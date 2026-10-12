@@ -76,12 +76,12 @@
   <!-- Login berhasil, belum terhubung ke daftar siswa -->
   <section id="vClaim" hidden>
     <h1>Hubungkan akunmu ke daftar siswa</h1>
-    <p class="muted">Cukup sekali. Isi nama dan NIS sesuai data di kelas.</p>
+    <p class="muted">Cukup sekali. Isi nama dan NIS (atau kode dari guru) sesuai data di kelas.</p>
     <div class="panel">
       <label for="fNama">Nama lengkap</label>
       <input id="fNama" autocomplete="name">
-      <label for="fNis">NIS</label>
-      <input id="fNis" inputmode="numeric" autocomplete="off">
+      <label for="fNis">NIS atau kode siswa</label>
+      <input id="fNis" autocomplete="off" autocapitalize="characters" spellcheck="false">
       <button id="btnClaim">Hubungkan akun</button>
       <div class="msg" id="claimMsg" role="alert"></div>
     </div>
