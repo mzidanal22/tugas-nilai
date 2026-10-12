@@ -121,6 +121,7 @@
     <div class="tabs">
       <button class="ghost on" data-tab="pTugas">Tugas</button>
       <button class="ghost" data-tab="pNilai">Rekap nilai</button>
+      <button class="ghost" data-tab="pRapor">Rapor</button>
       <button class="ghost" data-tab="pSiswa">Siswa</button>
     </div>
 
@@ -130,6 +131,8 @@
         <label for="tMapel">Mapel</label><select id="tMapel" style="width:100%;margin-bottom:14px"></select>
         <label for="tJudul">Judul</label><input id="tJudul" maxlength="150">
         <label for="tDesk">Deskripsi (opsional)</label><textarea id="tDesk"></textarea>
+        <label for="tJenis">Jenis nilai (untuk rapor)</label><select id="tJenis" style="width:100%;margin-bottom:14px"><option value="sumatif">Sumatif</option><option value="penugasan">Penugasan</option><option value="sts">STS</option><option value="sas">SAS</option></select>
+        <label for="tBentuk">Bentuk pengumpulan</label><select id="tBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
         <label for="tDl">Deadline (WIB)</label><input id="tDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="tKelas" style="margin-bottom:14px"></div>
         <button id="btnSimpanTugas">Simpan tugas</button>
@@ -141,17 +144,19 @@
       <button class="ghost small" id="btnBack">← Kembali</button>
       <h2 id="rJudul" style="margin-top:12px"></h2>
       <p class="muted" id="rInfo"></p>
-      <div class="bar"><button class="ghost small" id="btnEdit">Edit tugas</button><button class="ghost small" id="btnHapus">Hapus tugas</button></div>
+      <div class="bar"><button class="ghost small" id="btnEdit">Edit tugas</button><button class="ghost small" id="btnHapus">Hapus tugas</button><button id="btnSimpanSemua" hidden>Simpan semua nilai</button></div>
       <div class="panel card" id="fEdit" hidden>
         <label for="eJudul">Judul</label><input id="eJudul" maxlength="150">
         <label for="eDesk">Deskripsi</label><textarea id="eDesk"></textarea>
+        <label for="eJenis">Jenis nilai (untuk rapor)</label><select id="eJenis" style="width:100%;margin-bottom:14px"><option value="sumatif">Sumatif</option><option value="penugasan">Penugasan</option><option value="sts">STS</option><option value="sas">SAS</option></select>
+        <label for="eBentuk">Bentuk pengumpulan</label><select id="eBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
         <label for="eDl">Deadline (WIB)</label><input id="eDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="eKelas" style="margin-bottom:14px"></div>
         <p class="muted">Mengubah deadline tidak mengubah status "terlambat" yang sudah tercatat.</p>
         <button id="btnSimpanEdit">Simpan perubahan</button>
       </div>
       <div class="tablewrap"><table style="min-width:48rem">
-        <thead><tr><th>Nama</th><th>Status</th><th>Link</th><th>Nilai</th><th>Catatan guru</th><th></th></tr></thead>
+        <thead id="rHead"></thead>
         <tbody id="rBody"></tbody>
       </table></div>
     </div>
@@ -165,6 +170,23 @@
       </div>
       <p class="muted">Angka = nilai · … = sudah kumpul, belum dinilai · – = belum kumpul. Rata-rata hanya dari tugas yang sudah dinilai.</p>
       <div class="tablewrap"><table class="matrix"><thead id="nHead"></thead><tbody id="nBody"></tbody></table></div>
+    </div>
+
+    <div id="pRapor" hidden>
+      <h1>Rekap rapor</h1>
+      <div class="bar">
+        <label for="rpMapel" style="margin:0">Mapel</label><select id="rpMapel"></select>
+        <label for="rpKelas" style="margin:0">Kelas</label><select id="rpKelas"></select>
+      </div>
+      <p class="muted" id="rpInfo"></p>
+      <div class="bar">
+        <button class="small" data-salin="nama">Salin nama</button>
+        <button class="small" data-salin="sumatif">Salin Sumatif</button>
+        <button class="small" data-salin="penugasan">Salin Penugasan</button>
+        <button class="small" data-salin="stssas">Salin STS &amp; SAS</button>
+      </div>
+      <div class="muted" id="rpWarn" style="margin-bottom:12px"></div>
+      <div class="tablewrap"><table class="matrix"><thead id="rpHead"></thead><tbody id="rpBody"></tbody></table></div>
     </div>
 
     <div id="pSiswa" hidden>
@@ -202,12 +224,20 @@
     link_tidak_valid: 'Link harus diawali http:// atau https://',
     sudah_dinilai: 'Tugas sudah dinilai dan terkunci. Hubungi guru kalau perlu dibuka.',
     kelas_sudah_ada_kumpulan: 'Kelas yang sudah punya pengumpulan tidak bisa dilepas dari tugas ini.',
+    file_terlalu_besar: 'File terlalu besar. Maksimal 5 MB.',
+    tipe_file_tidak_didukung: 'Tipe file tidak didukung. Pakai JPG, PNG, WEBP, PDF, atau ZIP.',
+    file_rusak: 'File tidak terbaca. Coba pilih ulang.',
+    file_tidak_diminta: 'Tugas ini tidak menerima file.',
+    kumpulan_kosong: 'Isi link atau pilih file sesuai yang diminta tugas.',
+    tugas_tanpa_kumpulan: 'Tugas ini tidak menerima pengumpulan. Nilainya diinput guru.',
     nilai_tidak_valid: 'Nilai harus angka 0-100.',
     belum_kumpul: 'Siswa ini belum mengumpulkan.',
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc0 = j => ({ sumatif: 'Sumatif', penugasan: 'Penugasan', sts: 'STS', sas: 'SAS' }[j] || j);
+  const padTo = (a, n) => Array.from({ length: n }, (_, i) => a[i] ?? null);
   const fmt = iso => iso ? new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'medium', timeStyle: 'short' }) + ' WIB' : '';
   const safeUrl = u => /^https?:\/\/\S+$/i.test(u) ? u : '';
   let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null, curTugas = null, nData = null;
@@ -282,35 +312,49 @@
 
   function card(t) {
     const k = t.kumpul, lewat = new Date() > new Date(t.deadline);
-    const body = k && k.kunci
+    const body = t.bentuk === 'nilai'
+      ? (k && k.kunci ? `<p><strong>Nilai: ${esc(k.nilai)}</strong></p>` : '<p class="muted">Belum ada nilai.</p>')
+      : k && k.kunci
       ? `<p><strong>Nilai: ${esc(k.nilai)}</strong></p>${k.catatanGuru ? `<p class="muted">${esc(k.catatanGuru)}</p>` : ''}`
-      : `<input data-f="link" placeholder="https://link-tugasmu" value="${esc(k ? k.link : '')}">
+      : `${t.bentuk !== 'file' ? `<input data-f="link" placeholder="https://link-tugasmu" value="${esc(k ? k.link : '')}">` : ''}
+         ${t.bentuk !== 'link' ? `<p class="muted" style="margin-bottom:6px">${k && k.fileNama ? 'File sekarang: ' + esc(k.fileNama) + '. Pilih lagi kalau mau mengganti.' : 'Pilih file (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)'}</p><input data-f="file" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,.zip">` : ''}
          <input data-f="catatan" placeholder="Catatan (opsional)" maxlength="300" value="${esc(k ? k.catatan : '')}">
          <button data-act="kumpul" data-id="${esc(t.id)}">${k ? 'Kumpulkan ulang' : 'Kumpulkan'}</button>`;
     return `<div class="panel card"><div class="muted">${esc(t.mapel)}</div><h3>${esc(t.judul)}</h3>
       ${t.deskripsi ? `<p>${esc(t.deskripsi)}</p>` : ''}
-      <p class="muted">Deadline ${fmt(t.deadline)}${lewat && !k ? ' <span class="late">· sudah lewat</span>' : ''}</p>
-      <p><span class="tag">${stSiswa(k)}</span></p>${body}</div>`;
+      <p class="muted">Deadline ${fmt(t.deadline)}${lewat && !k && t.bentuk !== 'nilai' ? ' <span class="late">· sudah lewat</span>' : ''}</p>
+      <p><span class="tag">${t.bentuk === 'nilai' ? (k && k.kunci ? 'Dinilai' : 'Belum dinilai') : stSiswa(k)}</span></p>${body}</div>`;
   }
 
+  const toB64 = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(f); });
   $('sList').onclick = async e => {
     if (e.target.dataset.act !== 'kumpul') return;
-    const c = e.target.closest('.card'); e.target.disabled = true; msg('sMsg');
+    const c = e.target.closest('.card'), btn = e.target, label = btn.textContent;
+    msg('sMsg');
     try {
-      await api('kumpul', { id: e.target.dataset.id, link: c.querySelector('[data-f=link]').value, catatan: c.querySelector('[data-f=catatan]').value });
+      const li = c.querySelector('[data-f=link]'), fi = c.querySelector('[data-f=file]'), fl = fi && fi.files[0];
+      let file = null;
+      if (fl) {
+        if (fl.size > 5 * 1024 * 1024) throw new Error(ERR.file_terlalu_besar);
+        btn.disabled = true; btn.textContent = 'Mengunggah…';
+        file = { name: fl.name, data: await toB64(fl) };
+      }
+      btn.disabled = true;
+      await api('kumpul', { id: btn.dataset.id, link: li ? li.value : '', catatan: c.querySelector('[data-f=catatan]').value, file });
       await loadTugasSiswa();
-    } catch (err) { msg('sMsg', err.message); e.target.disabled = false; }
+    } catch (err) { msg('sMsg', err.message); btn.disabled = false; btn.textContent = label; }
   };
 
   async function loadRekapKelas() {
     if (!$('kTugas').value) { $('kBody').innerHTML = ''; return; }
     try {
       const r = await api('rekapKelas', { id: $('kTugas').value });
+      const tg = tugasSiswa.find(t => t.id === $('kTugas').value), bisa = tg && tg.bentuk !== 'file' && tg.bentuk !== 'nilai';
       $('kNilaiTh').hidden = !r.nilaiTampil;
       $('kBody').innerHTML = r.rows.map(s => `<tr><td>${esc(s.nama)}</td>
         <td>${!s.kumpul ? '<span class="muted">Belum</span>' : s.terlambat ? '<span class="late">Terlambat</span>' : '<span class="ok">Sudah</span>'}</td>
         ${r.nilaiTampil ? `<td>${s.nilai ?? ''}</td>` : ''}
-        <td>${!s.kumpul ? `<button class="ghost small" data-nis="${esc(s.nis)}">Kumpulkan</button>` : ''}</td></tr>`).join('');
+        <td>${!s.kumpul && bisa ? `<button class="ghost small" data-nis="${esc(s.nis)}">Kumpulkan</button>` : ''}</td></tr>`).join('');
     } catch (err) { msg('sMsg', err.message); }
   }
   $('kTugas').onchange = loadRekapKelas;
@@ -323,13 +367,13 @@
 
   /* ---------------- Admin ---------------- */
   function tab(id) {
-    ['pTugas', 'pRekap', 'pNilai', 'pSiswa'].forEach(p => $(p).hidden = p !== id);
+    ['pTugas', 'pRekap', 'pNilai', 'pRapor', 'pSiswa'].forEach(p => $(p).hidden = p !== id);
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === (id === 'pRekap' ? 'pTugas' : id)));
     msg('adminMsg');
   }
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
     tab(b.dataset.tab);
-    if (b.dataset.tab === 'pSiswa') loadSiswa(); else if (b.dataset.tab === 'pNilai') loadNilaiOpsi(); else loadTugasAdmin();
+    if (b.dataset.tab === 'pSiswa') loadSiswa(); else if (b.dataset.tab === 'pNilai') loadNilaiOpsi(); else if (b.dataset.tab === 'pRapor') loadRaporOpsi(); else loadTugasAdmin();
   });
 
   async function loadTugasAdmin() {
@@ -354,7 +398,7 @@
   $('btnSimpanTugas').onclick = async () => {
     const b = $('btnSimpanTugas'); b.disabled = true; msg('adminMsg');
     try {
-      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, deadline: $('tDl').value,
+      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, jenis: $('tJenis').value, bentuk: $('tBentuk').value, deadline: $('tDl').value,
         kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) });
       $('tJudul').value = ''; $('tDesk').value = ''; $('tDl').value = ''; $('fBaru').hidden = true;
       await loadTugasAdmin();
@@ -371,12 +415,22 @@
       curTugas = r.tugas; $('fEdit').hidden = true;
       const sudah = r.rows.filter(x => x.kumpul).length;
       $('rJudul').textContent = r.tugas.mapel + ': ' + r.tugas.judul;
-      $('rInfo').textContent = `Deadline ${fmt(r.tugas.deadline)} · ${sudah} dari ${r.rows.length} sudah kumpul`;
+      const modeNilai = r.tugas.bentuk === 'nilai';
+      $('btnSimpanSemua').hidden = !modeNilai;
+      $('rHead').innerHTML = modeNilai ? '<tr><th>Nama</th><th>Nilai (0-100)</th></tr>'
+        : '<tr><th>Nama</th><th>Status</th><th>Link</th><th>Nilai</th><th>Catatan guru</th><th></th></tr>';
+      $('rInfo').textContent = modeNilai ? `${esc0(r.tugas.jenis)} · ${sudah} dari ${r.rows.length} sudah ada nilai. Kosongkan kolom yang belum mau diisi.`
+        : `Deadline ${fmt(r.tugas.deadline)} · ${sudah} dari ${r.rows.length} sudah kumpul`;
+      if (modeNilai) {
+        $('rBody').innerHTML = r.rows.map(s => `<tr data-nis="${esc(s.nis)}"><td>${esc(s.nama)}<div class="muted">${esc(s.kelas)}</div></td>
+          <td><input data-f="nilai" type="number" min="0" max="100" value="${s.nilai ?? ''}"></td></tr>`).join('');
+        return tab('pRekap');
+      }
       $('rBody').innerHTML = r.rows.map(s => {
         const st = !s.kumpul ? '<span class="muted">Belum</span>' : s.kunci ? '<span class="ok">Dinilai</span>' : s.terlambat ? '<span class="late">Terlambat</span>' : 'Terkumpul';
         const u = safeUrl(s.link);
         return `<tr data-nis="${esc(s.nis)}"><td>${esc(s.nama)}<div class="muted">${esc(s.kelas)}</div></td><td>${st}</td>
-          <td>${s.kumpul ? (u ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">Buka</a>` : '-') + (s.catatan ? `<div class="muted">${esc(s.catatan)}</div>` : '') : ''}</td>
+          <td>${s.kumpul ? [u ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">Link</a>` : '', s.fileId ? `<a href="https://drive.google.com/file/d/${esc(s.fileId)}/view" target="_blank" rel="noopener noreferrer">${esc(s.fileNama || 'File')}</a>` : ''].filter(Boolean).join('<br>') || '-' : ''}${s.kumpul && s.catatan ? `<div class="muted">${esc(s.catatan)}</div>` : ''}</td>
           <td>${s.kumpul ? `<input data-f="nilai" type="number" min="0" max="100" value="${s.nilai ?? ''}">` : ''}</td>
           <td>${s.kumpul ? `<input data-f="cat" maxlength="500" value="${esc(s.catatanGuru)}">` : ''}</td>
           <td>${s.kumpul ? `<button class="small" data-act="nilai">Simpan</button>` : ''}${s.kunci ? ` <button class="ghost small" data-act="buka">Buka kunci</button>` : ''}</td></tr>`;
@@ -398,7 +452,7 @@
   const wibLocal = iso => new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16).replace(' ', 'T');
   $('btnEdit').onclick = () => {
     const t = curTugas, m = opsi.mapel.find(x => x.nama === t.mapel);
-    $('eJudul').value = t.judul; $('eDesk').value = t.deskripsi || ''; $('eDl').value = wibLocal(t.deadline);
+    $('eJudul').value = t.judul; $('eDesk').value = t.deskripsi || ''; $('eBentuk').value = t.bentuk || 'link'; $('eJenis').value = t.jenis || 'penugasan'; $('eDl').value = wibLocal(t.deadline);
     $('eKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat)
       .map(k => `<label class="chk"><input type="checkbox" value="${esc(k.nama)}" ${t.kelas.includes(k.nama) ? 'checked' : ''}> ${esc(k.nama)}</label>`).join('');
     $('fEdit').hidden = !$('fEdit').hidden;
@@ -406,7 +460,7 @@
   $('btnSimpanEdit').onclick = async () => {
     const b = $('btnSimpanEdit'); b.disabled = true; msg('adminMsg');
     try {
-      await api('editTugas', { id: rekapId, judul: $('eJudul').value, deskripsi: $('eDesk').value, deadline: $('eDl').value,
+      await api('editTugas', { id: rekapId, judul: $('eJudul').value, deskripsi: $('eDesk').value, jenis: $('eJenis').value, bentuk: $('eBentuk').value, deadline: $('eDl').value,
         kelas: [...document.querySelectorAll('#eKelas input:checked')].map(i => i.value) });
       await openRekap(rekapId);
     } catch (e) { msg('adminMsg', e.message); }
@@ -452,6 +506,58 @@
     a.download = `nilai_${$('nMapel').value}_${$('nKelas').value}.csv`.replace(/[^\w.-]+/g, '_');
     a.click(); URL.revokeObjectURL(a.href);
   };
+
+  $('btnSimpanSemua').onclick = async () => {
+    const b = $('btnSimpanSemua'); b.disabled = true; msg('adminMsg');
+    const items = [...document.querySelectorAll('#rBody tr')].map(tr => ({ nis: tr.dataset.nis, nilai: tr.querySelector('[data-f=nilai]').value }));
+    try {
+      const r = await api('nilaiBanyak', { id: rekapId, items });
+      await openRekap(rekapId);
+      $('rInfo').textContent += ` · ${r.disimpan} nilai tersimpan`;
+    } catch (e) { msg('adminMsg', e.message); }
+    b.disabled = false;
+  };
+
+  /* rekap rapor: blok siap-tempel ke template */
+  let rpData = null;
+  async function loadRaporOpsi() {
+    try { if (!opsi.mapel.length) opsi = await api('listTugas'); } catch (e) { return msg('adminMsg', e.message); }
+    const cur = $('rpMapel').value;
+    $('rpMapel').innerHTML = opsi.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
+    if (cur) $('rpMapel').value = cur;
+    fillRpKelas(); loadRapor();
+  }
+  function fillRpKelas() {
+    const m = opsi.mapel.find(x => x.nama === $('rpMapel').value), cur = $('rpKelas').value;
+    $('rpKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat).map(k => `<option>${esc(k.nama)}</option>`).join('');
+    if ([...$('rpKelas').options].some(o => o.value === cur)) $('rpKelas').value = cur;
+  }
+  async function loadRapor() {
+    if (!$('rpMapel').value || !$('rpKelas').value) return;
+    try { rpData = await api('rekapRapor', { mapel: $('rpMapel').value, kelas: $('rpKelas').value }); } catch (e) { return msg('adminMsg', e.message); }
+    const th = (l, t) => `<th title="${esc(t || 'belum ada tugas')}">${l}</th>`;
+    $('rpHead').innerHTML = '<tr><th>Nama</th>' + padTo(rpData.sumatif, 5).map((t, i) => th('S' + (i + 1), t)).join('')
+      + padTo(rpData.penugasan, 8).map((t, i) => th('P' + (i + 1), t)).join('') + th('STS', rpData.sts) + th('SAS', rpData.sas) + '</tr>';
+    const c = v => v === null || v === undefined ? '<span class="muted">·</span>' : esc(v);
+    $('rpBody').innerHTML = rpData.rows.map(s => `<tr><td>${esc(s.nama)}</td>`
+      + [...padTo(s.sumatif, 5), ...padTo(s.penugasan, 8), s.sts, s.sas].map(v => `<td>${c(v)}</td>`).join('') + '</tr>').join('')
+      || '<tr><td>Belum ada siswa di kelas ini.</td></tr>';
+    const r = rpData.rows;
+    $('rpInfo').textContent = r.length ? `${r.length} siswa · baris pertama: ${r[0].nama} · baris terakhir: ${r[r.length - 1].nama}. Cocokkan dengan file rapor sebelum paste.` : '';
+    $('rpWarn').innerHTML = rpData.peringatan.map(p => `<div>Perhatian: ${esc(p)}</div>`).join('');
+  }
+  $('rpMapel').onchange = () => { fillRpKelas(); loadRapor(); };
+  $('rpKelas').onchange = loadRapor;
+  document.querySelectorAll('[data-salin]').forEach(b => b.onclick = async () => {
+    if (!rpData || !rpData.rows.length) return;
+    const k = b.dataset.salin, v = x => x === null || x === undefined ? '' : x;
+    const baris = rpData.rows.map(s => k === 'nama' ? [s.nama] : k === 'sumatif' ? padTo(s.sumatif, 5)
+      : k === 'penugasan' ? padTo(s.penugasan, 8) : [s.sts, s.sas]);
+    const text = baris.map(r => r.map(v).join('\t')).join('\n');
+    try { await navigator.clipboard.writeText(text); }
+    catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+    $('rpInfo').textContent = `Tersalin: ${baris.length} baris × ${baris[0].length} kolom. Paste ke sel pertama blok yang sesuai di file rapor.`;
+  });
 
   async function loadSiswa() {
     try { allSiswa = (await api('listSiswa')).siswa; } catch (e) { return msg('adminMsg', e.message); }
