@@ -64,6 +64,10 @@
   .late { color: var(--bad); font-weight: 600; }
   .tag { font-size: 0.8125rem; border: 1px solid var(--line); border-radius: 99px; padding: 1px 10px; }
   .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .matrix { min-width: 0; }
+  .matrix th, .matrix td { white-space: nowrap; }
+  .matrix th { max-width: 10rem; overflow: hidden; text-overflow: ellipsis; }
+  .matrix th:first-child, .matrix td:first-child { position: sticky; left: 0; background: var(--panel); }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
@@ -116,6 +120,7 @@
   <section id="vAdmin" hidden>
     <div class="tabs">
       <button class="ghost on" data-tab="pTugas">Tugas</button>
+      <button class="ghost" data-tab="pNilai">Rekap nilai</button>
       <button class="ghost" data-tab="pSiswa">Siswa</button>
     </div>
 
@@ -136,10 +141,30 @@
       <button class="ghost small" id="btnBack">← Kembali</button>
       <h2 id="rJudul" style="margin-top:12px"></h2>
       <p class="muted" id="rInfo"></p>
+      <div class="bar"><button class="ghost small" id="btnEdit">Edit tugas</button><button class="ghost small" id="btnHapus">Hapus tugas</button></div>
+      <div class="panel card" id="fEdit" hidden>
+        <label for="eJudul">Judul</label><input id="eJudul" maxlength="150">
+        <label for="eDesk">Deskripsi</label><textarea id="eDesk"></textarea>
+        <label for="eDl">Deadline (WIB)</label><input id="eDl" type="datetime-local">
+        <label>Kelas tujuan</label><div id="eKelas" style="margin-bottom:14px"></div>
+        <p class="muted">Mengubah deadline tidak mengubah status "terlambat" yang sudah tercatat.</p>
+        <button id="btnSimpanEdit">Simpan perubahan</button>
+      </div>
       <div class="tablewrap"><table style="min-width:48rem">
         <thead><tr><th>Nama</th><th>Status</th><th>Link</th><th>Nilai</th><th>Catatan guru</th><th></th></tr></thead>
         <tbody id="rBody"></tbody>
       </table></div>
+    </div>
+
+    <div id="pNilai" hidden>
+      <h1>Rekap nilai</h1>
+      <div class="bar">
+        <label for="nMapel" style="margin:0">Mapel</label><select id="nMapel"></select>
+        <label for="nKelas" style="margin:0">Kelas</label><select id="nKelas"></select>
+        <button class="ghost small" id="btnCsv">Unduh CSV</button>
+      </div>
+      <p class="muted">Angka = nilai · … = sudah kumpul, belum dinilai · – = belum kumpul. Rata-rata hanya dari tugas yang sudah dinilai.</p>
+      <div class="tablewrap"><table class="matrix"><thead id="nHead"></thead><tbody id="nBody"></tbody></table></div>
     </div>
 
     <div id="pSiswa" hidden>
@@ -176,6 +201,7 @@
     tugas_bukan_untukmu: 'Tugas ini bukan untuk kelas ini.',
     link_tidak_valid: 'Link harus diawali http:// atau https://',
     sudah_dinilai: 'Tugas sudah dinilai dan terkunci. Hubungi guru kalau perlu dibuka.',
+    kelas_sudah_ada_kumpulan: 'Kelas yang sudah punya pengumpulan tidak bisa dilepas dari tugas ini.',
     nilai_tidak_valid: 'Nilai harus angka 0-100.',
     belum_kumpul: 'Siswa ini belum mengumpulkan.',
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
@@ -184,7 +210,7 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt = iso => iso ? new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'medium', timeStyle: 'short' }) + ' WIB' : '';
   const safeUrl = u => /^https?:\/\/\S+$/i.test(u) ? u : '';
-  let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null;
+  let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null, curTugas = null, nData = null;
   try { token = sessionStorage.getItem('tok'); } catch (e) {}
 
   function show(id) { ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); }
@@ -297,12 +323,13 @@
 
   /* ---------------- Admin ---------------- */
   function tab(id) {
-    ['pTugas', 'pRekap', 'pSiswa'].forEach(p => $(p).hidden = p !== id);
+    ['pTugas', 'pRekap', 'pNilai', 'pSiswa'].forEach(p => $(p).hidden = p !== id);
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === (id === 'pRekap' ? 'pTugas' : id)));
     msg('adminMsg');
   }
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
-    tab(b.dataset.tab); if (b.dataset.tab === 'pSiswa') loadSiswa(); else loadTugasAdmin();
+    tab(b.dataset.tab);
+    if (b.dataset.tab === 'pSiswa') loadSiswa(); else if (b.dataset.tab === 'pNilai') loadNilaiOpsi(); else loadTugasAdmin();
   });
 
   async function loadTugasAdmin() {
@@ -341,6 +368,7 @@
     rekapId = id; msg('adminMsg');
     try {
       const r = await api('rekapTugas', { id });
+      curTugas = r.tugas; $('fEdit').hidden = true;
       const sudah = r.rows.filter(x => x.kumpul).length;
       $('rJudul').textContent = r.tugas.mapel + ': ' + r.tugas.judul;
       $('rInfo').textContent = `Deadline ${fmt(r.tugas.deadline)} · ${sudah} dari ${r.rows.length} sudah kumpul`;
@@ -364,6 +392,65 @@
       else await api('bukaKunci', { id: rekapId, nis });
       await openRekap(rekapId);
     } catch (err) { msg('adminMsg', err.message); }
+  };
+
+  /* edit & hapus tugas */
+  const wibLocal = iso => new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16).replace(' ', 'T');
+  $('btnEdit').onclick = () => {
+    const t = curTugas, m = opsi.mapel.find(x => x.nama === t.mapel);
+    $('eJudul').value = t.judul; $('eDesk').value = t.deskripsi || ''; $('eDl').value = wibLocal(t.deadline);
+    $('eKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat)
+      .map(k => `<label class="chk"><input type="checkbox" value="${esc(k.nama)}" ${t.kelas.includes(k.nama) ? 'checked' : ''}> ${esc(k.nama)}</label>`).join('');
+    $('fEdit').hidden = !$('fEdit').hidden;
+  };
+  $('btnSimpanEdit').onclick = async () => {
+    const b = $('btnSimpanEdit'); b.disabled = true; msg('adminMsg');
+    try {
+      await api('editTugas', { id: rekapId, judul: $('eJudul').value, deskripsi: $('eDesk').value, deadline: $('eDl').value,
+        kelas: [...document.querySelectorAll('#eKelas input:checked')].map(i => i.value) });
+      await openRekap(rekapId);
+    } catch (e) { msg('adminMsg', e.message); }
+    b.disabled = false;
+  };
+  $('btnHapus').onclick = async () => {
+    if (!confirm(`Hapus tugas "${curTugas.judul}" beserta semua pengumpulan dan nilainya? Tidak bisa dibatalkan.`)) return;
+    try { await api('hapusTugas', { id: rekapId }); tab('pTugas'); await loadTugasAdmin(); }
+    catch (e) { msg('adminMsg', e.message); }
+  };
+
+  /* rekap nilai */
+  async function loadNilaiOpsi() {
+    try { if (!opsi.mapel.length) opsi = await api('listTugas'); } catch (e) { return msg('adminMsg', e.message); }
+    const cur = $('nMapel').value;
+    $('nMapel').innerHTML = opsi.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
+    if (cur) $('nMapel').value = cur;
+    fillNKelas(); loadNilai();
+  }
+  function fillNKelas() {
+    const m = opsi.mapel.find(x => x.nama === $('nMapel').value), cur = $('nKelas').value;
+    $('nKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat).map(k => `<option>${esc(k.nama)}</option>`).join('');
+    if ([...$('nKelas').options].some(o => o.value === cur)) $('nKelas').value = cur;
+  }
+  async function loadNilai() {
+    if (!$('nMapel').value || !$('nKelas').value) return;
+    try { nData = await api('rekapNilai', { mapel: $('nMapel').value, kelas: $('nKelas').value }); } catch (e) { return msg('adminMsg', e.message); }
+    const cell = c => c === null ? '<span class="muted">–</span>' : c === 'k' ? '<span class="muted">…</span>' : esc(c);
+    $('nHead').innerHTML = '<tr><th>Nama</th>' + nData.tugas.map(t => `<th title="${esc(t.judul)}">${esc(t.judul)}</th>`).join('') + '<th>Rata-rata</th></tr>';
+    $('nBody').innerHTML = nData.rows.map(s => `<tr><td>${esc(s.nama)}</td>${s.cells.map(c => `<td>${cell(c)}</td>`).join('')}<td><strong>${s.rata ?? ''}</strong></td></tr>`).join('')
+      || '<tr><td>Belum ada siswa.</td></tr>';
+  }
+  $('nMapel').onchange = () => { fillNKelas(); loadNilai(); };
+  $('nKelas').onchange = loadNilai;
+  $('btnCsv').onclick = () => {
+    if (!nData) return;
+    const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+    const val = c => c === null ? '' : c === 'k' ? 'belum dinilai' : c;
+    const lines = [['NIS', 'Nama', ...nData.tugas.map(t => t.judul), 'Rata-rata'],
+      ...nData.rows.map(s => [s.nis, s.nama, ...s.cells.map(val), s.rata])].map(r => r.map(q).join(','));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+    a.download = `nilai_${$('nMapel').value}_${$('nKelas').value}.csv`.replace(/[^\w.-]+/g, '_');
+    a.click(); URL.revokeObjectURL(a.href);
   };
 
   async function loadSiswa() {
