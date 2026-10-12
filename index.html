@@ -24,36 +24,47 @@
   html { height: 100%; }
   body {
     margin: 0; min-height: 100%; color: var(--ink); background-color: var(--bg);
-    background-image: radial-gradient(var(--dot) 1px, transparent 1px);
-    background-size: 20px 20px;
+    background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 20px 20px;
     font: 400 16px/1.55 "Bricolage Grotesque", system-ui, sans-serif;
     padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0);
   }
-  header { display: flex; justify-content: space-between; align-items: center; gap: 12px;
-    max-width: 60rem; margin: 0 auto; padding: 20px 20px 0; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 12px; max-width: 60rem; margin: 0 auto; padding: 20px 20px 0; }
   .brand { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.02em; }
-  main { max-width: 60rem; margin: 0 auto; padding: 32px 20px 64px; }
+  main { max-width: 60rem; margin: 0 auto; padding: 28px 20px 64px; }
   h1 { font-size: clamp(1.9rem, 5vw, 3rem); line-height: 1.08; letter-spacing: -0.03em; font-weight: 800; margin: 0 0 12px; max-width: 18ch; }
-  p { margin: 0 0 16px; max-width: 60ch; }
+  h2 { font-size: 1.35rem; letter-spacing: -0.02em; margin: 32px 0 8px; }
+  h3 { font-size: 1.1rem; margin: 2px 0 6px; }
+  p { margin: 0 0 12px; max-width: 60ch; }
   .muted { color: var(--muted); }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 24px; max-width: 28rem; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-bottom: 12px; }
+  .narrow { max-width: 28rem; }
+  .card { max-width: 40rem; }
   label { display: block; font-weight: 600; margin: 0 0 4px; }
-  input, select { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; margin-bottom: 16px; }
+  input, select, textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; margin-bottom: 14px; }
   select { width: auto; margin: 0; }
-  input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  textarea { min-height: 5rem; resize: vertical; }
+  td input { margin: 0; padding: 6px 8px; min-width: 6rem; }
+  .chk { display: inline-flex; gap: 6px; align-items: center; font-weight: 400; margin: 0 14px 8px 0; }
+  .chk input { width: auto; margin: 0; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   button { font: 600 1rem "Bricolage Grotesque", system-ui, sans-serif; cursor: pointer; border-radius: 6px; padding: 10px 18px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); }
   button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  button.on { border-color: var(--accent); }
   button.small { padding: 4px 10px; font-size: 0.875rem; }
   button:disabled { opacity: .6; cursor: wait; }
   .msg { min-height: 1.5em; color: var(--bad); font-weight: 600; margin-top: 12px; }
-  .bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 20px 0 12px; }
+  .bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 16px 0 12px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
   .tablewrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
   table { border-collapse: collapse; width: 100%; min-width: 34rem; }
-  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
   th { font-weight: 600; color: var(--muted); font-size: 0.875rem; }
   tr:last-child td { border-bottom: 0; }
   .ok { color: var(--ok); font-weight: 600; }
+  .late { color: var(--bad); font-weight: 600; }
   .tag { font-size: 0.8125rem; border: 1px solid var(--line); border-radius: 99px; padding: 1px 10px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }
+  a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
 </style>
@@ -65,7 +76,6 @@
 </header>
 
 <main>
-  <!-- Belum login -->
   <section id="vLogin" hidden>
     <h1>Masuk untuk lihat tugas dan nilaimu</h1>
     <p class="muted">Pakai akun Google yang kamu pakai di sekolah.</p>
@@ -73,11 +83,10 @@
     <div class="msg" id="loginMsg" role="alert"></div>
   </section>
 
-  <!-- Login berhasil, belum terhubung ke daftar siswa -->
   <section id="vClaim" hidden>
     <h1>Hubungkan akunmu ke daftar siswa</h1>
     <p class="muted">Cukup sekali. Isi nama dan NIS (atau kode dari guru) sesuai data di kelas.</p>
-    <div class="panel">
+    <div class="panel narrow">
       <label for="fNama">Nama lengkap</label>
       <input id="fNama" autocomplete="name">
       <label for="fNis">NIS atau kode siswa</label>
@@ -91,22 +100,59 @@
   <section id="vSiswa" hidden>
     <h1 id="sHello"></h1>
     <p class="muted" id="sInfo"></p>
-    <div class="panel"><strong>Belum ada tugas.</strong><br><span class="muted">Tugas dari guru akan muncul di sini.</span></div>
+    <div id="sList"></div>
+    <div id="kBlock" hidden>
+      <h2>Rekap kelas</h2>
+      <div class="bar"><label for="kTugas" style="margin:0">Tugas</label><select id="kTugas"></select></div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Nama</th><th>Status</th><th id="kNilaiTh">Nilai</th><th></th></tr></thead>
+        <tbody id="kBody"></tbody>
+      </table></div>
+    </div>
+    <div class="msg" id="sMsg" role="alert"></div>
   </section>
 
   <!-- Admin -->
   <section id="vAdmin" hidden>
-    <h1>Daftar siswa</h1>
-    <p class="muted" id="aSummary"></p>
-    <div class="bar">
-      <label for="aKelas" style="margin:0">Kelas</label>
-      <select id="aKelas"><option value="">Semua</option></select>
+    <div class="tabs">
+      <button class="ghost on" data-tab="pTugas">Tugas</button>
+      <button class="ghost" data-tab="pSiswa">Siswa</button>
     </div>
-    <div class="tablewrap">
-      <table>
+
+    <div id="pTugas">
+      <div class="row"><h1 style="margin:0">Tugas</h1><button id="btnBaru">Tugas baru</button></div>
+      <div class="panel card" id="fBaru" hidden style="margin-top:16px">
+        <label for="tMapel">Mapel</label><select id="tMapel" style="width:100%;margin-bottom:14px"></select>
+        <label for="tJudul">Judul</label><input id="tJudul" maxlength="150">
+        <label for="tDesk">Deskripsi (opsional)</label><textarea id="tDesk"></textarea>
+        <label for="tDl">Deadline (WIB)</label><input id="tDl" type="datetime-local">
+        <label>Kelas tujuan</label><div id="tKelas" style="margin-bottom:14px"></div>
+        <button id="btnSimpanTugas">Simpan tugas</button>
+      </div>
+      <div id="tList" style="margin-top:16px"></div>
+    </div>
+
+    <div id="pRekap" hidden>
+      <button class="ghost small" id="btnBack">← Kembali</button>
+      <h2 id="rJudul" style="margin-top:12px"></h2>
+      <p class="muted" id="rInfo"></p>
+      <div class="tablewrap"><table style="min-width:48rem">
+        <thead><tr><th>Nama</th><th>Status</th><th>Link</th><th>Nilai</th><th>Catatan guru</th><th></th></tr></thead>
+        <tbody id="rBody"></tbody>
+      </table></div>
+    </div>
+
+    <div id="pSiswa" hidden>
+      <h1>Daftar siswa</h1>
+      <p class="muted" id="aSummary"></p>
+      <div class="bar">
+        <label for="aKelas" style="margin:0">Kelas</label>
+        <select id="aKelas"><option value="">Semua</option></select>
+      </div>
+      <div class="tablewrap"><table>
         <thead><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Status akun</th><th></th></tr></thead>
         <tbody id="aBody"></tbody>
-      </table>
+      </table></div>
     </div>
     <div class="msg" id="adminMsg" role="alert"></div>
   </section>
@@ -118,21 +164,31 @@
   const API_URL   = 'https://script.google.com/macros/s/AKfycbz9fOmcReztL1uTLXpw96LZaeYwfPF5yaIgXK4DjM1Qv4YmYFMKsHJh18SA-gOxwjAO/exec';
 
   const ERR = {
-    data_tidak_cocok: 'Nama atau NIS tidak cocok dengan daftar, atau NIS sudah dipakai akun lain. Cek lagi, atau hubungi guru.',
+    data_tidak_cocok: 'Nama atau NIS/kode tidak cocok dengan daftar, atau sudah dipakai akun lain. Cek lagi, atau hubungi guru.',
     terlalu_banyak_percobaan: 'Terlalu banyak percobaan. Coba lagi 15 menit lagi.',
     sudah_terdaftar: 'Akun Google ini sudah terhubung.',
-    belum_setup: 'Sheet belum dibuat. Jalankan fungsi setup() di Apps Script.',
-    tidak_diizinkan: 'Kamu tidak punya akses ke halaman ini.',
+    belum_setup: 'Sheet belum lengkap. Jalankan fungsi setup() di Apps Script.',
+    tidak_diizinkan: 'Kamu tidak punya akses untuk ini.',
+    data_tugas_kurang: 'Lengkapi mapel, judul, deadline, dan pilih minimal satu kelas.',
+    mapel_tidak_ada: 'Mapel tidak ditemukan.',
+    kelas_tidak_sesuai_mapel: 'Kelas yang dipilih tidak sesuai tingkat mapel.',
+    tugas_tidak_ada: 'Tugas tidak ditemukan.',
+    tugas_bukan_untukmu: 'Tugas ini bukan untuk kelas ini.',
+    link_tidak_valid: 'Link harus diawali http:// atau https://',
+    sudah_dinilai: 'Tugas sudah dinilai dan terkunci. Hubungi guru kalau perlu dibuka.',
+    nilai_tidak_valid: 'Nilai harus angka 0-100.',
+    belum_kumpul: 'Siswa ini belum mengumpulkan.',
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let token = null, allSiswa = [];
+  const fmt = iso => iso ? new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'medium', timeStyle: 'short' }) + ' WIB' : '';
+  const safeUrl = u => /^https?:\/\/\S+$/i.test(u) ? u : '';
+  let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null;
   try { token = sessionStorage.getItem('tok'); } catch (e) {}
 
-  function show(id) {
-    ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id);
-  }
+  function show(id) { ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); }
+  function msg(id, text) { $(id).textContent = text || ''; }
 
   async function api(action, data) {
     let j;
@@ -143,9 +199,7 @@
         body: JSON.stringify({ action, token, ...(data || {}) })
       });
       j = await res.json();
-    } catch (e) {
-      throw new Error('Tidak bisa terhubung ke server. Cek internet lalu coba lagi.');
-    }
+    } catch (e) { throw new Error('Tidak bisa terhubung ke server. Cek internet lalu coba lagi.'); }
     if (!j.ok) {
       if (j.error === 'token_invalid') { logout('Sesi habis. Masuk lagi dengan Google.'); throw new Error(''); }
       throw new Error(ERR[j.error] || ERR.server_error);
@@ -153,84 +207,191 @@
     return j;
   }
 
-  function logout(msg) {
-    token = null;
+  function logout(m) {
+    token = null; me = null;
     try { sessionStorage.removeItem('tok'); } catch (e) {}
     if (window.google && google.accounts) google.accounts.id.disableAutoSelect();
-    $('who').hidden = true;
-    $('loginMsg').textContent = msg || '';
-    show('vLogin');
+    $('who').hidden = true; msg('loginMsg', m); show('vLogin');
   }
 
   async function boot() {
     if (!token) return logout();
-    try {
-      const { me } = await api('me');
-      render(me);
-    } catch (e) { if (e.message) { show('vLogin'); $('loginMsg').textContent = e.message; } }
+    try { render((await api('me')).me); }
+    catch (e) { if (e.message) { show('vLogin'); msg('loginMsg', e.message); } }
   }
 
-  function render(me) {
-    $('who').hidden = false;
-    $('whoName').textContent = me.role === 'belum_terdaftar' ? me.email : me.nama;
-    if (me.role === 'belum_terdaftar') return show('vClaim');
-    if (me.role === 'admin') { show('vAdmin'); return loadSiswa(); }
-    $('sHello').textContent = 'Halo, ' + me.nama.split(' ')[0];
-    $('sInfo').textContent = 'Kelas ' + me.kelas + (me.role === 'ketua' ? ' · Ketua kelas' : '');
-    show('vSiswa');
+  function render(m) {
+    me = m; $('who').hidden = false;
+    $('whoName').textContent = m.role === 'belum_terdaftar' ? m.email : m.nama;
+    if (m.role === 'belum_terdaftar') return show('vClaim');
+    if (m.role === 'admin') { show('vAdmin'); tab('pTugas'); return loadTugasAdmin(); }
+    $('sHello').textContent = 'Halo, ' + m.nama.split(' ')[0];
+    $('sInfo').textContent = 'Kelas ' + m.kelas + (m.role === 'ketua' ? ' · Ketua kelas' : '');
+    $('kBlock').hidden = m.role !== 'ketua';
+    show('vSiswa'); loadTugasSiswa();
   }
 
   $('btnClaim').onclick = async () => {
-    const btn = $('btnClaim'); btn.disabled = true; $('claimMsg').textContent = '';
+    const b = $('btnClaim'); b.disabled = true; msg('claimMsg');
+    try { render((await api('claim', { nama: $('fNama').value, nis: $('fNis').value })).me); }
+    catch (e) { msg('claimMsg', e.message); }
+    b.disabled = false;
+  };
+  $('btnOut').onclick = () => logout();
+
+  /* ---------------- Siswa & ketua ---------------- */
+  let tugasSiswa = [];
+  const stSiswa = k => !k ? 'Belum kumpul' : k.kunci ? 'Dinilai' : k.terlambat ? 'Terlambat' : 'Terkumpul';
+
+  async function loadTugasSiswa() {
+    msg('sMsg');
+    try { tugasSiswa = (await api('tugasSaya')).tugas; } catch (e) { return msg('sMsg', e.message); }
+    $('sList').innerHTML = tugasSiswa.length ? tugasSiswa.map(card).join('')
+      : '<div class="panel card"><strong>Belum ada tugas.</strong><br><span class="muted">Tugas dari guru akan muncul di sini.</span></div>';
+    if (me.role === 'ketua') {
+      $('kTugas').innerHTML = tugasSiswa.map(t => `<option value="${esc(t.id)}">${esc(t.mapel)}: ${esc(t.judul)}</option>`).join('');
+      loadRekapKelas();
+    }
+  }
+
+  function card(t) {
+    const k = t.kumpul, lewat = new Date() > new Date(t.deadline);
+    const body = k && k.kunci
+      ? `<p><strong>Nilai: ${esc(k.nilai)}</strong></p>${k.catatanGuru ? `<p class="muted">${esc(k.catatanGuru)}</p>` : ''}`
+      : `<input data-f="link" placeholder="https://link-tugasmu" value="${esc(k ? k.link : '')}">
+         <input data-f="catatan" placeholder="Catatan (opsional)" maxlength="300" value="${esc(k ? k.catatan : '')}">
+         <button data-act="kumpul" data-id="${esc(t.id)}">${k ? 'Kumpulkan ulang' : 'Kumpulkan'}</button>`;
+    return `<div class="panel card"><div class="muted">${esc(t.mapel)}</div><h3>${esc(t.judul)}</h3>
+      ${t.deskripsi ? `<p>${esc(t.deskripsi)}</p>` : ''}
+      <p class="muted">Deadline ${fmt(t.deadline)}${lewat && !k ? ' <span class="late">· sudah lewat</span>' : ''}</p>
+      <p><span class="tag">${stSiswa(k)}</span></p>${body}</div>`;
+  }
+
+  $('sList').onclick = async e => {
+    if (e.target.dataset.act !== 'kumpul') return;
+    const c = e.target.closest('.card'); e.target.disabled = true; msg('sMsg');
     try {
-      const { me } = await api('claim', { nama: $('fNama').value, nis: $('fNis').value });
-      render(me);
-    } catch (e) { $('claimMsg').textContent = e.message; }
-    btn.disabled = false;
+      await api('kumpul', { id: e.target.dataset.id, link: c.querySelector('[data-f=link]').value, catatan: c.querySelector('[data-f=catatan]').value });
+      await loadTugasSiswa();
+    } catch (err) { msg('sMsg', err.message); e.target.disabled = false; }
+  };
+
+  async function loadRekapKelas() {
+    if (!$('kTugas').value) { $('kBody').innerHTML = ''; return; }
+    try {
+      const r = await api('rekapKelas', { id: $('kTugas').value });
+      $('kNilaiTh').hidden = !r.nilaiTampil;
+      $('kBody').innerHTML = r.rows.map(s => `<tr><td>${esc(s.nama)}</td>
+        <td>${!s.kumpul ? '<span class="muted">Belum</span>' : s.terlambat ? '<span class="late">Terlambat</span>' : '<span class="ok">Sudah</span>'}</td>
+        ${r.nilaiTampil ? `<td>${s.nilai ?? ''}</td>` : ''}
+        <td>${!s.kumpul ? `<button class="ghost small" data-nis="${esc(s.nis)}">Kumpulkan</button>` : ''}</td></tr>`).join('');
+    } catch (err) { msg('sMsg', err.message); }
+  }
+  $('kTugas').onchange = loadRekapKelas;
+  $('kBody').onclick = async e => {
+    const nis = e.target.dataset.nis; if (!nis) return;
+    const link = prompt('Tempel link tugas teman yang mau dikumpulkan:'); if (!link) return;
+    try { await api('kumpul', { id: $('kTugas').value, nis, link }); await loadRekapKelas(); }
+    catch (err) { msg('sMsg', err.message); }
+  };
+
+  /* ---------------- Admin ---------------- */
+  function tab(id) {
+    ['pTugas', 'pRekap', 'pSiswa'].forEach(p => $(p).hidden = p !== id);
+    document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === (id === 'pRekap' ? 'pTugas' : id)));
+    msg('adminMsg');
+  }
+  document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
+    tab(b.dataset.tab); if (b.dataset.tab === 'pSiswa') loadSiswa(); else loadTugasAdmin();
+  });
+
+  async function loadTugasAdmin() {
+    try {
+      const r = await api('listTugas'); opsi = r;
+      $('tMapel').innerHTML = r.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
+      drawKelasBox();
+      $('tList').innerHTML = r.tugas.length ? r.tugas.map(t => `<div class="panel card"><div class="row">
+        <div><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}</div><h3>${esc(t.judul)}</h3>
+        <div class="muted">Deadline ${fmt(t.deadline)} · ${t.kumpul} dari ${t.total} sudah kumpul</div></div>
+        <button class="ghost small" data-id="${esc(t.id)}">Buka</button></div></div>`).join('')
+        : '<p class="muted">Belum ada tugas. Klik "Tugas baru" untuk membuat yang pertama.</p>';
+    } catch (e) { msg('adminMsg', e.message); }
+  }
+  function drawKelasBox() {
+    const m = opsi.mapel.find(x => x.nama === $('tMapel').value);
+    $('tKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat)
+      .map(k => `<label class="chk"><input type="checkbox" value="${esc(k.nama)}"> ${esc(k.nama)}</label>`).join('');
+  }
+  $('tMapel').onchange = drawKelasBox;
+  $('btnBaru').onclick = () => { $('fBaru').hidden = !$('fBaru').hidden; };
+  $('btnSimpanTugas').onclick = async () => {
+    const b = $('btnSimpanTugas'); b.disabled = true; msg('adminMsg');
+    try {
+      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, deadline: $('tDl').value,
+        kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) });
+      $('tJudul').value = ''; $('tDesk').value = ''; $('tDl').value = ''; $('fBaru').hidden = true;
+      await loadTugasAdmin();
+    } catch (e) { msg('adminMsg', e.message); }
+    b.disabled = false;
+  };
+  $('tList').onclick = e => { if (e.target.dataset.id) openRekap(e.target.dataset.id); };
+  $('btnBack').onclick = () => { tab('pTugas'); loadTugasAdmin(); };
+
+  async function openRekap(id) {
+    rekapId = id; msg('adminMsg');
+    try {
+      const r = await api('rekapTugas', { id });
+      const sudah = r.rows.filter(x => x.kumpul).length;
+      $('rJudul').textContent = r.tugas.mapel + ': ' + r.tugas.judul;
+      $('rInfo').textContent = `Deadline ${fmt(r.tugas.deadline)} · ${sudah} dari ${r.rows.length} sudah kumpul`;
+      $('rBody').innerHTML = r.rows.map(s => {
+        const st = !s.kumpul ? '<span class="muted">Belum</span>' : s.kunci ? '<span class="ok">Dinilai</span>' : s.terlambat ? '<span class="late">Terlambat</span>' : 'Terkumpul';
+        const u = safeUrl(s.link);
+        return `<tr data-nis="${esc(s.nis)}"><td>${esc(s.nama)}<div class="muted">${esc(s.kelas)}</div></td><td>${st}</td>
+          <td>${s.kumpul ? (u ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">Buka</a>` : '-') + (s.catatan ? `<div class="muted">${esc(s.catatan)}</div>` : '') : ''}</td>
+          <td>${s.kumpul ? `<input data-f="nilai" type="number" min="0" max="100" value="${s.nilai ?? ''}">` : ''}</td>
+          <td>${s.kumpul ? `<input data-f="cat" maxlength="500" value="${esc(s.catatanGuru)}">` : ''}</td>
+          <td>${s.kumpul ? `<button class="small" data-act="nilai">Simpan</button>` : ''}${s.kunci ? ` <button class="ghost small" data-act="buka">Buka kunci</button>` : ''}</td></tr>`;
+      }).join('');
+      tab('pRekap');
+    } catch (e) { msg('adminMsg', e.message); }
+  }
+  $('rBody').onclick = async e => {
+    const act = e.target.dataset.act; if (!act) return;
+    const tr = e.target.closest('tr'), nis = tr.dataset.nis; msg('adminMsg');
+    try {
+      if (act === 'nilai') await api('nilai', { id: rekapId, nis, nilai: tr.querySelector('[data-f=nilai]').value, catatan: tr.querySelector('[data-f=cat]').value });
+      else await api('bukaKunci', { id: rekapId, nis });
+      await openRekap(rekapId);
+    } catch (err) { msg('adminMsg', err.message); }
   };
 
   async function loadSiswa() {
-    $('adminMsg').textContent = '';
-    try { allSiswa = (await api('listSiswa')).siswa; } catch (e) { $('adminMsg').textContent = e.message; return; }
-    const kelas = [...new Set(allSiswa.map(s => s.kelas))].sort();
-    const cur = $('aKelas').value;
+    try { allSiswa = (await api('listSiswa')).siswa; } catch (e) { return msg('adminMsg', e.message); }
+    const kelas = [...new Set(allSiswa.map(s => s.kelas))].sort(), cur = $('aKelas').value;
     $('aKelas').innerHTML = '<option value="">Semua</option>' + kelas.map(k => `<option>${esc(k)}</option>`).join('');
-    $('aKelas').value = cur;
-    drawTable();
+    $('aKelas').value = cur; drawTable();
   }
-
   function drawTable() {
-    const k = $('aKelas').value;
-    const rows = allSiswa.filter(s => !k || s.kelas === k);
-    const done = rows.filter(s => s.terdaftar).length;
-    $('aSummary').textContent = rows.length
-      ? `${done} dari ${rows.length} siswa sudah menghubungkan akun.`
-      : 'Belum ada siswa. Isi sheet "Siswa" di Google Sheets (NIS, Nama, Kelas, Role), lalu muat ulang halaman ini.';
-    $('aBody').innerHTML = rows.map(s => `<tr>
-      <td>${esc(s.nis)}</td>
-      <td>${esc(s.nama)} ${s.role === 'ketua' ? '<span class="tag">Ketua</span>' : ''}</td>
-      <td>${esc(s.kelas)}</td>
+    const k = $('aKelas').value, rows = allSiswa.filter(s => !k || s.kelas === k), done = rows.filter(s => s.terdaftar).length;
+    $('aSummary').textContent = rows.length ? `${done} dari ${rows.length} siswa sudah menghubungkan akun.`
+      : 'Belum ada siswa. Isi sheet "Siswa" di Google Sheets, lalu muat ulang halaman ini.';
+    $('aBody').innerHTML = rows.map(s => `<tr><td>${esc(s.nis)}</td>
+      <td>${esc(s.nama)} ${s.role === 'ketua' ? '<span class="tag">Ketua</span>' : ''}</td><td>${esc(s.kelas)}</td>
       <td>${s.terdaftar ? '<span class="ok">Terhubung</span>' : '<span class="muted">Belum</span>'}</td>
       <td>${s.terdaftar ? `<button class="ghost small" data-nis="${esc(s.nis)}">Lepas akun</button>` : ''}</td></tr>`).join('');
   }
-
   $('aKelas').onchange = drawTable;
   $('aBody').onclick = async e => {
     const nis = e.target.dataset && e.target.dataset.nis;
     if (!nis || !confirm('Lepas akun Google dari NIS ' + nis + '? Siswa harus menghubungkan ulang.')) return;
-    try { await api('resetKlaim', { nis }); await loadSiswa(); } catch (err) { $('adminMsg').textContent = err.message; }
+    try { await api('resetKlaim', { nis }); await loadSiswa(); } catch (err) { msg('adminMsg', err.message); }
   };
-  $('btnOut').onclick = () => logout();
 
   function initGoogle() {
     google.accounts.id.initialize({
       client_id: CLIENT_ID,
-      callback: r => {
-        token = r.credential;
-        try { sessionStorage.setItem('tok', token); } catch (e) {}
-        $('loginMsg').textContent = '';
-        boot();
-      }
+      callback: r => { token = r.credential; try { sessionStorage.setItem('tok', token); } catch (e) {} msg('loginMsg'); boot(); }
     });
     google.accounts.id.renderButton($('gbtn'), { theme: 'outline', size: 'large', text: 'signin_with', locale: 'id' });
     boot();
