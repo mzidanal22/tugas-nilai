@@ -122,6 +122,13 @@
     .toast-wrap { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
     #whoName { display: none; }
   }
+  .peng { max-width: 40rem; }
+  .peng.pin { border-color: var(--accent); }
+  .isi { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .imgbox { border-radius: 8px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); margin: 0 0 12px; }
+  .imgbox.load { min-height: 140px; }
+  .imgbox img { display: block; width: 100%; max-height: 380px; object-fit: contain; cursor: zoom-in; }
+  .chk-row { margin-bottom: 14px; }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
@@ -164,6 +171,7 @@
     <div id="sHome">
       <h1 id="sHello" style="margin-bottom:4px"></h1>
       <p class="muted" id="sInfo"></p>
+      <div id="sPeng"></div>
       <div id="sDash"></div>
     </div>
     <div id="sTugas" hidden><h1>Tugas</h1><div id="sList"></div></div>
@@ -188,6 +196,21 @@
       <div id="aDash"></div>
     </div>
 
+
+    <div id="pInfo" hidden>
+      <div class="row"><h1 style="margin:0">Pengumuman</h1><button id="btnInfoBaru">Pengumuman baru</button></div>
+      <div class="panel card" id="fInfo" hidden style="margin-top:16px">
+        <label for="iJudul">Judul</label><input id="iJudul" maxlength="120">
+        <label for="iIsi">Isi (boleh kosong kalau ada gambar)</label><textarea id="iIsi" maxlength="2000"></textarea>
+        <label for="iGambar">Gambar (opsional)</label><input id="iGambar" type="file" accept="image/*">
+        <img id="iPrev" alt="Pratinjau gambar" hidden style="max-width:100%;max-height:220px;border-radius:8px;margin:0 0 14px;display:block">
+        <label>Tampilkan ke</label><div id="iKelas" class="chk-row"></div>
+        <label for="iSampai">Tampil sampai (opsional)</label><input id="iSampai" type="date">
+        <label class="chk chk-row"><input type="checkbox" id="iPin"> Sematkan di atas</label>
+        <div><button id="btnSimpanInfo">Terbitkan</button></div>
+      </div>
+      <div id="iList" style="margin-top:16px"></div>
+    </div>
 
     <div id="pTugas" hidden>
       <div class="row"><h1 style="margin:0">Tugas</h1><button id="btnBaru">Tugas baru</button></div>
@@ -269,6 +292,10 @@
   </section>
 </main>
 <div class="toast-wrap" id="toasts" role="status" aria-live="polite"></div>
+<dialog id="dlgImg" style="max-width:min(96vw,60rem);padding:10px">
+  <img id="dlgImgEl" alt="" style="display:block;max-width:100%;max-height:82vh;margin:0 auto">
+  <div class="actions" style="margin-top:10px"><button class="ghost" id="dlgImgClose" type="button">Tutup</button></div>
+</dialog>
 <dialog id="dlgLink">
   <p id="dlgTitle" style="font-weight:600"></p>
   <input id="dlgInput" placeholder="https://" inputmode="url" autocomplete="off">
@@ -296,6 +323,10 @@
     sudah_dinilai: 'Tugas sudah dinilai dan terkunci. Hubungi guru kalau perlu dibuka.',
     kelas_sudah_ada_kumpulan: 'Kelas yang sudah punya pengumpulan tidak bisa dilepas dari tugas ini.',
     drive_gagal: 'File belum bisa disimpan karena penyimpanan di server bermasalah. Kabari guru ya.',
+    pengumuman_kosong: 'Isi judul, lalu tulis isi atau pilih gambar.',
+    kelas_tidak_ada: 'Ada kelas yang tidak dikenal.',
+    tanggal_tidak_valid: 'Tanggal tidak valid.',
+    pengumuman_tidak_ada: 'Pengumuman tidak ditemukan.',
     file_terlalu_besar: 'File terlalu besar. Maksimal 5 MB.',
     tipe_file_tidak_didukung: 'Tipe file tidak didukung. Pakai JPG, PNG, WEBP, PDF, atau ZIP.',
     file_rusak: 'File tidak terbaca. Coba pilih ulang.',
@@ -362,7 +393,7 @@
     if (m.role === 'admin') { buildNav('admin'); show('vAdmin'); return goAdmin('pHome'); }
     $('sHello').textContent = greet() + ', ' + m.nama.split(' ')[0];
     $('sInfo').textContent = 'Kelas ' + m.kelas + (m.role === 'ketua' ? ' · Ketua kelas' : '');
-    buildNav(m.role === 'ketua' ? 'ketua' : 'siswa'); show('vSiswa'); goSiswa('sHome'); loadTugasSiswa();
+    buildNav(m.role === 'ketua' ? 'ketua' : 'siswa'); show('vSiswa'); goSiswa('sHome'); loadTugasSiswa(); loadPengumumanSiswa();
   }
 
   $('btnClaim').onclick = async () => {
@@ -551,11 +582,12 @@
     tugas: '<path d="M9 4h6v3H9z M7 5.5H5V21h14V5.5h-2 M8.5 14l2.5 2.5 4.5-5"/>',
     nilai: '<path d="M5 20V11 M12 20V4 M19 20v-6"/>',
     rapor: '<path d="M7 3h7l4 4v14H7z M14 3v4h4 M10 12h5 M10 16h5"/>',
+    info: '<path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/>',
     users: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6 M16 5.5a3 3 0 0 1 0 5.5 M18 14c2 .6 3.5 2.5 3.5 5"/>'
   };
   const ico = n => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
   const NAV = {
-    admin: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pNilai', 'Nilai', 'nilai'], ['pRapor', 'Rapor', 'rapor'], ['pSiswa', 'Siswa', 'users']],
+    admin: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pNilai', 'Nilai', 'nilai'], ['pRapor', 'Rapor', 'rapor'], ['pSiswa', 'Siswa', 'users'], ['pInfo', 'Info', 'info']],
     siswa: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai']],
     ketua: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['kBlock', 'Kelas', 'users']]
   };
@@ -625,7 +657,7 @@
     const perlu = r.tugas.filter(t => t.belumDinilai > 0).sort((a, b) => b.belumDinilai - a.belumDinilai);
     const totalPerlu = perlu.reduce((x, t) => x + t.belumDinilai, 0), pct = r.siswaTotal ? Math.round(r.siswaTerhubung / r.siswaTotal * 100) : 0;
     const stat = (n, l, go, hot) => `<button class="stat${hot ? ' hot' : ''}" data-go="${go}"><div class="n">${n}</div><div class="l">${l}</div></button>`;
-    const aksi = '<div class="bar"><button data-baru="1">+ Tugas baru</button><button class="ghost" data-go="pRapor">Rekap rapor</button></div>';
+    const aksi = '<div class="bar"><button data-baru="1">+ Tugas baru</button><button class="ghost" data-go="pRapor">Rekap rapor</button><button class="ghost" data-go="pInfo">Pengumuman</button></div>';
     if (!r.tugas.length) { $('aDash').innerHTML = aksi + '<div class="panel"><h2>Mulai dari tugas pertama</h2><p class="muted">Belum ada tugas. Buat satu, pilih mapel dan kelas tujuan, lalu siswa bisa langsung mengumpulkan.</p></div>'
       + `<div class="stats">${stat(`${r.siswaTerhubung}/${r.siswaTotal}`, `${pct}% akun siswa terhubung`, 'pSiswa')}</div>`; return; }
     const perluH = perlu.slice(0, 5).map(t => item(`${esc(t.mapel)} · ${esc(t.kelas.join(', '))}`, esc(t.judul), '', `<button class="small" data-open="${esc(t.id)}">Nilai (${t.belumDinilai})</button>`)).join('');
@@ -646,14 +678,102 @@
     if (b.dataset.baru) { $('fBaru').hidden = false; $('tJudul').focus(); }
   };
 
+  /* ---------------- Pengumuman ---------------- */
+  const imgCache = {};
+  const fmtTgl = iso => new Date(iso).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', year: 'numeric' });
+  function gambarUrl(id) {
+    if (!imgCache[id]) imgCache[id] = api('gambarPengumuman', { id }).then(r => r.dataUrl).catch(e => { delete imgCache[id]; throw e; });
+    return imgCache[id];
+  }
+  function isiGambar(root) { // gambar dimuat belakangan supaya teks langsung tampil
+    root.querySelectorAll('img[data-gid]').forEach(async im => {
+      try { im.src = await gambarUrl(im.dataset.gid); im.hidden = false; im.parentElement.classList.remove('load'); }
+      catch (e) { im.parentElement.remove(); }
+    });
+  }
+  const imgBox = p => p.adaGambar ? `<div class="imgbox load"><img data-gid="${esc(p.id)}" alt="${esc(p.judul)}" hidden></div>` : '';
+  document.addEventListener('click', e => {
+    const im = e.target.closest('img[data-gid]'); if (!im || !im.src) return;
+    $('dlgImgEl').src = im.src; $('dlgImgEl').alt = im.alt; $('dlgImg').showModal();
+  });
+  $('dlgImgClose').onclick = () => $('dlgImg').close();
+
+  const pengCard = p => `<article class="panel peng${p.sematkan ? ' pin' : ''}">${imgBox(p)}
+    <div class="row"><span class="tag">${p.sematkan ? 'Disematkan' : 'Pengumuman'}</span><span class="muted">${fmtTgl(p.dibuat)}</span></div>
+    <h3>${esc(p.judul)}</h3>${p.isi ? `<p class="isi">${esc(p.isi)}</p>` : ''}</article>`;
+
+  async function loadPengumumanSiswa() {
+    let r; try { r = await api('pengumumanSaya'); } catch (e) { return; } // pengumuman bukan fitur kritis: gagal diam-diam
+    const l = r.pengumuman;
+    $('sPeng').innerHTML = l.slice(0, 3).map(pengCard).join('')
+      + (l.length > 3 ? `<div id="pengLain" hidden>${l.slice(3).map(pengCard).join('')}</div><button class="ghost small" id="pengToggle">Lihat pengumuman lainnya (${l.length - 3})</button>` : '');
+    const t = $('pengToggle');
+    if (t) t.onclick = () => { const x = $('pengLain'); x.hidden = !x.hidden; t.textContent = x.hidden ? `Lihat pengumuman lainnya (${l.length - 3})` : 'Sembunyikan'; if (!x.hidden) isiGambar(x); };
+    isiGambar($('sPeng'));
+  }
+
+  // gambar dikecilkan di browser (maks 1280px, JPEG) supaya ringan untuk siswa dan hemat Drive
+  async function kecilkan(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('gambar_rusak')); i.src = url; });
+      const r = Math.min(1, 1280 / img.width, 1600 / img.height), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.width * r)); c.height = Math.max(1, Math.round(img.height * r));
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      let out = '';
+      for (const q of [0.82, 0.7, 0.55]) { out = c.toDataURL('image/jpeg', q); if (out.length < 1.9e6) break; }
+      return out;
+    } finally { URL.revokeObjectURL(url); }
+  }
+  let iData = null;
+  $('iGambar').onchange = async e => {
+    const f = e.target.files[0]; iData = null; $('iPrev').hidden = true; if (!f) return;
+    try { const u = await kecilkan(f); iData = u.split(',')[1]; $('iPrev').src = u; $('iPrev').hidden = false; }
+    catch (err) { e.target.value = ''; toast('Gambar tidak bisa dibaca. Coba file lain (JPG atau PNG).', true); }
+  };
+  $('iKelas').onchange = e => { // "Semua kelas" dan kelas tertentu saling meniadakan
+    const semua = $('iKelas').querySelector('[value=semua]');
+    if (e.target === semua) { if (semua.checked) $('iKelas').querySelectorAll('input:not([value=semua])').forEach(i => { i.checked = false; }); }
+    else if (e.target.checked) semua.checked = false;
+  };
+  $('btnInfoBaru').onclick = () => { $('fInfo').hidden = !$('fInfo').hidden; if (!$('fInfo').hidden) $('iJudul').focus(); };
+
+  const admCard = p => `<div class="panel peng${p.sematkan ? ' pin' : ''}">${imgBox(p)}
+    <div class="row"><span><span class="tag">${p.sematkan ? 'Disematkan' : 'Pengumuman'}</span>${p.sampai && new Date(p.sampai) < Date.now() ? ' <span class="tag">Berakhir</span>' : ''}</span><button class="ghost small" data-hapus="${esc(p.id)}">Hapus</button></div>
+    <h3>${esc(p.judul)}</h3>${p.isi ? `<p class="isi">${esc(p.isi)}</p>` : ''}
+    <p class="muted">${p.kelas.indexOf('semua') >= 0 ? 'Semua kelas' : esc(p.kelas.join(', '))} · dibuat ${fmtTgl(p.dibuat)} · ${p.sampai ? 'tampil sampai ' + fmtTgl(p.sampai) : 'tanpa batas waktu'}</p></div>`;
+
+  async function loadInfo() {
+    if (!$('iList').innerHTML) $('iList').innerHTML = '<p class="muted">Memuat…</p>';
+    let r; try { r = await api('listPengumuman'); } catch (e) { $('iList').innerHTML = ''; return msg('adminMsg', e.message); }
+    $('iKelas').innerHTML = '<label class="chk"><input type="checkbox" value="semua" checked> Semua kelas</label>'
+      + r.kelas.map(k => `<label class="chk"><input type="checkbox" value="${esc(k)}"> ${esc(k)}</label>`).join('');
+    $('iList').innerHTML = r.pengumuman.length ? r.pengumuman.map(admCard).join('') : '<p class="muted">Belum ada pengumuman. Klik "Pengumuman baru" untuk membuat yang pertama.</p>';
+    isiGambar($('iList'));
+  }
+  $('btnSimpanInfo').onclick = async () => {
+    const b = $('btnSimpanInfo'); b.disabled = true; b.textContent = iData ? 'Mengunggah…' : 'Menerbitkan…';
+    try {
+      await api('buatPengumuman', { judul: $('iJudul').value, isi: $('iIsi').value, sampai: $('iSampai').value, sematkan: $('iPin').checked,
+        kelas: [...document.querySelectorAll('#iKelas input:checked')].map(i => i.value), gambar: iData ? { data: iData } : null });
+      ['iJudul', 'iIsi', 'iSampai', 'iGambar'].forEach(i => { $(i).value = ''; }); $('iPin').checked = false; $('iPrev').hidden = true; iData = null; $('fInfo').hidden = true;
+      await loadInfo(); toast('Pengumuman diterbitkan.');
+    } catch (e) { msg('adminMsg', e.message); }
+    b.disabled = false; b.textContent = 'Terbitkan';
+  };
+  $('iList').onclick = async e => {
+    const id = e.target.dataset.hapus; if (!id || !confirm('Hapus pengumuman ini? Tidak bisa dibatalkan.')) return;
+    try { await api('hapusPengumuman', { id }); await loadInfo(); toast('Pengumuman dihapus.'); } catch (err) { msg('adminMsg', err.message); }
+  };
+
   /* ---------------- Admin ---------------- */
   function tab(id) {
-    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pRapor', 'pSiswa'].forEach(p => $(p).hidden = p !== id);
+    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pRapor', 'pSiswa', 'pInfo'].forEach(p => $(p).hidden = p !== id);
     setActive(id); msg('adminMsg'); window.scrollTo(0, 0);
   }
   function goAdmin(id) {
     tab(id);
-    ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pRapor: loadRaporOpsi, pSiswa: loadSiswa })[id]();
+    ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pRapor: loadRaporOpsi, pSiswa: loadSiswa, pInfo: loadInfo })[id]();
   }
 
   async function loadTugasAdmin() {
