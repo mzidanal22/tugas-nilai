@@ -353,6 +353,8 @@
     tugas_tanpa_kumpulan: 'Tugas ini tidak menerima pengumpulan. Nilainya diinput guru.',
     nilai_tidak_valid: 'Nilai harus angka 0-100.',
     belum_kumpul: 'Siswa ini belum mengumpulkan.',
+    server_sibuk: 'Server sedang ramai. Coba lagi beberapa detik lagi.',
+    cadangan_gagal: 'Cadangan gagal dibuat. Cek izin Drive lalu coba lagi.',
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
@@ -373,21 +375,27 @@
   function msg(id, text) { if ((id === 'adminMsg' || id === 'sMsg') && text) return toast(text, true); $(id).textContent = text || ''; }
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
-  async function api(action, data) {
-    let j;
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // hindari preflight CORS
-        body: JSON.stringify({ action, token, ...(data || {}) })
-      });
-      j = await res.json();
-    } catch (e) { throw new Error('Tidak bisa terhubung ke server. Cek internet lalu coba lagi.'); }
-    if (!j.ok) {
-      if (j.error === 'token_invalid') { logout('Sesi habis. Masuk lagi dengan Google.'); throw new Error(''); }
-      throw new Error(ERR[j.error] || ERR.server_error);
+  let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
+  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'rekapTugas', 'listSiswa']);
+  const tunggu = ms => new Promise(r => setTimeout(r, ms));
+  const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+  // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
+  // Permintaan yang aman diulang dikirim ulang otomatis (dengan jeda acak supaya tidak serentak lagi) sebelum menyerah.
+  async function api(action, data, opt) {
+    const body = JSON.stringify({ action, token, ...(data || {}) }), maks = ULANG.has(action) ? 3 : 0;
+    for (let i = 0; ; i++) {
+      let j = null;
+      try { j = await (await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body })).json(); } // text/plain: hindari preflight CORS
+      catch (e) { j = null; }
+      const sementara = !j || (!j.ok && (j.error === 'server_error' || j.error === 'server_sibuk'));
+      if (sementara && i < maks) { if (opt && opt.onRetry) opt.onRetry(i + 1, maks); await tunggu(jedaDasar * 2 ** i + Math.random() * jedaDasar); continue; }
+      if (!j) throw new Error('Tidak bisa terhubung ke server. Cek internet lalu coba lagi.');
+      if (!j.ok) {
+        if (j.error === 'token_invalid') { logout('Sesi habis. Masuk lagi dengan Google.'); throw new Error(''); }
+        throw new Error(ERR[j.error] || ERR.server_error);
+      }
+      return j;
     }
-    return j;
   }
 
   function logout(m) {
@@ -533,7 +541,8 @@
     btn.disabled = true; btn.textContent = fl ? 'Mengunggah… jangan tutup halaman' : 'Mengirim…';
     try {
       const file = fl ? { name: fl.name, data: await toB64(fl) } : null;
-      await api('kumpul', { id: t.id, link, catatan: c.querySelector('[data-f=catatan]').value, file });
+      await api('kumpul', { id: t.id, link, catatan: c.querySelector('[data-f=catatan]').value, file, rid: newRid() },
+        { onRetry: (n, m) => { btn.textContent = `Server sedang ramai, mencoba lagi (${n}/${m})…`; } });
       toast(sebelumnya ? 'Perubahan tersimpan.' : 'Berhasil dikumpulkan. Terima kasih!');
       await loadTugasSiswa(t.id);
     } catch (err) { if (err.message) fail(err.message); btn.disabled = false; btn.textContent = label; }
@@ -589,7 +598,7 @@
     if (!link) { $('dlgErr').textContent = 'Tempel linknya dulu.'; return; }
     if (!/^https?:\/\//i.test(link)) link = 'https://' + link;
     const nama = kRows.find(s => s.nis === dlgNis).nama; $('dlgOk').disabled = true; $('dlgErr').textContent = '';
-    try { await api('kumpul', { id: $('kTugas').value, nis: dlgNis, link }); $('dlgLink').close(); toast('Link ' + nama + ' berhasil dikumpulkan.'); await loadRekapKelas(); }
+    try { await api('kumpul', { id: $('kTugas').value, nis: dlgNis, link, rid: newRid() }); $('dlgLink').close(); toast('Link ' + nama + ' berhasil dikumpulkan.'); await loadRekapKelas(); }
     catch (err) { $('dlgErr').textContent = err.message; }
     $('dlgOk').disabled = false;
   };
@@ -664,12 +673,22 @@
       : '<div class="panel"><strong>Belum ada nilai.</strong><br><span class="muted">Nilai akan muncul di sini setelah guru menilai.</span></div>';
   }
 
+  const lalu = iso => rel(iso).replace(/^lewat (.*)$/, '$1 lalu');
+  function cadanganPanel(c) {
+    if (!c) return '';
+    const tua = !c.terakhir || Date.now() - new Date(c.terakhir) > 48 * 36e5;
+    const jadwal = c.terjadwal === true ? 'Otomatis setiap hari sekitar pukul 02.00 WIB.' : c.terjadwal === false ? 'Belum terjadwal otomatis. Jalankan pasangCadangan di Apps Script.' : '';
+    return `<div class="panel"><div class="row"><div class="grow"><h2 style="margin-bottom:4px">Cadangan data</h2>
+      <div class="${tua || c.galat ? 'due-soon' : 'muted'}">${c.terakhir ? 'Cadangan terakhir: ' + lalu(c.terakhir) + '.' : 'Belum ada cadangan.'}</div>
+      <div class="muted">${jadwal}</div>${c.galat ? `<div class="due-soon">Gagal terakhir: ${esc(c.galat)}</div>` : ''}</div>
+      <button class="ghost small" data-cadang="1">Cadangkan sekarang</button></div></div>`;
+  }
   async function loadDash() {
     $('aHello').textContent = greet() + '!';
     $('aDate').textContent = new Date().toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     if (!$('aDash').innerHTML) $('aDash').innerHTML = '<p class="muted">Memuat…</p>';
     let r;
-    try { r = await api('listTugas'); opsi = r; } catch (e) { $('aDash').innerHTML = ''; return msg('adminMsg', e.message); }
+    try { r = await api('listTugas', { cadangan: true }); opsi = r; } catch (e) { $('aDash').innerHTML = ''; return msg('adminMsg', e.message); }
     const now = Date.now();
     const aktif = r.tugas.filter(t => new Date(t.deadline) > now && t.bentuk !== 'nilai').sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     const perlu = r.tugas.filter(t => t.belumDinilai > 0).sort((a, b) => b.belumDinilai - a.belumDinilai);
@@ -687,9 +706,15 @@
       + `<div class="stats">${stat(totalPerlu, 'pengumpulan perlu dinilai', 'pTugas', totalPerlu > 0)}${stat(aktif.length, 'tugas aktif', 'pTugas')}${stat(`${r.siswaTerhubung}/${r.siswaTotal}`, `${pct}% akun siswa terhubung`, 'pSiswa')}${stat(r.tugas.length, 'total tugas', 'pTugas')}</div>`
       + `<div class="grid2"><div class="panel"><h2>Perlu dinilai</h2>${perluH || '<p class="muted">Semua pengumpulan sudah dinilai.</p>'}</div>`
       + `<div class="panel"><h2>Deadline terdekat</h2>${aktifH || '<p class="muted">Tidak ada tugas dengan deadline berjalan.</p>'}</div></div>`
-      + `<div class="panel"><h2>Akun terhubung per kelas</h2>${kelasH}</div>`;
+      + `<div class="panel"><h2>Akun terhubung per kelas</h2>${kelasH}</div>` + cadanganPanel(r.cadangan);
   }
-  $('aDash').onclick = e => {
+  $('aDash').onclick = async e => {
+    const cd = e.target.closest('[data-cadang]');
+    if (cd) {
+      cd.disabled = true; cd.textContent = 'Mencadangkan…';
+      try { await api('cadangSekarang'); toast('Cadangan dibuat.'); } catch (err) { msg('adminMsg', err.message); }
+      return loadDash();
+    }
     const b = e.target.closest('[data-go],[data-open],[data-baru]'); if (!b) return;
     if (b.dataset.open) return openRekap(b.dataset.open);
     goAdmin(b.dataset.go || 'pTugas');
