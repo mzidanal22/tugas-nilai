@@ -238,7 +238,7 @@
       <button class="ghost small" id="btnBack">← Kembali</button>
       <h2 id="rJudul" style="margin-top:12px"></h2>
       <p class="muted" id="rInfo"></p>
-      <div class="bar"><button class="ghost small" id="btnEdit">Edit tugas</button><button class="ghost small" id="btnHapus">Hapus tugas</button><button id="btnSimpanSemua" hidden>Simpan semua nilai</button></div>
+      <div class="bar"><button class="ghost small" id="btnEdit">Edit tugas</button><button class="ghost small" id="btnBagi">Bagikan ke WhatsApp</button><button class="ghost small" id="btnIngat">Ingatkan yang belum kumpul</button><button class="ghost small" id="btnHapus">Hapus tugas</button><button id="btnSimpanSemua" hidden>Simpan semua nilai</button></div>
       <div class="panel card" id="fEdit" hidden>
         <label for="eJudul">Judul</label><input id="eJudul" maxlength="150">
         <label for="eDesk">Deskripsi</label><textarea id="eDesk"></textarea>
@@ -299,6 +299,12 @@
   </section>
 </main>
 <div class="toast-wrap" id="toasts" role="status" aria-live="polite"></div>
+<dialog id="dlgShare">
+  <p id="shareTitle" style="font-weight:600;margin-top:0"></p>
+  <p class="muted" style="margin-top:0">Pratinjau pesan. Boleh diubah dulu sebelum dikirim.</p>
+  <textarea id="shareText" style="min-height:12rem"></textarea>
+  <div class="actions"><button class="ghost" id="shareClose" type="button">Nanti saja</button><button class="ghost" id="shareCopy" type="button">Salin</button><button id="shareWa" type="button">Buka WhatsApp</button></div>
+</dialog>
 <dialog id="dlgPeng" aria-labelledby="pengHead">
   <div class="dlg-head"><strong id="pengHead">Pengumuman</strong><button class="ghost small" id="pengX" type="button" aria-label="Tutup">✕</button></div>
   <div id="pengBody"></div>
@@ -317,8 +323,8 @@
 
 <script>
   // ISI dua nilai ini
-  const CLIENT_ID = '261058291495-k31m0bmb2b4tt8ggr11ifjbiurcui3c7.apps.googleusercontent.com';
-  const API_URL   = 'https://script.google.com/macros/s/AKfycbz9fOmcReztL1uTLXpw96LZaeYwfPF5yaIgXK4DjM1Qv4YmYFMKsHJh18SA-gOxwjAO/exec';
+  const CLIENT_ID = 'ISI_CLIENT_ID_DI_SINI.apps.googleusercontent.com';
+  const API_URL   = 'ISI_URL_WEB_APP_APPS_SCRIPT_DI_SINI';
 
   const ERR = {
     data_tidak_cocok: 'Nama atau NIS/kode tidak cocok dengan daftar, atau sudah dipakai akun lain. Cek lagi, atau hubungi guru.',
@@ -355,7 +361,7 @@
   const padTo = (a, n) => Array.from({ length: n }, (_, i) => a[i] ?? null);
   const fmt = iso => iso ? new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'medium', timeStyle: 'short' }) + ' WIB' : '';
   const safeUrl = u => /^https?:\/\/\S+$/i.test(u) ? u : '';
-  let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null, curTugas = null, nData = null;
+  let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null, curTugas = null, curRows = [], nData = null;
   try { token = sessionStorage.getItem('tok'); } catch (e) {}
 
   function show(id) { $('vLoad').hidden = true; ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); }
@@ -753,7 +759,7 @@
       return out;
     } finally { URL.revokeObjectURL(url); }
   }
-  let iData = null;
+  let iData = null, infoList = [];
   $('iGambar').onchange = async e => {
     const f = e.target.files[0]; iData = null; $('iPrev').hidden = true; if (!f) return;
     try { const u = await kecilkan(f); iData = u.split(',')[1]; $('iPrev').src = u; $('iPrev').hidden = false; }
@@ -767,13 +773,14 @@
   $('btnInfoBaru').onclick = () => { $('fInfo').hidden = !$('fInfo').hidden; if (!$('fInfo').hidden) $('iJudul').focus(); };
 
   const admCard = p => `<div class="panel peng${p.sematkan ? ' pin' : ''}">${imgBox(p)}
-    <div class="row"><span><span class="tag">${p.sematkan ? 'Disematkan' : 'Pengumuman'}</span>${p.sampai && new Date(p.sampai) < Date.now() ? ' <span class="tag">Berakhir</span>' : ''}</span><button class="ghost small" data-hapus="${esc(p.id)}">Hapus</button></div>
+    <div class="row"><span><span class="tag">${p.sematkan ? 'Disematkan' : 'Pengumuman'}</span>${p.sampai && new Date(p.sampai) < Date.now() ? ' <span class="tag">Berakhir</span>' : ''}</span><span><button class="ghost small" data-bagi="${esc(p.id)}">Bagikan</button> <button class="ghost small" data-hapus="${esc(p.id)}">Hapus</button></span></div>
     <h3>${esc(p.judul)}</h3>${p.isi ? `<p class="isi">${esc(p.isi)}</p>` : ''}
     <p class="muted">${p.kelas.indexOf('semua') >= 0 ? 'Semua kelas' : esc(p.kelas.join(', '))} · dibuat ${fmtTgl(p.dibuat)} · ${p.sampai ? 'tampil sampai ' + fmtTgl(p.sampai) : 'tanpa batas waktu'}</p></div>`;
 
   async function loadInfo() {
     if (!$('iList').innerHTML) $('iList').innerHTML = '<p class="muted">Memuat…</p>';
     let r; try { r = await api('listPengumuman'); } catch (e) { $('iList').innerHTML = ''; return msg('adminMsg', e.message); }
+    infoList = r.pengumuman;
     $('iKelas').innerHTML = '<label class="chk"><input type="checkbox" value="semua" checked> Semua kelas</label>'
       + r.kelas.map(k => `<label class="chk"><input type="checkbox" value="${esc(k)}"> ${esc(k)}</label>`).join('');
     $('iList').innerHTML = r.pengumuman.length ? r.pengumuman.map(admCard).join('') : '<p class="muted">Belum ada pengumuman. Klik "Pengumuman baru" untuk membuat yang pertama.</p>';
@@ -784,14 +791,38 @@
     try {
       await api('buatPengumuman', { judul: $('iJudul').value, isi: $('iIsi').value, sampai: $('iSampai').value, sematkan: $('iPin').checked,
         kelas: [...document.querySelectorAll('#iKelas input:checked')].map(i => i.value), gambar: iData ? { data: iData } : null });
+      const snapI = { judul: $('iJudul').value.trim(), isi: $('iIsi').value.trim() };
       ['iJudul', 'iIsi', 'iSampai', 'iGambar'].forEach(i => { $(i).value = ''; }); $('iPin').checked = false; $('iPrev').hidden = true; iData = null; $('fInfo').hidden = true;
-      await loadInfo(); toast('Pengumuman diterbitkan.');
+      await loadInfo(); toast('Pengumuman diterbitkan.'); bagikan('Pengumuman terbit. Bagikan ke WhatsApp?', pesanInfo(snapI));
     } catch (e) { msg('adminMsg', e.message); }
     b.disabled = false; b.textContent = 'Terbitkan';
   };
   $('iList').onclick = async e => {
+    if (e.target.dataset.bagi) { const p = infoList.find(x => x.id === e.target.dataset.bagi); if (p) bagikan('Bagikan pengumuman ke WhatsApp', pesanInfo(p)); return; }
     const id = e.target.dataset.hapus; if (!id || !confirm('Hapus pengumuman ini? Tidak bisa dibatalkan.')) return;
     try { await api('hapusPengumuman', { id }); await loadInfo(); toast('Pengumuman dihapus.'); } catch (err) { msg('adminMsg', err.message); }
+  };
+
+  /* ---------------- Bagikan ke WhatsApp ---------------- */
+  // Aplikasi tidak mengirim WhatsApp otomatis. Tombol ini menyiapkan teks lalu membuka WhatsApp, guru tinggal memilih grup dan mengirim.
+  const appUrl = () => location.origin + location.pathname;
+  const pesanTugas = t => `*Tugas baru: ${t.judul}*\n${t.mapel} · ${t.kelas.join(', ')}\nDeadline: ${fmt(t.deadline)}${t.deskripsi ? '\n\n' + t.deskripsi : ''}\n\nKumpulkan di: ${appUrl()}`;
+  const pesanInfo = p => `*Pengumuman: ${p.judul}*${p.isi ? '\n\n' + p.isi : '\n\n(Ada gambar, lihat di aplikasi)'}\n\nBuka aplikasi: ${appUrl()}`;
+  function pesanIngat(t, rows) {
+    const per = {}; rows.filter(s => !s.kumpul).forEach(s => (per[s.kelas] = per[s.kelas] || []).push(s.nama));
+    const kelas = Object.keys(per).sort();
+    if (!kelas.length) return null;
+    return `*Pengingat tugas: ${t.judul}*\nDeadline: ${fmt(t.deadline)}\n\nBelum mengumpulkan:\n` + kelas.map(k => `*${k}*\n` + per[k].map((n, i) => `${i + 1}. ${n}`).join('\n')).join('\n\n') + `\n\nKumpulkan di: ${appUrl()}`;
+  }
+  function bagikan(judul, teks) { $('shareTitle').textContent = judul; $('shareText').value = teks; $('dlgShare').showModal(); }
+  $('shareWa').onclick = () => window.open('https://wa.me/?text=' + encodeURIComponent($('shareText').value), '_blank', 'noopener');
+  $('shareCopy').onclick = async () => { await salin($('shareText').value); toast('Teks disalin.'); };
+  $('shareClose').onclick = () => $('dlgShare').close();
+  $('btnBagi').onclick = () => bagikan('Bagikan tugas ke WhatsApp', pesanTugas(curTugas));
+  $('btnIngat').onclick = () => {
+    const p = pesanIngat(curTugas, curRows);
+    if (!p) return toast('Semua siswa sudah mengumpulkan.');
+    bagikan('Ingatkan yang belum kumpul', p);
   };
 
   /* ---------------- Admin ---------------- */
@@ -832,8 +863,11 @@
     try {
       await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, jenis: $('tJenis').value, bentuk: $('tBentuk').value, deadline: $('tDl').value,
         kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) });
+      const snapT = { mapel: $('tMapel').value, judul: $('tJudul').value.trim(), deskripsi: $('tDesk').value.trim(), bentuk: $('tBentuk').value,
+        deadline: new Date($('tDl').value + ':00+07:00').toISOString(), kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) };
       $('tJudul').value = ''; $('tDesk').value = ''; $('tDl').value = ''; $('fBaru').hidden = true;
       await loadTugasAdmin(); toast('Tugas dibuat.');
+      if (snapT.bentuk !== 'nilai') bagikan('Tugas dibuat. Bagikan ke kelas?', pesanTugas(snapT)); // tugas yang dinilai langsung tidak perlu diumumkan ke siswa
     } catch (e) { msg('adminMsg', e.message); }
     b.disabled = false;
   };
@@ -848,7 +882,7 @@
       const sudah = r.rows.filter(x => x.kumpul).length;
       $('rJudul').textContent = r.tugas.mapel + ': ' + r.tugas.judul;
       const modeNilai = r.tugas.bentuk === 'nilai';
-      $('btnSimpanSemua').hidden = !modeNilai;
+      $('btnSimpanSemua').hidden = !modeNilai; $('btnBagi').hidden = modeNilai; $('btnIngat').hidden = modeNilai; curRows = r.rows;
       $('rHead').innerHTML = modeNilai ? '<tr><th>Nama</th><th>Nilai (0-100)</th></tr>'
         : '<tr><th>Nama</th><th>Status</th><th>Link</th><th>Nilai</th><th>Catatan guru</th><th></th></tr>';
       $('rInfo').textContent = modeNilai ? `${esc0(r.tugas.jenis)} · ${sudah} dari ${r.rows.length} sudah ada nilai. Kosongkan kolom yang belum mau diisi.`
