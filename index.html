@@ -129,6 +129,14 @@
   .imgbox.load { min-height: 140px; }
   .imgbox img { display: block; width: 100%; max-height: 380px; object-fit: contain; cursor: zoom-in; }
   .chk-row { margin-bottom: 14px; }
+  .bell { position: relative; padding: 6px 9px; min-height: 36px; }
+  .dot { position: absolute; top: -5px; right: -5px; background: #B3261E; color: #fff; border-radius: 99px; font-size: .7rem; min-width: 18px; height: 18px; line-height: 18px; text-align: center; font-weight: 700; }
+  #dlgPeng { padding: 0; max-width: 32rem; }
+  .dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  #pengBody { padding: 16px; max-height: 62vh; overflow-y: auto; }
+  #pengBody .panel { max-width: none; }
+  #pengBody .panel:last-child { margin-bottom: 0; }
+  #dlgPeng .actions { padding: 12px 16px; border-top: 1px solid var(--line); }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
@@ -137,7 +145,7 @@
 <body>
 <header>
   <span class="brand">Tugas &amp; Nilai</span>
-  <div id="who" class="who" hidden><span class="avatar" id="avatar" aria-hidden="true"></span><span id="whoName" class="muted"></span> <button class="ghost small" id="btnOut">Keluar</button></div>
+  <div id="who" class="who" hidden><button class="ghost small bell" id="btnBell" hidden aria-label="Pengumuman"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/></svg><span class="dot" id="bellN" hidden></span></button><span class="avatar" id="avatar" aria-hidden="true"></span><span id="whoName" class="muted"></span> <button class="ghost small" id="btnOut">Keluar</button></div>
 </header>
 <nav class="navbar" id="navbar" hidden aria-label="Menu utama"><div class="nav" id="nav"></div></nav>
 
@@ -171,7 +179,6 @@
     <div id="sHome">
       <h1 id="sHello" style="margin-bottom:4px"></h1>
       <p class="muted" id="sInfo"></p>
-      <div id="sPeng"></div>
       <div id="sDash"></div>
     </div>
     <div id="sTugas" hidden><h1>Tugas</h1><div id="sList"></div></div>
@@ -292,6 +299,11 @@
   </section>
 </main>
 <div class="toast-wrap" id="toasts" role="status" aria-live="polite"></div>
+<dialog id="dlgPeng" aria-labelledby="pengHead">
+  <div class="dlg-head"><strong id="pengHead">Pengumuman</strong><button class="ghost small" id="pengX" type="button" aria-label="Tutup">✕</button></div>
+  <div id="pengBody"></div>
+  <div class="actions"><button id="pengOk" type="button">Oke, mengerti</button></div>
+</dialog>
 <dialog id="dlgImg" style="max-width:min(96vw,60rem);padding:10px">
   <img id="dlgImgEl" alt="" style="display:block;max-width:100%;max-height:82vh;margin:0 auto">
   <div class="actions" style="margin-top:10px"><button class="ghost" id="dlgImgClose" type="button">Tutup</button></div>
@@ -376,7 +388,7 @@
     token = null; me = null;
     try { sessionStorage.removeItem('tok'); } catch (e) {}
     if (window.google && google.accounts) google.accounts.id.disableAutoSelect();
-    $('who').hidden = true; $('navbar').hidden = true; msg('loginMsg', m); show('vLogin');
+    $('who').hidden = true; $('btnBell').hidden = true; $('navbar').hidden = true; msg('loginMsg', m); show('vLogin');
   }
 
   async function boot() {
@@ -386,7 +398,7 @@
   }
 
   function render(m) {
-    me = m; $('who').hidden = false;
+    me = m; $('who').hidden = false; $('btnBell').hidden = true;
     $('whoName').textContent = m.role === 'belum_terdaftar' ? m.email : m.nama;
     $('avatar').textContent = String(m.nama || m.email || '?').trim().charAt(0).toUpperCase();
     if (m.role === 'belum_terdaftar') { $('navbar').hidden = true; $('cEmail').textContent = m.email; return show('vClaim'); }
@@ -702,14 +714,30 @@
     <div class="row"><span class="tag">${p.sematkan ? 'Disematkan' : 'Pengumuman'}</span><span class="muted">${fmtTgl(p.dibuat)}</span></div>
     <h3>${esc(p.judul)}</h3>${p.isi ? `<p class="isi">${esc(p.isi)}</p>` : ''}</article>`;
 
+  // Pengumuman tampil sebagai popup saat siswa membuka aplikasi. Yang sudah ditutup tidak muncul lagi,
+  // tapi tetap bisa dibuka ulang lewat ikon lonceng di header.
+  let pengList = [], pengSeen = new Set(), pengTampil = [];
+  const seenKey = () => 'peng_seen_' + (me ? me.nis : '');
+  function muatSeen() { try { pengSeen = new Set(JSON.parse(localStorage.getItem(seenKey()) || '[]')); } catch (e) { pengSeen = new Set(); } }
+  function simpanSeen() { try { localStorage.setItem(seenKey(), JSON.stringify([...pengSeen].filter(id => pengList.some(p => p.id === id)))); } catch (e) {} }
+  function updBell() {
+    const baru = pengList.filter(p => !pengSeen.has(p.id)).length;
+    $('btnBell').hidden = !pengList.length; $('bellN').hidden = !baru; $('bellN').textContent = baru;
+  }
+  function bukaPeng(semua) {
+    pengTampil = semua ? pengList : pengList.filter(p => !pengSeen.has(p.id));
+    if (!pengTampil.length) return;
+    $('pengBody').innerHTML = pengTampil.map(pengCard).join('');
+    $('pengHead').textContent = pengTampil.length > 1 ? `Pengumuman (${pengTampil.length})` : 'Pengumuman';
+    $('dlgPeng').showModal(); $('pengBody').scrollTop = 0; isiGambar($('pengBody')); $('pengOk').focus();
+  }
+  $('dlgPeng').addEventListener('close', () => { pengTampil.forEach(p => pengSeen.add(p.id)); simpanSeen(); updBell(); }); // berlaku untuk X, tombol Oke, Esc, dan klik di luar
+  $('pengX').onclick = $('pengOk').onclick = () => $('dlgPeng').close();
+  $('dlgPeng').addEventListener('click', e => { if (e.target === $('dlgPeng')) $('dlgPeng').close(); });
+  $('btnBell').onclick = () => bukaPeng(true);
   async function loadPengumumanSiswa() {
     let r; try { r = await api('pengumumanSaya'); } catch (e) { return; } // pengumuman bukan fitur kritis: gagal diam-diam
-    const l = r.pengumuman;
-    $('sPeng').innerHTML = l.slice(0, 3).map(pengCard).join('')
-      + (l.length > 3 ? `<div id="pengLain" hidden>${l.slice(3).map(pengCard).join('')}</div><button class="ghost small" id="pengToggle">Lihat pengumuman lainnya (${l.length - 3})</button>` : '');
-    const t = $('pengToggle');
-    if (t) t.onclick = () => { const x = $('pengLain'); x.hidden = !x.hidden; t.textContent = x.hidden ? `Lihat pengumuman lainnya (${l.length - 3})` : 'Sembunyikan'; if (!x.hidden) isiGambar(x); };
-    isiGambar($('sPeng'));
+    pengList = r.pengumuman; muatSeen(); updBell(); bukaPeng(false);
   }
 
   // gambar dikecilkan di browser (maks 1280px, JPEG) supaya ringan untuk siswa dan hemat Drive
