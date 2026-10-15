@@ -137,12 +137,24 @@
   #pengBody .panel { max-width: none; }
   #pengBody .panel:last-child { margin-bottom: 0; }
   #dlgPeng .actions { padding: 12px 16px; border-top: 1px solid var(--line); }
+  .seg { display: flex; gap: 6px; margin: 4px 0 14px; }
+  .seg button.on { background: var(--panel); font-weight: 700; }
+  .sk { display: block; border-radius: 6px; background: linear-gradient(90deg, var(--line) 0%, color-mix(in srgb, var(--line) 35%, var(--panel)) 50%, var(--line) 100%); background-size: 200% 100%; }
+  @media (prefers-reduced-motion: no-preference) { .sk { animation: shimmer 1.4s linear infinite; } }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #topbar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 60; overflow: hidden; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #topbar.on { opacity: 1; }
+  #topbar i { display: block; width: 40%; height: 100%; background: var(--accent); }
+  @media (prefers-reduced-motion: no-preference) { #topbar.on i { animation: geser 1s ease-in-out infinite; } }
+  @keyframes geser { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
 </style>
 </head>
 <body>
+<div id="topbar" aria-hidden="true"><i></i></div>
 <header>
   <span class="brand">Tugas &amp; Nilai</span>
   <div id="who" class="who" hidden><button class="ghost small bell" id="btnBell" hidden aria-label="Pengumuman"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/></svg><span class="dot" id="bellN" hidden></span></button><span class="avatar" id="avatar" aria-hidden="true"></span><span id="whoName" class="muted"></span> <button class="ghost small" id="btnOut">Keluar</button></div>
@@ -150,7 +162,12 @@
 <nav class="navbar" id="navbar" hidden aria-label="Menu utama"><div class="nav" id="nav"></div></nav>
 
 <main>
-  <p class="muted" id="vLoad">Memuat…</p>
+  <div id="vLoad" role="status" aria-busy="true">
+    <span class="sr">Memuat…</span>
+    <div class="sk" style="width:55%;height:34px;margin:4px 0 10px"></div><div class="sk" style="width:35%;height:14px;margin-bottom:22px"></div>
+    <div class="stats"><div class="panel" style="margin:0"><div class="sk" style="width:45%;height:32px;"></div><div class="sk" style="width:80%;height:12px;margin-top:12px"></div></div><div class="panel" style="margin:0"><div class="sk" style="width:45%;height:32px;"></div><div class="sk" style="width:80%;height:12px;margin-top:12px"></div></div><div class="panel" style="margin:0"><div class="sk" style="width:45%;height:32px;"></div><div class="sk" style="width:80%;height:12px;margin-top:12px"></div></div></div>
+    <div class="panel"><div class="sk" style="width:38%;height:18px;margin-bottom:6px"></div><div class="item"><div class="grow"><div class="sk" style="width:30%;height:11px;"></div><div class="sk" style="width:62%;height:15px;margin-top:8px"></div></div><div class="sk" style="width:4.5rem;height:32px;border-radius:8px"></div></div><div class="item"><div class="grow"><div class="sk" style="width:30%;height:11px;"></div><div class="sk" style="width:62%;height:15px;margin-top:8px"></div></div><div class="sk" style="width:4.5rem;height:32px;border-radius:8px"></div></div><div class="item"><div class="grow"><div class="sk" style="width:30%;height:11px;"></div><div class="sk" style="width:62%;height:15px;margin-top:8px"></div></div><div class="sk" style="width:4.5rem;height:32px;border-radius:8px"></div></div></div>
+  </div>
 
   <section id="vLogin" hidden>
     <h1>Masuk untuk lihat tugas dan nilaimu</h1>
@@ -256,31 +273,33 @@
     </div>
 
     <div id="pNilai" hidden>
-      <h1>Rekap nilai</h1>
+      <h1>Nilai</h1>
       <div class="bar">
         <label for="nMapel" style="margin:0">Mapel</label><select id="nMapel"></select>
         <label for="nKelas" style="margin:0">Kelas</label><select id="nKelas"></select>
-        <button class="ghost small" id="btnCsv">Unduh CSV</button>
       </div>
-      <p class="muted">Angka = nilai · … = sudah kumpul, belum dinilai · – = belum kumpul. Rata-rata hanya dari tugas yang sudah dinilai.</p>
-      <div class="tablewrap"><table class="matrix"><thead id="nHead"></thead><tbody id="nBody"></tbody></table></div>
-    </div>
+      <div class="seg" role="group" aria-label="Tampilan nilai">
+        <button class="ghost small on" data-mode="semua">Semua tugas</button>
+        <button class="ghost small" data-mode="rapor">Format rapor</button>
+      </div>
 
-    <div id="pRapor" hidden>
-      <h1>Rekap rapor</h1>
-      <div class="bar">
-        <label for="rpMapel" style="margin:0">Mapel</label><select id="rpMapel"></select>
-        <label for="rpKelas" style="margin:0">Kelas</label><select id="rpKelas"></select>
+      <div id="nvSemua">
+        <p class="muted">Angka = nilai · … = sudah kumpul, belum dinilai · – = belum kumpul. Rata-rata hanya dari tugas yang sudah dinilai.</p>
+        <div class="bar"><button class="ghost small" id="btnCsv">Unduh CSV</button></div>
+        <div class="tablewrap"><table class="matrix"><thead id="nHead"></thead><tbody id="nBody"></tbody></table></div>
       </div>
-      <p class="muted" id="rpInfo"></p>
-      <div class="bar">
-        <button class="small" data-salin="nama">Salin nama</button>
-        <button class="small" data-salin="sumatif">Salin Sumatif</button>
-        <button class="small" data-salin="penugasan">Salin Penugasan</button>
-        <button class="small" data-salin="stssas">Salin STS &amp; SAS</button>
+
+      <div id="nvRapor" hidden>
+        <p class="muted" id="rpInfo"></p>
+        <div class="bar">
+          <button class="small" data-salin="nama">Salin nama</button>
+          <button class="small" data-salin="sumatif">Salin Sumatif</button>
+          <button class="small" data-salin="penugasan">Salin Penugasan</button>
+          <button class="small" data-salin="stssas">Salin STS &amp; SAS</button>
+        </div>
+        <div class="muted" id="rpWarn" style="margin-bottom:12px"></div>
+        <div class="tablewrap"><table class="matrix"><thead id="rpHead"></thead><tbody id="rpBody"></tbody></table></div>
       </div>
-      <div class="muted" id="rpWarn" style="margin-bottom:12px"></div>
-      <div class="tablewrap"><table class="matrix"><thead id="rpHead"></thead><tbody id="rpBody"></tbody></table></div>
     </div>
 
     <div id="pSiswa" hidden>
@@ -358,6 +377,14 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
+  /* kerangka loading: bentuknya meniru halaman asli supaya terasa cepat dan tidak melompat saat data tiba */
+  const sk = (w, h, ex) => `<div class="sk" style="width:${w};height:${h || 14}px;${ex || ''}"></div>`;
+  const skBerisi = html => `<div role="status" aria-busy="true"><span class="sr">Memuat…</span>${html}</div>`;
+  const skStats = n => `<div class="stats">${Array.from({ length: n }, () => `<div class="panel" style="margin:0">${sk('45%', 32)}${sk('80%', 12, 'margin-top:12px')}</div>`).join('')}</div>`;
+  const skPanel = n => `<div class="panel">${sk('38%', 18, 'margin-bottom:6px')}${Array.from({ length: n }, () => `<div class="item"><div class="grow">${sk('30%', 11)}${sk('62%', 15, 'margin-top:8px')}</div>${sk('4.5rem', 32, 'border-radius:8px')}</div>`).join('')}</div>`;
+  const skKartu = n => Array.from({ length: n }, () => `<div class="panel card">${sk('28%', 11)}${sk('55%', 20, 'margin-top:10px')}${sk('40%', 12, 'margin-top:12px')}${sk('100%', 44, 'margin-top:16px;border-radius:8px')}</div>`).join('');
+  const skBaris = (n, kolom) => Array.from({ length: n }, () => `<tr>${Array.from({ length: kolom }, (_, i) => `<td>${sk(i ? '60%' : '85%', 14)}</td>`).join('')}</tr>`).join('');
+  const galat = (pesan, retry) => `<div class="panel"><strong>Belum bisa memuat data.</strong><p class="muted">${esc(pesan)}</p><button data-retry="${retry}">Coba lagi</button></div>`;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const esc0 = j => ({ sumatif: 'Sumatif', penugasan: 'Penugasan', sts: 'STS', sas: 'SAS' }[j] || j);
   const padTo = (a, n) => Array.from({ length: n }, (_, i) => a[i] ?? null);
@@ -381,7 +408,7 @@
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
   // Permintaan yang aman diulang dikirim ulang otomatis (dengan jeda acak supaya tidak serentak lagi) sebelum menyerah.
-  async function api(action, data, opt) {
+  async function apiInti(action, data, opt) {
     const body = JSON.stringify({ action, token, ...(data || {}) }), maks = ULANG.has(action) ? 3 : 0;
     for (let i = 0; ; i++) {
       let j = null;
@@ -396,6 +423,12 @@
       }
       return j;
     }
+  }
+  let sibuk = 0; // jumlah permintaan yang sedang berjalan
+  async function api(action, data, opt) {
+    if (++sibuk === 1) $('topbar').classList.add('on');
+    try { return await apiInti(action, data, opt); }
+    finally { if (--sibuk === 0) $('topbar').classList.remove('on'); }
   }
 
   function logout(m) {
@@ -498,8 +531,12 @@
   }
 
   async function loadTugasSiswa(highlight) {
-    if (!tugasSiswa.length) $('sList').innerHTML = '<p class="muted">Memuat tugas…</p>';
-    try { tugasSiswa = (await api('tugasSaya')).tugas; } catch (e) { $('sList').innerHTML = ''; return msg('sMsg', e.message); }
+    if (!tugasSiswa.length) {
+      $('sList').innerHTML = skBerisi(skKartu(2));
+      $('sDash').innerHTML = skBerisi(skStats(3) + `<div class="grid2">${skPanel(3)}${skPanel(2)}</div>` + skPanel(2));
+      $('sNilaiBody').innerHTML = skBerisi(skPanel(3));
+    }
+    try { tugasSiswa = (await api('tugasSaya')).tugas; } catch (e) { $('sList').innerHTML = ''; $('sNilaiBody').innerHTML = ''; $('sDash').innerHTML = galat(e.message, 'siswa'); return; }
     drawTugasSiswa(); drawDashSiswa(); drawNilaiSiswa();
     if (highlight) {
       const el = $('sList').querySelector(`[data-id="${CSS.escape(highlight)}"]`);
@@ -562,6 +599,7 @@
   /* ketua kelas */
   async function loadRekapKelas() {
     if (!$('kTugas').value) { $('kBody').innerHTML = ''; $('kInfo').textContent = ''; return; }
+    if (!$('kBody').innerHTML) $('kBody').innerHTML = skBaris(6, 3);
     try {
       const r = await api('rekapKelas', { id: $('kTugas').value });
       const tg = tugasSiswa.find(t => t.id === $('kTugas').value), nilaiType = tg && tg.bentuk === 'nilai';
@@ -614,7 +652,7 @@
   };
   const ico = n => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
   const NAV = {
-    admin: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pNilai', 'Nilai', 'nilai'], ['pRapor', 'Rapor', 'rapor'], ['pSiswa', 'Siswa', 'users'], ['pInfo', 'Info', 'info']],
+    admin: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pNilai', 'Nilai', 'nilai'], ['pSiswa', 'Siswa', 'users'], ['pInfo', 'Info', 'info']],
     siswa: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai']],
     ketua: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['kBlock', 'Kelas', 'users']]
   };
@@ -634,7 +672,10 @@
     setActive(id); window.scrollTo(0, 0);
     if (sorot) { const el = $('sList').querySelector(`[data-id="${CSS.escape(sorot)}"]`); if (el) { el.scrollIntoView({ block: 'start' }); el.classList.add('flash'); } }
   }
-  $('sDash').onclick = e => { const b = e.target.closest('[data-go]'); if (b) goSiswa(b.dataset.go, b.dataset.sorot); };
+  $('sDash').onclick = e => {
+    if (e.target.dataset.retry) { tugasSiswa = []; return loadTugasSiswa(); }
+    const b = e.target.closest('[data-go]'); if (b) goSiswa(b.dataset.go, b.dataset.sorot);
+  };
 
   function drawDashSiswa() {
     if (!tugasSiswa.length) { $('sDash').innerHTML = '<div class="panel"><strong>Belum ada tugas.</strong><br><span class="muted">Tugas dari guru akan muncul di sini.</span></div>'; return; }
@@ -686,15 +727,15 @@
   async function loadDash() {
     $('aHello').textContent = greet() + '!';
     $('aDate').textContent = new Date().toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    if (!$('aDash').innerHTML) $('aDash').innerHTML = '<p class="muted">Memuat…</p>';
+    if (!$('aDash').innerHTML) $('aDash').innerHTML = skBerisi(skStats(4) + `<div class="grid2">${skPanel(3)}${skPanel(3)}</div>` + skPanel(3));
     let r;
-    try { r = await api('listTugas', { cadangan: true }); opsi = r; } catch (e) { $('aDash').innerHTML = ''; return msg('adminMsg', e.message); }
+    try { r = await api('listTugas', { cadangan: true }); opsi = r; } catch (e) { $('aDash').innerHTML = galat(e.message, 'dash'); return; }
     const now = Date.now();
     const aktif = r.tugas.filter(t => new Date(t.deadline) > now && t.bentuk !== 'nilai').sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     const perlu = r.tugas.filter(t => t.belumDinilai > 0).sort((a, b) => b.belumDinilai - a.belumDinilai);
     const totalPerlu = perlu.reduce((x, t) => x + t.belumDinilai, 0), pct = r.siswaTotal ? Math.round(r.siswaTerhubung / r.siswaTotal * 100) : 0;
     const stat = (n, l, go, hot) => `<button class="stat${hot ? ' hot' : ''}" data-go="${go}"><div class="n">${n}</div><div class="l">${l}</div></button>`;
-    const aksi = '<div class="bar"><button data-baru="1">+ Tugas baru</button><button class="ghost" data-go="pRapor">Rekap rapor</button><button class="ghost" data-go="pInfo">Pengumuman</button></div>';
+    const aksi = '<div class="bar"><button data-baru="1">+ Tugas baru</button><button class="ghost" data-go="pNilai" data-mode="rapor">Rekap rapor</button><button class="ghost" data-go="pInfo">Pengumuman</button></div>';
     if (!r.tugas.length) { $('aDash').innerHTML = aksi + '<div class="panel"><h2>Mulai dari tugas pertama</h2><p class="muted">Belum ada tugas. Buat satu, pilih mapel dan kelas tujuan, lalu siswa bisa langsung mengumpulkan.</p></div>'
       + `<div class="stats">${stat(`${r.siswaTerhubung}/${r.siswaTotal}`, `${pct}% akun siswa terhubung`, 'pSiswa')}</div>`; return; }
     const perluH = perlu.slice(0, 5).map(t => item(`${esc(t.mapel)} · ${esc(t.kelas.join(', '))}`, esc(t.judul), '', `<button class="small" data-open="${esc(t.id)}">Nilai (${t.belumDinilai})</button>`)).join('');
@@ -709,6 +750,7 @@
       + `<div class="panel"><h2>Akun terhubung per kelas</h2>${kelasH}</div>` + cadanganPanel(r.cadangan);
   }
   $('aDash').onclick = async e => {
+    if (e.target.dataset.retry) { $('aDash').innerHTML = ''; return loadDash(); }
     const cd = e.target.closest('[data-cadang]');
     if (cd) {
       cd.disabled = true; cd.textContent = 'Mencadangkan…';
@@ -717,6 +759,7 @@
     }
     const b = e.target.closest('[data-go],[data-open],[data-baru]'); if (!b) return;
     if (b.dataset.open) return openRekap(b.dataset.open);
+    if (b.dataset.mode) nMode = b.dataset.mode;
     goAdmin(b.dataset.go || 'pTugas');
     if (b.dataset.baru) { $('fBaru').hidden = false; $('tJudul').focus(); }
   };
@@ -768,7 +811,7 @@
   $('btnBell').onclick = () => bukaPeng(true);
   async function loadPengumumanSiswa() {
     let r; try { r = await api('pengumumanSaya'); } catch (e) { return; } // pengumuman bukan fitur kritis: gagal diam-diam
-    pengList = r.pengumuman; muatSeen(); updBell(); bukaPeng(false);
+    pengList = r.pengumuman || []; muatSeen(); updBell(); bukaPeng(false);
   }
 
   // gambar dikecilkan di browser (maks 1280px, JPEG) supaya ringan untuk siswa dan hemat Drive
@@ -803,7 +846,7 @@
     <p class="muted">${p.kelas.indexOf('semua') >= 0 ? 'Semua kelas' : esc(p.kelas.join(', '))} · dibuat ${fmtTgl(p.dibuat)} · ${p.sampai ? 'tampil sampai ' + fmtTgl(p.sampai) : 'tanpa batas waktu'}</p></div>`;
 
   async function loadInfo() {
-    if (!$('iList').innerHTML) $('iList').innerHTML = '<p class="muted">Memuat…</p>';
+    if (!$('iList').innerHTML) $('iList').innerHTML = skBerisi(skKartu(2));
     let r; try { r = await api('listPengumuman'); } catch (e) { $('iList').innerHTML = ''; return msg('adminMsg', e.message); }
     infoList = r.pengumuman;
     $('iKelas').innerHTML = '<label class="chk"><input type="checkbox" value="semua" checked> Semua kelas</label>'
@@ -852,16 +895,16 @@
 
   /* ---------------- Admin ---------------- */
   function tab(id) {
-    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pRapor', 'pSiswa', 'pInfo'].forEach(p => $(p).hidden = p !== id);
+    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo'].forEach(p => $(p).hidden = p !== id);
     setActive(id); msg('adminMsg'); window.scrollTo(0, 0);
   }
   function goAdmin(id) {
     tab(id);
-    ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pRapor: loadRaporOpsi, pSiswa: loadSiswa, pInfo: loadInfo })[id]();
+    ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pSiswa: loadSiswa, pInfo: loadInfo })[id]();
   }
 
   async function loadTugasAdmin() {
-    if (!$('tList').innerHTML) $('tList').innerHTML = '<p class="muted">Memuat…</p>';
+    if (!$('tList').innerHTML) $('tList').innerHTML = skBerisi(skKartu(3));
     try {
       const r = await api('listTugas'); opsi = r;
       $('tMapel').innerHTML = r.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
@@ -901,6 +944,10 @@
 
   async function openRekap(id) {
     rekapId = id; msg('adminMsg');
+    if ($('pRekap').hidden) { // dari daftar tugas: langsung pindah halaman dan tampilkan kerangka
+      tab('pRekap'); $('rJudul').textContent = ''; $('rInfo').textContent = ''; $('btnSimpanSemua').hidden = true;
+      $('rHead').innerHTML = '<tr><th>Nama</th><th></th></tr>'; $('rBody').innerHTML = skBaris(6, 2);
+    }
     try {
       const r = await api('rekapTugas', { id });
       curTugas = r.tugas; $('fEdit').hidden = true;
@@ -927,7 +974,7 @@
           <td>${s.kumpul ? `<button class="small" data-act="nilai">Simpan</button>` : ''}${s.kunci ? ` <button class="ghost small" data-act="buka">Buka kunci</button>` : ''}</td></tr>`;
       }).join('');
       tab('pRekap');
-    } catch (e) { msg('adminMsg', e.message); }
+    } catch (e) { msg('adminMsg', e.message); if ($('rBody').querySelector('.sk')) { tab('pTugas'); loadTugasAdmin(); } }
   }
   $('rBody').onclick = async e => {
     const act = e.target.dataset.act; if (!act) return;
@@ -983,7 +1030,7 @@
     const cur = $('nMapel').value;
     $('nMapel').innerHTML = opsi.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
     if (cur) $('nMapel').value = cur;
-    fillNKelas(); loadNilai();
+    fillNKelas(); syncNMode(); muatNilaiAktif();
   }
   function fillNKelas() {
     const m = opsi.mapel.find(x => x.nama === $('nMapel').value), cur = $('nKelas').value;
@@ -992,14 +1039,23 @@
   }
   async function loadNilai() {
     if (!$('nMapel').value || !$('nKelas').value) return;
-    try { nData = await api('rekapNilai', { mapel: $('nMapel').value, kelas: $('nKelas').value }); } catch (e) { return msg('adminMsg', e.message); }
+    $('nHead').innerHTML = '<tr><th>Nama</th><th></th></tr>'; $('nBody').innerHTML = skBaris(6, 2);
+    try { nData = await api('rekapNilai', { mapel: $('nMapel').value, kelas: $('nKelas').value }); } catch (e) { $('nBody').innerHTML = ''; return msg('adminMsg', e.message); }
     const cell = c => c === null ? '<span class="muted">–</span>' : c === 'k' ? '<span class="muted">…</span>' : esc(c);
     $('nHead').innerHTML = '<tr><th>Nama</th>' + nData.tugas.map(t => `<th title="${esc(t.judul)}">${esc(t.judul)}</th>`).join('') + '<th>Rata-rata</th></tr>';
     $('nBody').innerHTML = nData.rows.map(s => `<tr><td>${esc(s.nama)}</td>${s.cells.map(c => `<td>${cell(c)}</td>`).join('')}<td><strong>${s.rata ?? ''}</strong></td></tr>`).join('')
       || '<tr><td>Belum ada siswa.</td></tr>';
   }
-  $('nMapel').onchange = () => { fillNKelas(); loadNilai(); };
-  $('nKelas').onchange = loadNilai;
+  // satu pilihan mapel dan kelas dipakai oleh kedua tampilan; hanya tampilan yang aktif yang dimuat
+  let nMode = 'semua';
+  const muatNilaiAktif = () => (nMode === 'rapor' ? loadRapor() : loadNilai());
+  function syncNMode() {
+    $('nvSemua').hidden = nMode !== 'semua'; $('nvRapor').hidden = nMode !== 'rapor';
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === nMode));
+  }
+  document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { nMode = b.dataset.mode; syncNMode(); muatNilaiAktif(); });
+  $('nMapel').onchange = () => { fillNKelas(); muatNilaiAktif(); };
+  $('nKelas').onchange = muatNilaiAktif;
   $('btnCsv').onclick = () => {
     if (!nData) return;
     const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
@@ -1025,21 +1081,10 @@
 
   /* rekap rapor: blok siap-tempel ke template */
   let rpData = null;
-  async function loadRaporOpsi() {
-    try { if (!opsi.mapel.length) opsi = await api('listTugas'); } catch (e) { return msg('adminMsg', e.message); }
-    const cur = $('rpMapel').value;
-    $('rpMapel').innerHTML = opsi.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
-    if (cur) $('rpMapel').value = cur;
-    fillRpKelas(); loadRapor();
-  }
-  function fillRpKelas() {
-    const m = opsi.mapel.find(x => x.nama === $('rpMapel').value), cur = $('rpKelas').value;
-    $('rpKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat).map(k => `<option>${esc(k.nama)}</option>`).join('');
-    if ([...$('rpKelas').options].some(o => o.value === cur)) $('rpKelas').value = cur;
-  }
   async function loadRapor() {
-    if (!$('rpMapel').value || !$('rpKelas').value) return;
-    try { rpData = await api('rekapRapor', { mapel: $('rpMapel').value, kelas: $('rpKelas').value }); } catch (e) { return msg('adminMsg', e.message); }
+    if (!$('nMapel').value || !$('nKelas').value) return;
+    $('rpHead').innerHTML = '<tr><th>Nama</th><th></th></tr>'; $('rpBody').innerHTML = skBaris(6, 2);
+    try { rpData = await api('rekapRapor', { mapel: $('nMapel').value, kelas: $('nKelas').value }); } catch (e) { $('rpBody').innerHTML = ''; return msg('adminMsg', e.message); }
     const th = (l, t) => `<th title="${esc(t || 'belum ada tugas')}">${l}</th>`;
     $('rpHead').innerHTML = '<tr><th>Nama</th>' + padTo(rpData.sumatif, 5).map((t, i) => th('S' + (i + 1), t)).join('')
       + padTo(rpData.penugasan, 8).map((t, i) => th('P' + (i + 1), t)).join('') + th('STS', rpData.sts) + th('SAS', rpData.sas) + '</tr>';
@@ -1051,8 +1096,6 @@
     $('rpInfo').textContent = r.length ? `${r.length} siswa · baris pertama: ${r[0].nama} · baris terakhir: ${r[r.length - 1].nama}. Cocokkan dengan file rapor sebelum paste.` : '';
     $('rpWarn').innerHTML = rpData.peringatan.map(p => `<div>Perhatian: ${esc(p)}</div>`).join('');
   }
-  $('rpMapel').onchange = () => { fillRpKelas(); loadRapor(); };
-  $('rpKelas').onchange = loadRapor;
   document.querySelectorAll('[data-salin]').forEach(b => b.onclick = async () => {
     if (!rpData || !rpData.rows.length) return;
     const k = b.dataset.salin, v = x => x === null || x === undefined ? '' : x;
@@ -1065,6 +1108,7 @@
   });
 
   async function loadSiswa() {
+    if (!$('aBody').innerHTML) $('aBody').innerHTML = skBaris(8, 5);
     try { allSiswa = (await api('listSiswa')).siswa; } catch (e) { return msg('adminMsg', e.message); }
     const kelas = [...new Set(allSiswa.map(s => s.kelas))].sort(), cur = $('aKelas').value;
     $('aKelas').innerHTML = '<option value="">Semua</option>' + kelas.map(k => `<option>${esc(k)}</option>`).join('');
