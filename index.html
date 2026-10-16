@@ -179,6 +179,19 @@
   @keyframes frameIn { from { opacity: 0; transform: scale(.96); } }
   @keyframes pop { from { opacity: 0; transform: scale(0); } }
   @keyframes naik { from { opacity: 0; transform: translateY(6px); } }
+  .abrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  .abrow:last-child { border-bottom: 0; }
+  .abrow:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; border-radius: 6px; }
+  .abnama { min-width: 0; overflow-wrap: anywhere; }
+  .abtns { display: flex; gap: 6px; flex: none; }
+  .abtn { min-width: 44px; padding: 0; background: transparent; color: var(--ink); border: 1px solid var(--line); font-weight: 800; }
+  .abtn.on[data-s=H] { background: var(--ok); border-color: var(--ok); color: var(--accent-ink); }
+  .abtn.on[data-s=S] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .abtn.on[data-s=I] { background: var(--muted); border-color: var(--muted); color: var(--accent-ink); }
+  .abtn.on[data-s=A] { background: var(--bad); border-color: var(--bad); color: var(--accent-ink); }
+  #abDaftar { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin: 8px 0 14px; max-width: 40rem; }
+  #abRingkas { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 8px 0; }
+  .chip.belum { border-color: var(--accent); }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
@@ -295,6 +308,27 @@
     </div>
 
 
+    <div id="pAbsen" hidden>
+      <h1>Absensi</h1>
+      <div class="bar">
+        <label for="abMapel" style="margin:0">Mapel</label><select id="abMapel"></select>
+        <label for="abKelas" style="margin:0">Kelas</label><select id="abKelas"></select>
+      </div>
+      <div id="abList"></div>
+      <div id="abForm" hidden>
+        <div class="row"><h2 id="abJudul" style="margin:0"></h2><span><button class="ghost small" id="abHapus" type="button">Hapus</button> <button class="ghost small" id="abBatal" type="button">Kembali</button></span></div>
+        <div class="bar">
+          <label for="abTgl" style="margin:0">Tanggal</label><input id="abTgl" type="date" style="width:auto;margin:0">
+          <label for="abKe" style="margin:0">Pertemuan ke</label><input id="abKe" type="number" min="1" style="width:5rem;margin:0">
+        </div>
+        <p class="muted" style="margin-bottom:0">Klik H, S, I, atau A. Dengan keyboard: tekan huruf itu, lalu otomatis lanjut ke nama berikutnya (panah atas/bawah untuk berpindah).</p>
+        <div class="sum" id="abRingkas"></div>
+        <div class="bar"><button class="ghost small" id="abSisa" type="button">Tandai sisanya hadir</button><button class="ghost small" id="abKosong" type="button">Kosongkan semua</button></div>
+        <div id="abDaftar"></div>
+        <button id="abSimpan" type="button">Simpan absensi</button>
+      </div>
+    </div>
+
     <div id="pInfo" hidden>
       <div class="row"><h1 style="margin:0">Pengumuman</h1><button id="btnInfoBaru">Pengumuman baru</button></div>
       <div class="panel card" id="fInfo" hidden style="margin-top:16px">
@@ -378,6 +412,7 @@
           <button class="small" data-salin="sumatif">Salin Sumatif</button>
           <button class="small" data-salin="penugasan">Salin Penugasan</button>
           <button class="small" data-salin="stssas">Salin STS &amp; SAS</button>
+          <button class="small" data-salin="absen">Salin Absensi (S, I, A)</button>
         </div>
         <div class="muted" id="rpWarn" style="margin-bottom:12px"></div>
         <div class="tablewrap"><table class="matrix"><thead id="rpHead"></thead><tbody id="rpBody"></tbody></table></div>
@@ -452,6 +487,10 @@
     file_tidak_diminta: 'Tugas ini tidak menerima file.',
     kumpulan_kosong: 'Isi link atau pilih file sesuai yang diminta tugas.',
     tugas_tanpa_kumpulan: 'Tugas ini tidak menerima pengumpulan. Nilainya diinput guru.',
+    status_tidak_valid: 'Status absensi tidak valid.',
+    pertemuan_sudah_ada: 'Nomor pertemuan itu sudah ada untuk kelas ini. Pakai nomor lain atau buka yang sudah ada.',
+    pertemuan_tidak_valid: 'Isi nomor pertemuan dengan angka 1 atau lebih.',
+    absensi_tidak_ada: 'Data absensi tidak ditemukan.',
     nilai_tidak_valid: 'Nilai harus angka 0-100.',
     belum_kumpul: 'Siswa ini belum mengumpulkan.',
     server_sibuk: 'Server sedang ramai. Coba lagi beberapa detik lagi.',
@@ -490,7 +529,7 @@
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
   let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
-  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'simpanRapor', 'rekapTugas', 'listSiswa']);
+  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
@@ -735,11 +774,12 @@
     nilai: '<path d="M5 20V11 M12 20V4 M19 20v-6"/>',
     rapor: '<path d="M7 3h7l4 4v14H7z M14 3v4h4 M10 12h5 M10 16h5"/>',
     info: '<path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/>',
+    absen: '<path d="M4 6h16v14H4z M4 10h16 M8 3v4 M16 3v4 M9 15l2 2 4-4"/>',
     users: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6 M16 5.5a3 3 0 0 1 0 5.5 M18 14c2 .6 3.5 2.5 3.5 5"/>'
   };
   const ico = n => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
   const NAV = {
-    admin: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pNilai', 'Nilai', 'nilai'], ['pSiswa', 'Siswa', 'users'], ['pInfo', 'Info', 'info']],
+    admin: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pAbsen', 'Absen', 'absen'], ['pNilai', 'Nilai', 'nilai'], ['pSiswa', 'Siswa', 'users'], ['pInfo', 'Info', 'info']],
     siswa: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai']],
     ketua: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['kBlock', 'Kelas', 'users']]
   };
@@ -980,14 +1020,105 @@
     bagikan('Ingatkan yang belum kumpul', p);
   };
 
+  /* ---------------- Absensi ---------------- */
+  const ST = ['H', 'S', 'I', 'A'], NAMA_ST = { H: 'hadir', S: 'sakit', I: 'izin', A: 'alpa' };
+  let ab = null, abAsli = '', abData = { sesi: [], berikut: 1, siswa: [] }, abTerakhir = { mapel: '', kelas: '' };
+  const hariIni = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+  const tglIndo = t => new Date(t + 'T00:00:00+07:00').toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' });
+  const abSnap = () => JSON.stringify([$('abTgl').value, $('abKe').value, ab.status]);
+  function absDirty() { return !!ab && !$('abForm').hidden && abSnap() !== abAsli; }
+
+  async function loadAbsenOpsi() {
+    try { if (!opsi.mapel.length) opsi = await api('listTugas'); } catch (e) { return msg('adminMsg', e.message); }
+    const cur = $('abMapel').value;
+    $('abMapel').innerHTML = opsi.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
+    if (cur) $('abMapel').value = cur;
+    isiAbKelas(); muatAbList();
+  }
+  function isiAbKelas() {
+    const m = opsi.mapel.find(x => x.nama === $('abMapel').value), cur = $('abKelas').value;
+    $('abKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat).map(k => `<option>${esc(k.nama)}</option>`).join('');
+    if ([...$('abKelas').options].some(o => o.value === cur)) $('abKelas').value = cur;
+  }
+  async function muatAbList() {
+    if (!$('abMapel').value || !$('abKelas').value) return;
+    $('abForm').hidden = true; $('abList').hidden = false; $('abList').innerHTML = skBerisi(skPanel(3));
+    let r; try { r = await api('listAbsensi', { mapel: $('abMapel').value, kelas: $('abKelas').value }); } catch (e) { $('abList').innerHTML = ''; return msg('adminMsg', e.message); }
+    abData = r; abTerakhir = { mapel: $('abMapel').value, kelas: $('abKelas').value };
+    $('abList').innerHTML = `<div class="bar"><button id="abBaru" type="button">Pertemuan baru (ke-${r.berikut})</button></div>`
+      + (r.sesi.length ? '<div class="panel card">' + r.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan,
+          `<div class="muted">Hadir ${s.ringkas.H}, sakit ${s.ringkas.S}, izin ${s.ringkas.I}, alpa ${s.ringkas.A}${s.ringkas.belum ? ', belum ' + s.ringkas.belum : ''}</div>`,
+          `<button class="ghost small" data-buka="${esc(s.id)}" type="button">Buka</button>`)).join('') + '</div>'
+        : '<p class="muted">Belum ada absensi untuk kelas ini. Mulai dari "Pertemuan baru".</p>');
+  }
+  const balikAb = () => { $('abMapel').value = abTerakhir.mapel; isiAbKelas(); $('abKelas').value = abTerakhir.kelas; };
+  $('abMapel').onchange = () => { if (!izinPindah()) return balikAb(); isiAbKelas(); muatAbList(); };
+  $('abKelas').onchange = () => { if (!izinPindah()) return balikAb(); muatAbList(); };
+  $('abList').onclick = e => { if (e.target.id === 'abBaru') bukaAb(null); else if (e.target.dataset.buka) bukaAb(e.target.dataset.buka); };
+
+  async function bukaAb(id) { // id kosong = pertemuan baru
+    let st = {}, tgl = hariIni(), ke = abData.berikut;
+    if (id) { try { const r = await api('absensiSesi', { id }); st = r.data; tgl = r.tanggal; ke = r.pertemuan; } catch (e) { return msg('adminMsg', e.message); } }
+    ab = { id: id || null, sis: abData.siswa, status: { ...st } };
+    $('abList').hidden = true; $('abForm').hidden = false; anim($('abForm'));
+    $('abJudul').textContent = id ? `Pertemuan ke-${ke}` : 'Pertemuan baru';
+    $('abTgl').value = tgl; $('abKe').value = ke; $('abHapus').hidden = !id;
+    gambarAb(); abAsli = abSnap();
+    const r1 = $('abDaftar').querySelector('.abrow'); if (r1) r1.focus();
+  }
+  function gambarAb() {
+    $('abDaftar').innerHTML = ab.sis.length ? ab.sis.map((s, i) => `<div class="abrow" tabindex="0" data-nis="${esc(s.nis)}"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)}</span>`
+      + `<span class="abtns" role="group" aria-label="Status ${esc(s.nama)}">${ST.map(k => `<button class="abtn" type="button" data-s="${k}" title="${NAMA_ST[k]}" aria-label="${NAMA_ST[k]}">${k}</button>`).join('')}</span></div>`).join('')
+      : '<p class="muted" style="padding:12px">Belum ada siswa di kelas ini.</p>';
+    segarkanAb();
+  }
+  function segarkanAb() {
+    const c = { H: 0, S: 0, I: 0, A: 0 };
+    ab.sis.forEach(s => { if (c[ab.status[s.nis]] !== undefined) c[ab.status[s.nis]]++; });
+    const belum = ab.sis.length - c.H - c.S - c.I - c.A;
+    $('abRingkas').innerHTML = ST.map(k => `<span class="chip"><b>${c[k]}</b> ${NAMA_ST[k]}</span>`).join('') + `<span class="chip${belum ? ' belum' : ''}"><b>${belum}</b> belum</span>`;
+    $('abDaftar').querySelectorAll('.abrow').forEach(r => r.querySelectorAll('.abtn').forEach(b => { const on = ab.status[r.dataset.nis] === b.dataset.s; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }));
+    return belum;
+  }
+  $('abDaftar').addEventListener('click', e => { // klik status yang sama sekali lagi = batalkan
+    const b = e.target.closest('.abtn'); if (!b) return;
+    const nis = b.closest('.abrow').dataset.nis;
+    if (ab.status[nis] === b.dataset.s) delete ab.status[nis]; else ab.status[nis] = b.dataset.s;
+    segarkanAb();
+  });
+  $('abDaftar').addEventListener('keydown', e => { // mengabsen dengan keyboard sambil memanggil nama
+    const row = e.target.closest('.abrow'); if (!row || e.target.classList.contains('abtn') && (e.key === 'Enter' || e.key === ' ')) return;
+    const k = e.key.toUpperCase(), geser = d => { const n = d > 0 ? row.nextElementSibling : row.previousElementSibling; if (n) n.focus(); };
+    if (ST.includes(k) && e.key.length === 1) { e.preventDefault(); ab.status[row.dataset.nis] = k; segarkanAb(); geser(1); }
+    else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); delete ab.status[row.dataset.nis]; segarkanAb(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); geser(1); } else if (e.key === 'ArrowUp') { e.preventDefault(); geser(-1); }
+  });
+  $('abSisa').onclick = () => { ab.sis.forEach(s => { if (!ab.status[s.nis]) ab.status[s.nis] = 'H'; }); segarkanAb(); };
+  $('abKosong').onclick = () => { if (Object.keys(ab.status).length && !confirm('Kosongkan semua tanda di pertemuan ini?')) return; ab.status = {}; segarkanAb(); };
+  $('abBatal').onclick = () => { if (izinPindah()) muatAbList(); };
+  $('abSimpan').onclick = async () => {
+    const belum = segarkanAb();
+    if (belum && !confirm(`Masih ada ${belum} siswa yang belum ditandai. Simpan tetap?`)) return;
+    const b = $('abSimpan'); b.disabled = true;
+    try {
+      const r = await api('simpanAbsensi', { id: ab.id, mapel: $('abMapel').value, kelas: $('abKelas').value, tanggal: $('abTgl').value, pertemuan: Number($('abKe').value), data: ab.status });
+      toast(`Absensi pertemuan ke-${r.pertemuan} tersimpan.`); abAsli = abSnap(); await muatAbList();
+    } catch (e) { msg('adminMsg', e.message); }
+    b.disabled = false;
+  };
+  $('abHapus').onclick = async () => {
+    if (!confirm('Hapus absensi pertemuan ini? Tidak bisa dibatalkan.')) return;
+    try { await api('hapusAbsensi', { id: ab.id }); abAsli = abSnap(); toast('Absensi dihapus.'); await muatAbList(); } catch (e) { msg('adminMsg', e.message); }
+  };
+
   /* ---------------- Admin ---------------- */
   function tab(id) {
-    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo'].forEach(p => $(p).hidden = p !== id);
+    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo', 'pAbsen'].forEach(p => $(p).hidden = p !== id);
     setActive(id); msg('adminMsg'); window.scrollTo(0, 0); anim($(id));
   }
   function goAdmin(id) {
     tab(id);
-    ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pSiswa: loadSiswa, pInfo: loadInfo })[id]();
+    ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pAbsen: loadAbsenOpsi, pSiswa: loadSiswa, pInfo: loadInfo })[id]();
   }
 
   async function loadTugasAdmin() {
@@ -1174,8 +1305,8 @@
     return rpData.rows.map((s, i) => ({ nis: s.nis, sumatif: kolS.map(k => g(i, k)), sts: g(i, 'STS'), sas: g(i, 'SAS') }));
   }
   const rapDirty = () => !!rpData && !$('nvRapor').hidden && JSON.stringify(bacaRapor()) !== rpAsli;
-  function izinPindah() { return !rapDirty() || confirm('Ada nilai rapor yang belum disimpan. Tetap pindah dan buang perubahan?'); }
-  window.addEventListener('beforeunload', e => { if (rapDirty()) { e.preventDefault(); e.returnValue = ''; } });
+  function izinPindah() { return !(rapDirty() || absDirty()) || confirm('Ada perubahan yang belum disimpan. Tetap pindah dan buang perubahan?'); }
+  window.addEventListener('beforeunload', e => { if (rapDirty() || absDirty()) { e.preventDefault(); e.returnValue = ''; } });
 
   function peringatanRapor() {
     const b = bacaRapor(), out = [];
@@ -1186,16 +1317,16 @@
   function infoRapor(extra) {
     const r = rpData.rows;
     $('rpInfo').textContent = (r.length ? `${r.length} siswa · baris pertama: ${r[0].nama} · baris terakhir: ${r[r.length - 1].nama}. Cocokkan dengan file rapor sebelum paste. ` : '')
-      + (extra || (rapDirty() ? 'Ada perubahan yang belum disimpan.' : 'Semua tersimpan.'));
+      + (rpData.pertemuan != null ? `Absensi dari ${rpData.pertemuan} pertemuan. ` : '') + (extra || (rapDirty() ? 'Ada perubahan yang belum disimpan.' : 'Semua tersimpan.'));
     $('rpWarn').innerHTML = peringatanRapor().map(p => `<div>Perhatian: ${esc(p)}</div>`).join('');
   }
   function gambarRapor() {
     const th = (l, t) => `<th title="${esc(t || '')}">${l}</th>`;
-    $('rpHead').innerHTML = '<tr><th>Nama</th>' + kolS.map(k => th(k)).join('') + padTo(rpData.penugasan, RP).map((t, i) => th('P' + (i + 1), t || 'belum ada tugas')).join('') + th('STS') + th('SAS') + '</tr>';
+    $('rpHead').innerHTML = '<tr><th>Nama</th>' + kolS.map(k => th(k)).join('') + padTo(rpData.penugasan, RP).map((t, i) => th('P' + (i + 1), t || 'belum ada tugas')).join('') + th('STS') + th('SAS') + th('Sakit', 'Jumlah sakit') + th('Izin', 'Jumlah izin') + th('Alpa', 'Jumlah alpa') + '</tr>';
     $('rpBody').innerHTML = rpData.rows.map((s, i) => `<tr><td>${esc(s.nama)}</td>`
       + padTo(s.sumatif, RS).map((v, j) => sel(i, 'S' + (j + 1), v)).join('')
       + padTo(s.penugasan, RP).map(v => `<td>${v === null || v === undefined ? '<span class="muted">·</span>' : esc(v)}</td>`).join('')
-      + sel(i, 'STS', s.sts) + sel(i, 'SAS', s.sas) + '</tr>').join('') || '<tr><td>Belum ada siswa di kelas ini.</td></tr>';
+      + sel(i, 'STS', s.sts) + sel(i, 'SAS', s.sas) + [(s.absen || {}).s, (s.absen || {}).i, (s.absen || {}).a].map(v => `<td>${v ?? ''}</td>`).join('') + '</tr>').join('') || '<tr><td>Belum ada siswa di kelas ini.</td></tr>';
     $('btnRapLama').hidden = !rpData.adaLama;
     rpAsli = JSON.stringify(bacaRapor()); infoRapor();
   }
@@ -1248,7 +1379,7 @@
     if (!rpData || !rpData.rows.length) return;
     const man = bacaRapor(), k = b.dataset.salin, v = x => x === null || x === undefined ? '' : x;
     const baris = rpData.rows.map((s, i) => k === 'nama' ? [s.nama] : k === 'sumatif' ? man[i].sumatif
-      : k === 'penugasan' ? padTo(s.penugasan, RP) : [man[i].sts, man[i].sas]);
+      : k === 'penugasan' ? padTo(s.penugasan, RP) : k === 'absen' ? [(s.absen || {}).s, (s.absen || {}).i, (s.absen || {}).a] : [man[i].sts, man[i].sas]);
     await salin(baris.map(r => r.map(v).join('\t')).join('\n'));
     infoRapor(`Tersalin: ${baris.length} baris × ${baris[0].length} kolom. Paste ke sel pertama blok yang sesuai di file rapor.`);
   });
