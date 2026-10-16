@@ -148,6 +148,8 @@
   #topbar i { display: block; width: 40%; height: 100%; background: var(--accent); }
   @media (prefers-reduced-motion: no-preference) { #topbar.on i { animation: geser 1s ease-in-out infinite; } }
   @keyframes geser { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+  .cellin { width: 3.6rem; min-width: 0; padding: 4px 6px; margin: 0; text-align: center; min-height: 34px; }
+  .cellin.dirty { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
@@ -242,7 +244,6 @@
         <label for="tMapel">Mapel</label><select id="tMapel" style="width:100%;margin-bottom:14px"></select>
         <label for="tJudul">Judul</label><input id="tJudul" maxlength="150">
         <label for="tDesk">Deskripsi (opsional)</label><textarea id="tDesk"></textarea>
-        <label for="tJenis">Jenis nilai (untuk rapor)</label><select id="tJenis" style="width:100%;margin-bottom:14px"><option value="sumatif">Sumatif</option><option value="penugasan">Penugasan</option><option value="sts">STS</option><option value="sas">SAS</option></select>
         <label for="tBentuk">Bentuk pengumpulan</label><select id="tBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
         <label for="tDl">Deadline (WIB)</label><input id="tDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="tKelas" style="margin-bottom:14px"></div>
@@ -259,7 +260,6 @@
       <div class="panel card" id="fEdit" hidden>
         <label for="eJudul">Judul</label><input id="eJudul" maxlength="150">
         <label for="eDesk">Deskripsi</label><textarea id="eDesk"></textarea>
-        <label for="eJenis">Jenis nilai (untuk rapor)</label><select id="eJenis" style="width:100%;margin-bottom:14px"><option value="sumatif">Sumatif</option><option value="penugasan">Penugasan</option><option value="sts">STS</option><option value="sas">SAS</option></select>
         <label for="eBentuk">Bentuk pengumpulan</label><select id="eBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
         <label for="eDl">Deadline (WIB)</label><input id="eDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="eKelas" style="margin-bottom:14px"></div>
@@ -290,6 +290,16 @@
       </div>
 
       <div id="nvRapor" hidden>
+        <p class="muted">Sumatif (S1-S5), STS, dan SAS diketik langsung di sel. Penugasan (P) terisi otomatis dari tugas yang sudah dinilai.</p>
+        <div class="bar">
+          <label for="rpSampai" style="margin:0">Penugasan sampai tanggal</label>
+          <input id="rpSampai" type="date" style="width:auto;margin:0">
+          <span class="muted">(kosongkan untuk semua; berguna untuk rapor bayangan)</span>
+        </div>
+        <div class="bar">
+          <button id="btnRapSimpan">Simpan nilai</button>
+          <button class="ghost small" id="btnRapLama" hidden>Isi dari tugas lama</button>
+        </div>
         <p class="muted" id="rpInfo"></p>
         <div class="bar">
           <button class="small" data-salin="nama">Salin nama</button>
@@ -403,7 +413,7 @@
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
   let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
-  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'rekapTugas', 'listSiswa']);
+  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'simpanRapor', 'rekapTugas', 'listSiswa']);
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
@@ -661,7 +671,7 @@
     $('navbar').hidden = false;
   }
   function setActive(id) { document.querySelectorAll('#nav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === (id === 'pRekap' ? 'pTugas' : id))); }
-  $('nav').onclick = e => { const b = e.target.closest('[data-go]'); if (b) (me.role === 'admin' ? goAdmin : goSiswa)(b.dataset.go); };
+  $('nav').onclick = e => { const b = e.target.closest('[data-go]'); if (!b || (me.role === 'admin' && !izinPindah())) return; (me.role === 'admin' ? goAdmin : goSiswa)(b.dataset.go); };
 
   const greet = () => { const j = Number(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false })) % 24; return j < 11 ? 'Selamat pagi' : j < 15 ? 'Selamat siang' : j < 18 ? 'Selamat sore' : 'Selamat malam'; };
   const avg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length * 10) / 10 : null;
@@ -922,14 +932,11 @@
       .map(k => `<label class="chk"><input type="checkbox" value="${esc(k.nama)}"> ${esc(k.nama)}</label>`).join('');
   }
   $('tMapel').onchange = drawKelasBox;
-  // Sumatif, STS, dan SAS diketik manual oleh guru (tanpa pengumpulan); penugasan tetap dikumpulkan siswa
-  $('tJenis').value = 'penugasan';
-  $('tJenis').onchange = () => { $('tBentuk').value = $('tJenis').value === 'penugasan' ? 'link' : 'nilai'; };
   $('btnBaru').onclick = () => { $('fBaru').hidden = !$('fBaru').hidden; };
   $('btnSimpanTugas').onclick = async () => {
     const b = $('btnSimpanTugas'); b.disabled = true; msg('adminMsg');
     try {
-      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, jenis: $('tJenis').value, bentuk: $('tBentuk').value, deadline: $('tDl').value,
+      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, bentuk: $('tBentuk').value, deadline: $('tDl').value,
         kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) });
       const snapT = { mapel: $('tMapel').value, judul: $('tJudul').value.trim(), deskripsi: $('tDesk').value.trim(), bentuk: $('tBentuk').value,
         deadline: new Date($('tDl').value + ':00+07:00').toISOString(), kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) };
@@ -1004,7 +1011,7 @@
   const wibLocal = iso => new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16).replace(' ', 'T');
   $('btnEdit').onclick = () => {
     const t = curTugas, m = opsi.mapel.find(x => x.nama === t.mapel);
-    $('eJudul').value = t.judul; $('eDesk').value = t.deskripsi || ''; $('eBentuk').value = t.bentuk || 'link'; $('eJenis').value = t.jenis || 'penugasan'; $('eDl').value = wibLocal(t.deadline);
+    $('eJudul').value = t.judul; $('eDesk').value = t.deskripsi || ''; $('eBentuk').value = t.bentuk || 'link'; $('eDl').value = wibLocal(t.deadline);
     $('eKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat)
       .map(k => `<label class="chk"><input type="checkbox" value="${esc(k.nama)}" ${t.kelas.includes(k.nama) ? 'checked' : ''}> ${esc(k.nama)}</label>`).join('');
     $('fEdit').hidden = !$('fEdit').hidden;
@@ -1012,7 +1019,7 @@
   $('btnSimpanEdit').onclick = async () => {
     const b = $('btnSimpanEdit'); b.disabled = true; msg('adminMsg');
     try {
-      await api('editTugas', { id: rekapId, judul: $('eJudul').value, deskripsi: $('eDesk').value, jenis: $('eJenis').value, bentuk: $('eBentuk').value, deadline: $('eDl').value,
+      await api('editTugas', { id: rekapId, judul: $('eJudul').value, deskripsi: $('eDesk').value, bentuk: $('eBentuk').value, deadline: $('eDl').value,
         kelas: [...document.querySelectorAll('#eKelas input:checked')].map(i => i.value) });
       await openRekap(rekapId); toast('Perubahan disimpan.');
     } catch (e) { msg('adminMsg', e.message); }
@@ -1053,9 +1060,9 @@
     $('nvSemua').hidden = nMode !== 'semua'; $('nvRapor').hidden = nMode !== 'rapor';
     document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === nMode));
   }
-  document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { nMode = b.dataset.mode; syncNMode(); muatNilaiAktif(); });
-  $('nMapel').onchange = () => { fillNKelas(); muatNilaiAktif(); };
-  $('nKelas').onchange = muatNilaiAktif;
+  document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { if (nMode === 'rapor' && b.dataset.mode !== 'rapor' && !izinPindah()) return; nMode = b.dataset.mode; syncNMode(); muatNilaiAktif(); });
+  $('nMapel').onchange = () => { if (!izinPindah()) return balikPilihan(); fillNKelas(); muatNilaiAktif(); };
+  $('nKelas').onchange = () => { if (!izinPindah()) return balikPilihan(); muatNilaiAktif(); };
   $('btnCsv').onclick = () => {
     if (!nData) return;
     const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
@@ -1079,32 +1086,94 @@
     b.disabled = false;
   };
 
-  /* rekap rapor: blok siap-tempel ke template */
-  let rpData = null;
+  /* rapor: S1-S5, STS, SAS diketik guru; P1-P8 terisi otomatis dari tugas */
+  let rpData = null, rpAsli = '', nTerakhir = { mapel: '', kelas: '', sampai: '' };
+  const RS = 5, RP = 8;
+  const sel = (i, kol, v) => `<td><input class="cellin" type="number" min="0" max="100" step="any" inputmode="decimal" data-i="${i}" data-k="${kol}" value="${v ?? ''}" aria-label="${kol}, baris ${i + 1}"></td>`;
+  const kolS = Array.from({ length: RS }, (_, j) => 'S' + (j + 1));
+  // membaca isi semua sel yang diketik (termasuk yang belum disimpan)
+  function bacaRapor() {
+    const g = (i, k) => { const el = $('rpBody').querySelector(`[data-i="${i}"][data-k="${k}"]`); return el ? el.value.trim() : ''; };
+    return rpData.rows.map((s, i) => ({ nis: s.nis, sumatif: kolS.map(k => g(i, k)), sts: g(i, 'STS'), sas: g(i, 'SAS') }));
+  }
+  const rapDirty = () => !!rpData && !$('nvRapor').hidden && JSON.stringify(bacaRapor()) !== rpAsli;
+  function izinPindah() { return !rapDirty() || confirm('Ada nilai rapor yang belum disimpan. Tetap pindah dan buang perubahan?'); }
+  window.addEventListener('beforeunload', e => { if (rapDirty()) { e.preventDefault(); e.returnValue = ''; } });
+
+  function peringatanRapor() {
+    const b = bacaRapor(), out = [];
+    const cek = (label, fn) => { const isi = b.filter(x => fn(x) !== '').length; if (isi && isi < b.length) out.push(`${label}: ${b.length - isi} siswa belum diisi.`); };
+    kolS.forEach((k, j) => cek('Sumatif ' + (j + 1), x => x.sumatif[j])); cek('STS', x => x.sts); cek('SAS', x => x.sas);
+    return [...(rpData.peringatan || []), ...out];
+  }
+  function infoRapor(extra) {
+    const r = rpData.rows;
+    $('rpInfo').textContent = (r.length ? `${r.length} siswa · baris pertama: ${r[0].nama} · baris terakhir: ${r[r.length - 1].nama}. Cocokkan dengan file rapor sebelum paste. ` : '')
+      + (extra || (rapDirty() ? 'Ada perubahan yang belum disimpan.' : 'Semua tersimpan.'));
+    $('rpWarn').innerHTML = peringatanRapor().map(p => `<div>Perhatian: ${esc(p)}</div>`).join('');
+  }
+  function gambarRapor() {
+    const th = (l, t) => `<th title="${esc(t || '')}">${l}</th>`;
+    $('rpHead').innerHTML = '<tr><th>Nama</th>' + kolS.map(k => th(k)).join('') + padTo(rpData.penugasan, RP).map((t, i) => th('P' + (i + 1), t || 'belum ada tugas')).join('') + th('STS') + th('SAS') + '</tr>';
+    $('rpBody').innerHTML = rpData.rows.map((s, i) => `<tr><td>${esc(s.nama)}</td>`
+      + padTo(s.sumatif, RS).map((v, j) => sel(i, 'S' + (j + 1), v)).join('')
+      + padTo(s.penugasan, RP).map(v => `<td>${v === null || v === undefined ? '<span class="muted">·</span>' : esc(v)}</td>`).join('')
+      + sel(i, 'STS', s.sts) + sel(i, 'SAS', s.sas) + '</tr>').join('') || '<tr><td>Belum ada siswa di kelas ini.</td></tr>';
+    $('btnRapLama').hidden = !rpData.adaLama;
+    rpAsli = JSON.stringify(bacaRapor()); infoRapor();
+  }
   async function loadRapor() {
     if (!$('nMapel').value || !$('nKelas').value) return;
     $('rpHead').innerHTML = '<tr><th>Nama</th><th></th></tr>'; $('rpBody').innerHTML = skBaris(6, 2);
-    try { rpData = await api('rekapRapor', { mapel: $('nMapel').value, kelas: $('nKelas').value }); } catch (e) { $('rpBody').innerHTML = ''; return msg('adminMsg', e.message); }
-    const th = (l, t) => `<th title="${esc(t || 'belum ada tugas')}">${l}</th>`;
-    $('rpHead').innerHTML = '<tr><th>Nama</th>' + padTo(rpData.sumatif, 5).map((t, i) => th('S' + (i + 1), t)).join('')
-      + padTo(rpData.penugasan, 8).map((t, i) => th('P' + (i + 1), t)).join('') + th('STS', rpData.sts) + th('SAS', rpData.sas) + '</tr>';
-    const c = v => v === null || v === undefined ? '<span class="muted">·</span>' : esc(v);
-    $('rpBody').innerHTML = rpData.rows.map(s => `<tr><td>${esc(s.nama)}</td>`
-      + [...padTo(s.sumatif, 5), ...padTo(s.penugasan, 8), s.sts, s.sas].map(v => `<td>${c(v)}</td>`).join('') + '</tr>').join('')
-      || '<tr><td>Belum ada siswa di kelas ini.</td></tr>';
-    const r = rpData.rows;
-    $('rpInfo').textContent = r.length ? `${r.length} siswa · baris pertama: ${r[0].nama} · baris terakhir: ${r[r.length - 1].nama}. Cocokkan dengan file rapor sebelum paste.` : '';
-    $('rpWarn').innerHTML = rpData.peringatan.map(p => `<div>Perhatian: ${esc(p)}</div>`).join('');
+    try { rpData = await api('rekapRapor', { mapel: $('nMapel').value, kelas: $('nKelas').value, sampai: $('rpSampai').value }); }
+    catch (e) { rpData = null; $('rpBody').innerHTML = ''; return msg('adminMsg', e.message); }
+    nTerakhir = { mapel: $('nMapel').value, kelas: $('nKelas').value, sampai: $('rpSampai').value };
+    gambarRapor();
   }
+  const balikPilihan = () => { $('nMapel').value = nTerakhir.mapel; fillNKelas(); $('nKelas').value = nTerakhir.kelas; $('rpSampai').value = nTerakhir.sampai; };
+  $('rpSampai').onchange = () => { if (!izinPindah()) return balikPilihan(); loadRapor(); };
+
+  $('rpBody').addEventListener('input', e => { if (e.target.classList.contains('cellin')) { e.target.classList.add('dirty'); infoRapor(); } });
+  $('rpBody').addEventListener('keydown', e => { // Enter pindah ke baris berikutnya di kolom yang sama, enak untuk mengetik satu kolom penuh
+    if (e.key !== 'Enter' || !e.target.classList.contains('cellin')) return;
+    e.preventDefault();
+    const nx = $('rpBody').querySelector(`[data-i="${+e.target.dataset.i + 1}"][data-k="${e.target.dataset.k}"]`);
+    if (nx) { nx.focus(); nx.select(); }
+  });
+
+  $('btnRapSimpan').onclick = async () => {
+    if (!rpData || !rpData.rows.length) return;
+    const b = $('btnRapSimpan'); b.disabled = true;
+    try {
+      const items = bacaRapor();
+      for (const x of items) for (const v of [...x.sumatif, x.sts, x.sas]) if (v !== '' && !(Number(v) >= 0 && Number(v) <= 100)) throw new Error(ERR.nilai_tidak_valid);
+      await api('simpanRapor', { mapel: $('nMapel').value, kelas: $('nKelas').value, items });
+      await loadRapor(); toast(`Nilai ${items.length} siswa tersimpan.`);
+    } catch (e) { msg('adminMsg', e.message); }
+    b.disabled = false;
+  };
+
+  // mengisi sel yang MASIH KOSONG dari tugas Sumatif/STS/SAS lama; belum disimpan sampai guru menekan Simpan nilai
+  $('btnRapLama').onclick = () => {
+    let n = 0;
+    rpData.rows.forEach((s, i) => {
+      const isi = (k, v) => {
+        const el = $('rpBody').querySelector(`[data-i="${i}"][data-k="${k}"]`);
+        if (el && el.value === '' && v !== null && v !== undefined) { el.value = v; el.classList.add('dirty'); n++; }
+      };
+      (s.lama.sumatif || []).forEach((v, j) => isi('S' + (j + 1), v)); isi('STS', s.lama.sts); isi('SAS', s.lama.sas);
+    });
+    infoRapor();
+    toast(n ? `${n} nilai diisi dari tugas lama. Periksa dan ubah dulu, lalu klik Simpan nilai.` : 'Tidak ada sel kosong yang bisa diisi dari tugas lama.');
+  };
+
   document.querySelectorAll('[data-salin]').forEach(b => b.onclick = async () => {
     if (!rpData || !rpData.rows.length) return;
-    const k = b.dataset.salin, v = x => x === null || x === undefined ? '' : x;
-    const baris = rpData.rows.map(s => k === 'nama' ? [s.nama] : k === 'sumatif' ? padTo(s.sumatif, 5)
-      : k === 'penugasan' ? padTo(s.penugasan, 8) : [s.sts, s.sas]);
-    const text = baris.map(r => r.map(v).join('\t')).join('\n');
-    try { await navigator.clipboard.writeText(text); }
-    catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
-    $('rpInfo').textContent = `Tersalin: ${baris.length} baris × ${baris[0].length} kolom. Paste ke sel pertama blok yang sesuai di file rapor.`;
+    const man = bacaRapor(), k = b.dataset.salin, v = x => x === null || x === undefined ? '' : x;
+    const baris = rpData.rows.map((s, i) => k === 'nama' ? [s.nama] : k === 'sumatif' ? man[i].sumatif
+      : k === 'penugasan' ? padTo(s.penugasan, RP) : [man[i].sts, man[i].sas]);
+    await salin(baris.map(r => r.map(v).join('\t')).join('\n'));
+    infoRapor(`Tersalin: ${baris.length} baris × ${baris[0].length} kolom. Paste ke sel pertama blok yang sesuai di file rapor.`);
   });
 
   async function loadSiswa() {
