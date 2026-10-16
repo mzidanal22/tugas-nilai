@@ -150,6 +150,35 @@
   @keyframes geser { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
   .cellin { width: 3.6rem; min-width: 0; padding: 4px 6px; margin: 0; text-align: center; min-height: 34px; }
   .cellin.dirty { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
+  :root[data-tema=dark] { --bg: #12151C; --ink: #E8EBF2; --muted: #98A1B5; --line: #2A3040; --panel: #1A1F2B; --accent: #8D78FF; --accent-ink: #12151C; --ok: #4CC9A0; --bad: #FF8A80; --dot: #262C3B; }
+  :root[data-tema=light] { --bg: #F2F4F8; --ink: #151A24; --muted: #5C6578; --line: #D5DAE4; --panel: #FFFFFF; --accent: #5B3DF5; --accent-ink: #FFFFFF; --ok: #0F7B55; --bad: #B3261E; --dot: #C9CFDC; }
+  .login { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 28px; align-items: center; min-height: 68vh; }
+  .hero h1 { max-width: 17ch; }
+  .lead { font-size: 1.05rem; color: var(--muted); max-width: 46ch; }
+  .ftabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 6px; }
+  .ftab { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 99px; padding: 6px 16px; min-height: 38px; }
+  .ftab.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .frame { position: relative; margin: 30px 8px 8px; padding: 18px; max-width: 26rem; border: 1.5px solid var(--accent); border-radius: 4px; background: var(--panel); }
+  .fname { position: absolute; top: -23px; left: -1px; font-size: .8rem; font-weight: 600; color: var(--accent); }
+  .hd { position: absolute; width: 9px; height: 9px; background: var(--panel); border: 1.5px solid var(--accent); }
+  .hd.tl { top: -5px; left: -5px; } .hd.tr { top: -5px; right: -5px; } .hd.bl { bottom: -5px; left: -5px; } .hd.br { bottom: -5px; right: -5px; }
+  .fbody h3 { margin-top: 2px; }
+  .logincard { padding: 28px; margin: 0; }
+  .logincard h2 { font-size: 1.7rem; margin: 0 0 16px; }
+  .steps { list-style: none; counter-reset: s; padding: 0; margin: 24px 0 0; display: grid; gap: 14px; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 28px 1fr; column-gap: 12px; }
+  .steps li::before { content: counter(s); grid-row: span 2; width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); display: grid; place-items: center; font-weight: 800; font-size: .85rem; }
+  .steps span { color: var(--muted); font-size: .9rem; }
+  @media (max-width: 860px) { .login { grid-template-columns: 1fr; gap: 20px; } .logincard { order: -1; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .frame { animation: frameIn .7s cubic-bezier(.2,.8,.2,1) both; }
+    .hd { animation: pop .35s .45s cubic-bezier(.3,1.6,.5,1) both; }
+    .fade { animation: naik .18s ease-out both; }
+    button:active:not(:disabled) { transform: translateY(1px); }
+  }
+  @keyframes frameIn { from { opacity: 0; transform: scale(.96); } }
+  @keyframes pop { from { opacity: 0; transform: scale(0); } }
+  @keyframes naik { from { opacity: 0; transform: translateY(6px); } }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
@@ -159,7 +188,8 @@
 <div id="topbar" aria-hidden="true"><i></i></div>
 <header>
   <span class="brand">Tugas &amp; Nilai</span>
-  <div id="who" class="who" hidden><button class="ghost small bell" id="btnBell" hidden aria-label="Pengumuman"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/></svg><span class="dot" id="bellN" hidden></span></button><span class="avatar" id="avatar" aria-hidden="true"></span><span id="whoName" class="muted"></span> <button class="ghost small" id="btnOut">Keluar</button></div>
+  <div class="who"><button class="ghost small" id="btnTema" type="button" aria-label="Ganti tema terang atau gelap"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v16a8 8 0 0 0 0-16z" fill="currentColor"/></svg></button>
+  <div id="who" class="who" hidden><button class="ghost small bell" id="btnBell" hidden aria-label="Pengumuman"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/></svg><span class="dot" id="bellN" hidden></span></button><span class="avatar" id="avatar" aria-hidden="true"></span><span id="whoName" class="muted"></span> <button class="ghost small" id="btnOut">Keluar</button></div></div>
 </header>
 <nav class="navbar" id="navbar" hidden aria-label="Menu utama"><div class="nav" id="nav"></div></nav>
 
@@ -171,12 +201,54 @@
     <div class="panel"><div class="sk" style="width:38%;height:18px;margin-bottom:6px"></div><div class="item"><div class="grow"><div class="sk" style="width:30%;height:11px;"></div><div class="sk" style="width:62%;height:15px;margin-top:8px"></div></div><div class="sk" style="width:4.5rem;height:32px;border-radius:8px"></div></div><div class="item"><div class="grow"><div class="sk" style="width:30%;height:11px;"></div><div class="sk" style="width:62%;height:15px;margin-top:8px"></div></div><div class="sk" style="width:4.5rem;height:32px;border-radius:8px"></div></div><div class="item"><div class="grow"><div class="sk" style="width:30%;height:11px;"></div><div class="sk" style="width:62%;height:15px;margin-top:8px"></div></div><div class="sk" style="width:4.5rem;height:32px;border-radius:8px"></div></div></div>
   </div>
 
-  <section id="vLogin" hidden>
-    <h1>Masuk untuk lihat tugas dan nilaimu</h1>
-    <p class="muted">Pakai akun Google yang kamu pakai di sekolah.</p>
-    <div id="gbtn"></div>
-    <div class="msg" id="loginMsg" role="alert"></div>
-    <p class="muted" style="margin-top:16px">Pertama kali masuk? Setelah login, kamu diminta mengisi nama dan NIS (atau kode dari guru) satu kali saja.</p>
+  <section id="vLogin" class="login" hidden>
+    <div class="hero">
+      <h1>Tugas, deadline, dan nilaimu ada di satu tempat.</h1>
+      <p class="lead">Kumpulkan tugas lewat link atau file, lihat kapan batasnya, dan baca nilai beserta catatan guru tanpa bertanya di grup.</p>
+      <div class="ftabs" role="group" aria-label="Contoh tampilan">
+        <button class="ftab on" data-fitur="tugas" aria-pressed="true" type="button">Tugas</button>
+        <button class="ftab" data-fitur="nilai" aria-pressed="false" type="button">Nilai</button>
+        <button class="ftab" data-fitur="info" aria-pressed="false" type="button">Pengumuman</button>
+      </div>
+      <div class="frame" id="frame">
+        <span class="fname">Contoh tampilan, tidak ada data yang dikirim</span>
+        <i class="hd tl"></i><i class="hd tr"></i><i class="hd bl"></i><i class="hd br"></i>
+        <div class="fbody" data-p="tugas">
+          <div id="demoForm">
+            <div class="muted">Desain Komputer Grafis</div>
+            <h3>Poster Event Sekolah</h3>
+            <p class="muted">Deadline Jumat 19.00 WIB, <span class="due-soon">19 jam lagi</span></p>
+            <label for="demoLink">Link tugas</label>
+            <input id="demoLink" placeholder="https://figma.com/..." autocomplete="off">
+            <button id="demoKirim" type="button">Kumpulkan</button>
+          </div>
+          <div id="demoOk" hidden>
+            <div class="banner"><strong>✓ Berhasil dikumpulkan</strong><div class="muted" id="demoJam"></div><div class="muted" style="margin-top:6px">Nilai akan muncul di sini setelah guru menilai.</div></div>
+            <button class="ghost small" id="demoUlang" type="button">Coba lagi</button>
+          </div>
+        </div>
+        <div class="fbody" data-p="nilai" hidden>
+          <div class="muted">Poster Event Sekolah</div>
+          <div class="nilai-big">88</div>
+          <p style="margin:8px 0 0">Komposisi rapi dan kontras warna sudah pas. Tambahkan variasi ukuran huruf.</p>
+        </div>
+        <div class="fbody" data-p="info" hidden>
+          <span class="tag">Disematkan</span>
+          <h3 style="margin-top:8px">Besok bawa laptop</h3>
+          <p style="margin:0">Praktik Figma di lab. Link tugas dikumpulkan sebelum jam 12.</p>
+        </div>
+      </div>
+    </div>
+    <div class="panel logincard">
+      <h2>Masuk</h2>
+      <div id="gbtn"></div>
+      <div class="msg" id="loginMsg" role="alert"></div>
+      <ol class="steps">
+        <li><strong>Masuk dengan Google</strong><span>Pakai akun Google sekolahmu.</span></li>
+        <li><strong>Hubungkan akunmu</strong><span>Isi nama dan NIS (atau kode dari guru). Cukup sekali.</span></li>
+        <li><strong>Mulai</strong><span>Tugas dan nilaimu langsung muncul.</span></li>
+      </ol>
+    </div>
   </section>
 
   <section id="vClaim" hidden>
@@ -387,6 +459,11 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
+  const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
+  // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
+  const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
+  const pasangTema = t => { if (t) document.documentElement.dataset.tema = t; else delete document.documentElement.dataset.tema; };
+  pasangTema(bacaTema());
   /* kerangka loading: bentuknya meniru halaman asli supaya terasa cepat dan tidak melompat saat data tiba */
   const sk = (w, h, ex) => `<div class="sk" style="width:${w};height:${h || 14}px;${ex || ''}"></div>`;
   const skBerisi = html => `<div role="status" aria-busy="true"><span class="sr">Memuat…</span>${html}</div>`;
@@ -403,7 +480,7 @@
   let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null, curTugas = null, curRows = [], nData = null;
   try { token = sessionStorage.getItem('tok'); } catch (e) {}
 
-  function show(id) { $('vLoad').hidden = true; ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); }
+  function show(id) { $('vLoad').hidden = true; ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); anim($(id)); }
   function toast(text, err) {
     const el = document.createElement('div'); el.className = 'toast' + (err ? ' err' : ''); el.textContent = text;
     $('toasts').appendChild(el); setTimeout(() => el.remove(), err ? 6000 : 3500);
@@ -679,7 +756,7 @@
 
   function goSiswa(id, sorot) {
     ['sHome', 'sTugas', 'sNilai', 'kBlock'].forEach(p => $(p).hidden = p !== id);
-    setActive(id); window.scrollTo(0, 0);
+    setActive(id); window.scrollTo(0, 0); anim($(id));
     if (sorot) { const el = $('sList').querySelector(`[data-id="${CSS.escape(sorot)}"]`); if (el) { el.scrollIntoView({ block: 'start' }); el.classList.add('flash'); } }
   }
   $('sDash').onclick = e => {
@@ -906,7 +983,7 @@
   /* ---------------- Admin ---------------- */
   function tab(id) {
     ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo'].forEach(p => $(p).hidden = p !== id);
-    setActive(id); msg('adminMsg'); window.scrollTo(0, 0);
+    setActive(id); msg('adminMsg'); window.scrollTo(0, 0); anim($(id));
   }
   function goAdmin(id) {
     tab(id);
@@ -1198,6 +1275,26 @@
     if (!nis || !confirm('Lepas akun Google dari NIS ' + nis + '? Siswa harus menghubungkan ulang.')) return;
     try { await api('resetKlaim', { nis }); await loadSiswa(); toast('Akun dilepas.'); } catch (err) { msg('adminMsg', err.message); }
   };
+
+  $('btnTema').onclick = () => {
+    const gelap = document.documentElement.dataset.tema ? document.documentElement.dataset.tema === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    const t = gelap ? 'light' : 'dark'; pasangTema(t); try { localStorage.setItem('tema', t); } catch (e) {}
+  };
+
+  /* halaman masuk: contoh tampilan yang bisa dicoba */
+  const ftabs = [...document.querySelectorAll('.ftab')];
+  ftabs.forEach(b => b.onclick = () => {
+    ftabs.forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); });
+    document.querySelectorAll('#frame .fbody').forEach(p => { p.hidden = p.dataset.p !== b.dataset.fitur; if (!p.hidden) anim(p); });
+  });
+  const demoKirim = () => {
+    if (!$('demoLink').value.trim()) { $('demoLink').focus(); return; }
+    $('demoJam').textContent = 'Dikumpulkan pukul ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    $('demoForm').hidden = true; $('demoOk').hidden = false; anim($('demoOk'));
+  };
+  $('demoKirim').onclick = demoKirim;
+  $('demoLink').onkeydown = e => { if (e.key === 'Enter') demoKirim(); };
+  $('demoUlang').onclick = () => { $('demoLink').value = ''; $('demoOk').hidden = true; $('demoForm').hidden = false; anim($('demoForm')); $('demoLink').focus(); };
 
   function initGoogle() {
     google.accounts.id.initialize({
