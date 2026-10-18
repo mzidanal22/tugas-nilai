@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#5B3DF5">
+<meta name="apple-mobile-web-app-title" content="Tugas &amp; Nilai">
 <title>Tugas & Nilai</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -202,6 +207,7 @@
   .ndot { position: absolute; top: 2px; right: 6px; background: #B3261E; color: #fff; border-radius: 99px; font-size: .7rem; min-width: 18px; height: 18px; line-height: 18px; text-align: center; font-weight: 700; }
   .tag.baru { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
   summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  @media print { header, .navbar, #topbar, .toast-wrap, dialog, button { display: none !important; } body { background: #fff; color: #000; } main { padding: 0; } .panel { break-inside: avoid; } }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
@@ -211,7 +217,7 @@
 <div id="topbar" aria-hidden="true"><i></i></div>
 <header>
   <span class="brand">Tugas &amp; Nilai</span>
-  <div class="who"><button class="ghost small" id="btnTema" type="button" aria-label="Ganti tema terang atau gelap"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v16a8 8 0 0 0 0-16z" fill="currentColor"/></svg></button>
+  <div class="who"><button class="ghost small" id="btnPasang" type="button" hidden>Pasang</button><button class="ghost small" id="btnTema" type="button" aria-label="Ganti tema terang atau gelap"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v16a8 8 0 0 0 0-16z" fill="currentColor"/></svg></button>
   <div id="who" class="who" hidden><button class="ghost small bell" id="btnBell" hidden aria-label="Pengumuman"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/></svg><span class="dot" id="bellN" hidden></span></button><span class="avatar" id="avatar" aria-hidden="true"></span><span id="whoName" class="muted"></span> <button class="ghost small" id="btnOut">Keluar</button></div></div>
 </header>
 <nav class="navbar" id="navbar" hidden aria-label="Menu utama"><div class="nav" id="nav"></div></nav>
@@ -340,6 +346,11 @@
       </div>
     </div>
 
+    <div id="pProfil" hidden>
+      <div class="row"><button class="ghost small" id="pfBack" type="button">← Kembali</button><button class="ghost small" id="pfCetak" type="button">Cetak</button></div>
+      <div id="pfBody" style="margin-top:12px"></div>
+    </div>
+
     <div id="pInfo" hidden>
       <div class="row"><h1 style="margin:0">Pengumuman</h1><button id="btnInfoBaru">Pengumuman baru</button></div>
       <div class="panel card" id="fInfo" hidden style="margin-top:16px">
@@ -437,9 +448,12 @@
     <div id="pSiswa" hidden>
       <h1>Daftar siswa</h1>
       <p class="muted" id="aSummary"></p>
+      <div id="aMasalah"></div>
       <div class="bar">
         <label for="aKelas" style="margin:0">Kelas</label>
         <select id="aKelas"><option value="">Semua</option></select>
+        <input id="aCari" type="search" placeholder="Cari nama atau NIS" aria-label="Cari siswa" style="width:14rem;margin:0">
+        <button class="small" id="btnTambahSiswa" type="button">Tambah siswa</button>
       </div>
       <div class="tablewrap"><table>
         <thead><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Status akun</th><th></th></tr></thead>
@@ -450,6 +464,15 @@
   </section>
 </main>
 <div class="toast-wrap" id="toasts" role="status" aria-live="polite"></div>
+<dialog id="dlgSiswa" aria-labelledby="sdJudul">
+  <p id="sdJudul" style="font-weight:600;margin-top:0"></p>
+  <label for="sdNama">Nama lengkap</label><input id="sdNama" maxlength="100">
+  <label for="sdNis">NIS atau kode</label><input id="sdNis" maxlength="40" autocomplete="off">
+  <label for="sdKelas">Kelas</label><select id="sdKelas" style="width:100%;margin-bottom:14px"></select>
+  <label for="sdRole">Peran</label><select id="sdRole" style="width:100%;margin-bottom:14px"><option value="siswa">Siswa</option><option value="ketua">Ketua kelas</option></select>
+  <div class="cerr" id="sdErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="sdHapus" type="button" style="margin-right:auto">Hapus siswa</button><button class="ghost" id="sdBatal" type="button">Batal</button><button id="sdSimpan" type="button">Simpan</button></div>
+</dialog>
 <dialog id="dlgNilai" aria-labelledby="nlJudul">
   <div class="dlg-head"><strong id="nlJudul"></strong><button class="ghost small" id="nlX" type="button" aria-label="Tutup">✕</button></div>
   <div id="nlBody">
@@ -528,6 +551,11 @@
     pertemuan_tidak_valid: 'Isi nomor pertemuan dengan angka 1 atau lebih.',
     absensi_tidak_ada: 'Data absensi tidak ditemukan.',
     revisi_kosong: 'Tulis alasan revisinya dulu.',
+    data_siswa_kurang: 'Isi nama dan NIS atau kode dulu.',
+    role_tidak_valid: 'Peran harus siswa atau ketua.',
+    siswa_tidak_ada: 'Siswa tidak ditemukan.',
+    nis_sudah_ada: 'NIS atau kode itu sudah dipakai siswa lain.',
+    ketua_sudah_ada: 'Kelas ini sudah punya ketua.',
     nilai_tidak_valid: 'Nilai harus angka 0-100.',
     belum_kumpul: 'Siswa ini belum mengumpulkan.',
     server_sibuk: 'Server sedang ramai. Coba lagi beberapa detik lagi.',
@@ -825,7 +853,7 @@
     $('nav').innerHTML = NAV[kind].map(([id, label, ic]) => `<button data-go="${id}">${ico(ic)}<span>${label}</span></button>`).join('');
     $('navbar').hidden = false;
   }
-  function setActive(id) { document.querySelectorAll('#nav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === (id === 'pRekap' ? 'pTugas' : id))); }
+  function setActive(id) { document.querySelectorAll('#nav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === (id === 'pRekap' ? 'pTugas' : id === 'pProfil' ? 'pSiswa' : id))); }
   $('nav').onclick = e => { const b = e.target.closest('[data-go]'); if (!b || (me.role === 'admin' && !izinPindah())) return; (me.role === 'admin' ? goAdmin : goSiswa)(b.dataset.go); };
 
   const greet = () => { const j = Number(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false })) % 24; return j < 11 ? 'Selamat pagi' : j < 15 ? 'Selamat siang' : j < 18 ? 'Selamat sore' : 'Selamat malam'; };
@@ -1303,9 +1331,49 @@
   }
   $('sHadirBody').onclick = e => { if (e.target.dataset.retry) loadHadir(); };
 
+  /* ---------------- Kelola siswa & pemeriksa data ---------------- */
+  let sdLama = null, kelasList = [];
+  $('aCari').oninput = () => drawTable();
+  function tampilMasalah(m) {
+    $('aMasalah').innerHTML = m.length
+      ? `<details class="panel" open style="max-width:40rem"><summary>${m.length} masalah data perlu dicek</summary>${m.map(x => item(esc(x.judul), esc(x.detail), '', `<span class="tag">${x.t === 'galat' ? 'Perlu diperbaiki' : 'Peringatan'}</span>`)).join('')}</details>`
+      : '<p class="muted">Pemeriksa data: tidak ada masalah ditemukan.</p>';
+  }
+  function bukaSiswa(nis) { // nis kosong = tambah siswa baru
+    sdLama = nis ? allSiswa.find(x => x.nis === nis) : null;
+    $('sdJudul').textContent = sdLama ? 'Ubah siswa' : 'Tambah siswa';
+    $('sdNama').value = sdLama ? sdLama.nama : ''; $('sdNis').value = sdLama ? sdLama.nis : '';
+    $('sdKelas').innerHTML = kelasList.map(k => `<option>${esc(k)}</option>`).join('');
+    $('sdKelas').value = sdLama ? sdLama.kelas : ($('aKelas').value || kelasList[0] || '');
+    $('sdRole').value = sdLama ? sdLama.role : 'siswa';
+    $('sdHapus').hidden = !sdLama; $('sdErr').textContent = ''; $('dlgSiswa').showModal(); $('sdNama').focus();
+  }
+  $('btnTambahSiswa').onclick = () => bukaSiswa('');
+  $('sdBatal').onclick = () => $('dlgSiswa').close();
+  $('sdSimpan').onclick = async () => {
+    const nama = $('sdNama').value.trim(), nis = $('sdNis').value.trim(), kelas = $('sdKelas').value, role = $('sdRole').value;
+    if (!nama || !nis) { $('sdErr').textContent = ERR.data_siswa_kurang; return; }
+    const pesan = [];
+    if (sdLama && sdLama.kelas !== kelas) pesan.push('Pindah kelas: tugas dan nilai dari kelas lama tidak ikut tampil di kelas baru.');
+    if (sdLama && sdLama.nis !== nis) pesan.push('NIS diubah: pengumpulan, nilai, dan absensinya ikut dipindahkan ke NIS baru.');
+    const kt = role === 'ketua' && allSiswa.find(x => x.kelas === kelas && x.role === 'ketua' && x.nis !== (sdLama ? sdLama.nis : null));
+    if (kt) pesan.push(`${kt.nama} akan diturunkan dari ketua kelas.`);
+    if (pesan.length && !confirm(pesan.join('\n') + '\n\nLanjutkan?')) return;
+    $('sdSimpan').disabled = true;
+    try {
+      await api('simpanSiswa', { nisLama: sdLama ? sdLama.nis : '', nis, nama, kelas, role, gantiKetua: !!kt });
+      $('dlgSiswa').close(); toast(sdLama ? 'Data siswa disimpan.' : 'Siswa ditambahkan.'); await loadSiswa();
+    } catch (e) { $('sdErr').textContent = e.message; }
+    $('sdSimpan').disabled = false;
+  };
+  $('sdHapus').onclick = async () => {
+    if (!confirm(`Hapus ${sdLama.nama} dari daftar? Akun Google-nya terlepas. Pengumpulan dan nilainya tetap ada di sheet tapi tidak lagi tampil.`)) return;
+    try { await api('hapusSiswa', { nis: sdLama.nis }); $('dlgSiswa').close(); toast('Siswa dihapus.'); await loadSiswa(); } catch (e) { $('sdErr').textContent = e.message; }
+  };
+
   /* ---------------- Admin ---------------- */
   function tab(id) {
-    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo', 'pAbsen'].forEach(p => $(p).hidden = p !== id);
+    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo', 'pAbsen', 'pProfil'].forEach(p => $(p).hidden = p !== id);
     setActive(id); msg('adminMsg'); window.scrollTo(0, 0); anim($(id));
   }
   function goAdmin(id) {
@@ -1582,22 +1650,24 @@
 
   async function loadSiswa() {
     if (!$('aBody').innerHTML) $('aBody').innerHTML = skBaris(8, 5);
-    try { allSiswa = (await api('listSiswa')).siswa; } catch (e) { return msg('adminMsg', e.message); }
+    try { const rs = await api('listSiswa'); allSiswa = rs.siswa; kelasList = rs.kelas || []; tampilMasalah(rs.masalah || []); } catch (e) { return msg('adminMsg', e.message); }
     const kelas = [...new Set(allSiswa.map(s => s.kelas))].sort(), cur = $('aKelas').value;
     $('aKelas').innerHTML = '<option value="">Semua</option>' + kelas.map(k => `<option>${esc(k)}</option>`).join('');
     $('aKelas').value = cur; drawTable();
   }
   function drawTable() {
-    const k = $('aKelas').value, rows = allSiswa.filter(s => !k || s.kelas === k), done = rows.filter(s => s.terdaftar).length;
+    const k = $('aKelas').value, q = $('aCari').value.trim().toLowerCase(), rows = allSiswa.filter(s => (!k || s.kelas === k) && (!q || (s.nama + ' ' + s.nis).toLowerCase().includes(q))), done = rows.filter(s => s.terdaftar).length;
     $('aSummary').textContent = rows.length ? `${done} dari ${rows.length} siswa sudah menghubungkan akun.`
       : 'Belum ada siswa. Isi sheet "Siswa" di Google Sheets, lalu muat ulang halaman ini.';
     $('aBody').innerHTML = rows.map(s => `<tr><td>${esc(s.nis)}</td>
       <td>${esc(s.nama)} ${s.role === 'ketua' ? '<span class="tag">Ketua</span>' : ''}</td><td>${esc(s.kelas)}</td>
       <td>${s.terdaftar ? '<span class="ok">Terhubung</span>' : '<span class="muted">Belum</span>'}</td>
-      <td>${s.terdaftar ? `<button class="ghost small" data-nis="${esc(s.nis)}">Lepas akun</button>` : ''}</td></tr>`).join('');
+      <td>${s.terdaftar ? `<button class="ghost small" data-nis="${esc(s.nis)}">Lepas akun</button>` : ''} <button class="ghost small" data-profil="${esc(s.nis)}">Profil</button> <button class="ghost small" data-ubah="${esc(s.nis)}">Ubah</button></td></tr>`).join('');
   }
   $('aKelas').onchange = drawTable;
   $('aBody').onclick = async e => {
+    if (e.target.dataset.profil !== undefined) return bukaProfil(e.target.dataset.profil);
+    if (e.target.dataset.ubah !== undefined) return bukaSiswa(e.target.dataset.ubah);
     const nis = e.target.dataset && e.target.dataset.nis;
     if (!nis || !confirm('Lepas akun Google dari NIS ' + nis + '? Siswa harus menghubungkan ulang.')) return;
     try { await api('resetKlaim', { nis }); await loadSiswa(); toast('Akun dilepas.'); } catch (err) { msg('adminMsg', err.message); }
@@ -1622,6 +1692,48 @@
   $('demoKirim').onclick = demoKirim;
   $('demoLink').onkeydown = e => { if (e.key === 'Enter') demoKirim(); };
   $('demoUlang').onclick = () => { $('demoLink').value = ''; $('demoOk').hidden = true; $('demoForm').hidden = false; anim($('demoForm')); $('demoLink').focus(); };
+
+  /* pasang di layar utama (PWA). Service worker sengaja tidak menyimpan cache, jadi pembaruan aplikasi selalu langsung terpakai. */
+  let promptPasang = null;
+  const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const iosSafari = () => /iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone();
+  function tampilPasang() { $('btnPasang').hidden = standalone() || !(promptPasang || iosSafari()); }
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); promptPasang = e; tampilPasang(); });
+  window.addEventListener('appinstalled', () => { promptPasang = null; tampilPasang(); toast('Aplikasi terpasang di layar utama.'); });
+  $('btnPasang').onclick = async () => {
+    if (promptPasang) { promptPasang.prompt(); try { await promptPasang.userChoice; } catch (e) {} promptPasang = null; tampilPasang(); }
+    else alert('Di iPhone: ketuk ikon Bagikan di Safari, lalu pilih "Tambah ke Layar Utama".');
+  };
+  tampilPasang();
+  if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+
+  /* profil siswa (guru) */
+  let pfNis = '';
+  $('pfBack').onclick = () => goAdmin('pSiswa');
+  $('pfCetak').onclick = () => { document.querySelectorAll('#pfBody details').forEach(d => { d.open = true; }); window.print(); };
+  $('pfBody').onclick = e => { if (e.target.dataset.retry) bukaProfil(pfNis); };
+  async function bukaProfil(nis) {
+    pfNis = nis; tab('pProfil'); $('pfBody').innerHTML = skBerisi(skPanel(3));
+    let r; try { r = await api('profilSiswa', { nis }); } catch (e) { $('pfBody').innerHTML = galat(e.message || 'Coba lagi sebentar.', 'profil'); return; }
+    const s = r.siswa, ab = m => r.absensi.find(a => a.mapel === m), flags = [];
+    r.mapel.forEach(m => {
+      if (m.terlewat) flags.push(`${m.mapel}: ${m.terlewat} tugas lewat deadline dan belum dikumpulkan.`);
+      if (m.terlambat >= 2 || (m.dikumpulkan && m.terlambat / m.dikumpulkan >= 0.3)) flags.push(`${m.mapel}: sering terlambat (${m.terlambat} dari ${m.dikumpulkan} tugas yang dikumpulkan).`);
+      const rv = m.tugas.filter(t => t.revisi && !t.revisi.dikirim).length; if (rv) flags.push(`${m.mapel}: ${rv} tugas menunggu revisi dari siswa.`);
+    });
+    r.absensi.forEach(a => { if (a.total >= 3 && a.H / a.total < 0.8) flags.push(`${a.mapel}: kehadiran ${Math.round(a.H / a.total * 100)}% dari ${a.total} pertemuan.`); if (a.A >= 2) flags.push(`${a.mapel}: alpa ${a.A} kali.`); });
+    const stT = t => t.bentuk === 'nilai' ? 'Dinilai langsung' : !t.kumpul ? (t.lewat ? 'Belum dikumpulkan, lewat deadline' : 'Belum dikumpulkan') : (t.revisi && !t.revisi.dikirim) ? 'Perlu revisi' : t.terlambat ? 'Terlambat' : 'Tepat waktu';
+    $('pfBody').innerHTML = `<h1 style="margin-bottom:4px">${esc(s.nama)}</h1>
+      <p class="muted">${esc(s.kelas)}, NIS ${esc(s.nis)}${s.role === 'ketua' ? ', ketua kelas' : ''}. Akun Google ${s.terhubung ? 'terhubung' : 'belum terhubung'}.</p>
+      <div class="panel card"><h2>Perlu perhatian</h2>${flags.length ? flags.map(f => `<div class="item"><div class="grow">${esc(f)}</div></div>`).join('') : '<p class="muted" style="margin:0">Tidak ada hal yang menonjol.</p>'}</div>`
+      + (r.mapel.map(m => { const a = ab(m.mapel), pct = a && a.total ? Math.round(a.H / a.total * 100) : null;
+        return `<div class="panel card"><div class="row"><h2 style="margin:0">${esc(m.mapel)}</h2><span class="nilai-pill">${m.rata ?? '–'}</span></div>
+          <div class="muted">rata-rata nilai tugas yang sudah dinilai</div>
+          <div class="sum" style="margin-top:10px"><span class="chip"><b>${m.dikumpulkan}/${m.total}</b> dikumpulkan</span><span class="chip"><b>${m.terlambat}</b> terlambat</span><span class="chip"><b>${m.terlewat}</b> terlewat</span>
+          ${a ? `<span class="chip"><b>${pct ?? '–'}${pct === null ? '' : '%'}</b> hadir</span><span class="chip"><b>${a.S}</b> sakit</span><span class="chip"><b>${a.I}</b> izin</span><span class="chip"><b>${a.A}</b> alpa</span>` : ''}</div>
+          <details style="margin-top:6px"><summary>Lihat semua tugas</summary>${m.tugas.map(t => item(esc(fmt(t.deadline)), esc(t.judul), `<div class="${!t.kumpul && t.lewat && t.bentuk !== 'nilai' ? 'late' : 'muted'}">${stT(t)}</div>`, t.nilai !== null ? `<div class="nilai-pill">${esc(t.nilai)}</div>` : '')).join('')}</details></div>`; }).join('')
+        || '<div class="panel"><strong>Belum ada tugas untuk kelas ini.</strong></div>');
+  }
 
   function initGoogle() {
     google.accounts.id.initialize({
