@@ -198,6 +198,10 @@
   #dlgNilai { padding: 0; max-width: 34rem; }
   #nlBody { padding: 16px; max-height: 68vh; overflow-y: auto; }
   #dlgNilai .actions { padding: 12px 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .nav button { position: relative; }
+  .ndot { position: absolute; top: 2px; right: 6px; background: #B3261E; color: #fff; border-radius: 99px; font-size: .7rem; min-width: 18px; height: 18px; line-height: 18px; text-align: center; font-weight: 700; }
+  .tag.baru { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  summary { cursor: pointer; color: var(--accent); font-weight: 600; }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
@@ -292,6 +296,7 @@
       <div id="sDash"></div>
     </div>
     <div id="sTugas" hidden><h1>Tugas</h1><div id="sList"></div></div>
+    <div id="sHadir" hidden><h1>Kehadiran</h1><div id="sHadirBody"></div></div>
     <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Rata-rata hanya dari tugas yang nilainya sudah dirilis, tanpa bobot. Nilai rapor dihitung guru dengan komponen lain.</p><div id="sNilaiBody"></div></div>
     <div id="kBlock" hidden>
       <h1 style="margin-bottom:8px">Rekap kelas</h1>
@@ -561,7 +566,7 @@
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
   let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
-  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
+  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
@@ -666,14 +671,15 @@
     const k = t.kumpul, st = statusOf(t), lewat = new Date() > new Date(t.deadline);
     const rev = !!(k && k.revisi && !k.revisi.dikirim), tag = rev ? 'Perlu revisi' : { belum: lewat ? 'Lewat deadline' : 'Belum dikumpulkan', terkumpul: 'Terkumpul', menunggu: 'Belum dinilai', dinilai: 'Dinilai' }[st];
     const dl = t.bentuk === 'nilai' ? '' : `<p class="muted">Deadline ${fmt(t.deadline)}${st === 'belum' ? ` · <span class="${lewat || new Date(t.deadline) - Date.now() < 864e5 ? 'due-soon' : ''}">${rel(t.deadline)}</span>` : ''}</p>`;
+    const kalH = st === 'belum' && t.bentuk !== 'nilai' && new Date(t.deadline) > Date.now() ? `<p class="muted" style="margin-top:-6px"><a href="${linkKalender(t)}" target="_blank" rel="noopener noreferrer">Tambahkan ke Google Kalender</a></p>` : '';
     let body;
     if (st === 'dinilai') body = `<div class="banner nilai"><div class="muted">Nilai</div><div class="nilai-big">${esc(k.nilai)}</div>${k.catatanGuru ? `<p style="margin:8px 0 0">${esc(k.catatanGuru)}</p>` : ''}</div>${t.bentuk !== 'nilai' ? `<div class="muted">${ringkas(k)}</div>` : ''}`;
     else if (st === 'menunggu') body = '<p class="muted">Belum ada nilai dari guru.</p>';
     else if (st === 'terkumpul') body = `<div class="banner${k.terlambat ? ' warn' : ''}"><strong>${k.terlambat ? '✓ Terkumpul, tapi terlambat' : '✓ Berhasil dikumpulkan'}</strong>
         <div class="muted">${fmt(k.waktu)}</div>${ringkas(k)}<div class="muted" style="margin-top:6px">${k.kunci ? 'Sudah diperiksa guru. Nilai akan muncul setelah dirilis.' : k.revisi ? 'Revisi terkirim. Menunggu guru menilai ulang.' : 'Nilai akan muncul di sini setelah guru menilai.'}</div></div>${k.kunci ? '' : `<button class="ghost small" data-act="ubah">Ubah pengumpulan</button><div class="form" hidden style="margin-top:14px">${formHtml(t)}</div>`}`;
     else body = (rev ? `<div class="banner warn"><strong>Perlu revisi</strong><div>${esc(k.revisi.catatan)}</div></div>` : '') + `<div class="form">${formHtml(t)}</div>`;
-    return `<div class="panel card" data-id="${esc(t.id)}"><div class="row"><span class="muted">${esc(t.mapel)}</span><span class="tag">${tag}</span></div>
-      <h3>${esc(t.judul)}</h3>${t.deskripsi ? `<p>${esc(t.deskripsi)}</p>` : ''}${dl}${body}</div>`;
+    return `<div class="panel card" data-id="${esc(t.id)}"><div class="row"><span class="muted">${esc(t.mapel)}</span><span><span class="tag">${tag}</span>${baru.tugas.has(t.id) || (rev && baru.tugas.has('rev:' + t.id + ':' + k.revisi.pada)) ? ' <span class="tag baru">Baru</span>' : ''}</span></div>
+      <h3>${esc(t.judul)}</h3>${t.deskripsi ? `<p>${esc(t.deskripsi)}</p>` : ''}${dl}${kalH}${body}</div>`;
   }
 
   function drawTugasSiswa() {
@@ -695,7 +701,7 @@
       $('sNilaiBody').innerHTML = skBerisi(skPanel(3));
     }
     try { tugasSiswa = (await api('tugasSaya')).tugas; } catch (e) { $('sList').innerHTML = ''; $('sNilaiBody').innerHTML = ''; $('sDash').innerHTML = galat(e.message, 'siswa'); return; }
-    drawTugasSiswa(); drawDashSiswa(); drawNilaiSiswa();
+    segarBaru(); drawTugasSiswa(); drawDashSiswa(); drawNilaiSiswa(); pasangLencana();
     if (highlight) {
       const el = $('sList').querySelector(`[data-id="${CSS.escape(highlight)}"]`);
       if (el) { el.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); el.classList.add('flash'); }
@@ -812,8 +818,8 @@
   const ico = n => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
   const NAV = {
     admin: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pAbsen', 'Absen', 'absen'], ['pNilai', 'Nilai', 'nilai'], ['pSiswa', 'Siswa', 'users'], ['pInfo', 'Info', 'info']],
-    siswa: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai']],
-    ketua: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['kBlock', 'Kelas', 'users']]
+    siswa: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Hadir', 'absen']],
+    ketua: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Hadir', 'absen'], ['kBlock', 'Kelas', 'users']]
   };
   function buildNav(kind) {
     $('nav').innerHTML = NAV[kind].map(([id, label, ic]) => `<button data-go="${id}">${ico(ic)}<span>${label}</span></button>`).join('');
@@ -827,7 +833,11 @@
   const item = (atas, judul, bawah, kanan) => `<div class="item"><div class="grow"><div class="muted">${atas}</div><div class="t">${judul}</div>${bawah || ''}</div>${kanan || ''}</div>`;
 
   function goSiswa(id, sorot) {
-    ['sHome', 'sTugas', 'sNilai', 'kBlock'].forEach(p => $(p).hidden = p !== id);
+    if (panelAktif === 'sTugas' && id !== 'sTugas') tandaiDilihat('tugas'); // yang sudah dibuka tidak lagi bertanda baru
+    if (panelAktif === 'sNilai' && id !== 'sNilai') tandaiDilihat('nilai');
+    panelAktif = id;
+    ['sHome', 'sTugas', 'sNilai', 'sHadir', 'kBlock'].forEach(p => $(p).hidden = p !== id);
+    if (id === 'sHadir') loadHadir();
     setActive(id); window.scrollTo(0, 0); anim($(id));
     if (sorot) { const el = $('sList').querySelector(`[data-id="${CSS.escape(sorot)}"]`); if (el) { el.scrollIntoView({ block: 'start' }); el.classList.add('flash'); } }
   }
@@ -869,7 +879,7 @@
     tugasSiswa.filter(t => t.kumpul && t.kumpul.kunci && typeof t.kumpul.nilai === 'number').sort(desc).forEach(t => (g[t.mapel] = g[t.mapel] || []).push(t));
     const nama = Object.keys(g).sort();
     $('sNilaiBody').innerHTML = nama.length ? nama.map(m => `<div class="panel"><div class="row"><h2>${esc(m)}</h2><span class="muted">rata-rata <strong>${avg(g[m].map(t => t.kumpul.nilai))}</strong></span></div>`
-      + g[m].map(t => item('', esc(t.judul), t.kumpul.catatanGuru ? `<div class="muted">${esc(t.kumpul.catatanGuru)}</div>` : '', `<div class="nilai-pill">${esc(t.kumpul.nilai)}</div>`)).join('') + '</div>').join('')
+      + g[m].map(t => item(baru.nilai.has(t.id) ? '<span class="tag baru">Baru</span>' : '', esc(t.judul), t.kumpul.catatanGuru ? `<div class="muted">${esc(t.kumpul.catatanGuru)}</div>` : '', `<div class="nilai-pill">${esc(t.kumpul.nilai)}</div>`)).join('') + '</div>').join('')
       : '<div class="panel"><strong>Belum ada nilai.</strong><br><span class="muted">Nilai akan muncul di sini setelah guru menilai.</span></div>';
   }
 
@@ -1239,6 +1249,59 @@
   $('nlX').onclick = () => $('dlgNilai').close();
   $('dlgNilai').addEventListener('close', () => { if (nlSelesai) { nlSelesai = 0; openRekap(rekapId); } }); // tabel ikut diperbarui setelah selesai atau ditutup
   $('nlNilai').onkeydown = $('nlCat').onkeydown = e => { if (e.key === 'Enter') nlSimpan(); };
+
+  /* ---------------- Kehadiran saya, penanda baru, kalender ---------------- */
+  let panelAktif = 'sHome', baru = { tugas: new Set(), nilai: new Set() };
+  const LB = { H: 'Hadir', S: 'Sakit', I: 'Izin', A: 'Alpa' };
+  // deadline jadi acara satu jam yang berakhir tepat di deadline (tautan Google Kalender, tanpa izin apa pun)
+  function linkKalender(t) {
+    const e = new Date(t.deadline), s = new Date(e.getTime() - 36e5), f = d => d.toISOString().replace(/[-:]|\.\d{3}/g, '');
+    return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('Deadline: ' + t.judul + ' (' + t.mapel + ')')
+      + '&dates=' + f(s) + '/' + f(e) + '&details=' + encodeURIComponent('Kumpulkan di ' + appUrl());
+  }
+  // "baru" = belum pernah dilihat di HP ini. Disimpan di browser, jadi pindah HP bisa memunculkan tanda lagi.
+  const kunciBaru = j => 'baru_' + j + '_' + (me ? me.nis : '');
+  const bacaBaru = j => { try { const x = localStorage.getItem(kunciBaru(j)); return x === null ? null : new Set(JSON.parse(x)); } catch (e) { return null; } };
+  const simpanBaru = (j, set) => { try { localStorage.setItem(kunciBaru(j), JSON.stringify([...set])); } catch (e) {} };
+  const idBaru = {
+    tugas: () => tugasSiswa.flatMap(t => [t.id, ...(t.kumpul && t.kumpul.revisi && !t.kumpul.revisi.dikirim ? ['rev:' + t.id + ':' + t.kumpul.revisi.pada] : [])]),
+    nilai: () => tugasSiswa.filter(t => t.kumpul && t.kumpul.kunci && typeof t.kumpul.nilai === 'number').map(t => t.id)
+  };
+  function segarBaru() {
+    ['tugas', 'nilai'].forEach(j => {
+      const ids = idBaru[j](); let seen = bacaBaru(j);
+      if (seen === null) { seen = new Set(ids); simpanBaru(j, seen); } // kunjungan pertama: jangan menandai semuanya baru
+      baru[j] = new Set(ids.filter(i => !seen.has(i)));
+    });
+  }
+  function pasangLencana() {
+    [['sTugas', baru.tugas.size], ['sNilai', baru.nilai.size]].forEach(([id, n]) => {
+      const btn = document.querySelector(`#nav [data-go="${id}"]`); if (!btn) return;
+      let d = btn.querySelector('.ndot');
+      if (!n) { if (d) d.remove(); return; }
+      if (!d) { d = document.createElement('span'); d.className = 'ndot'; btn.appendChild(d); }
+      d.textContent = n;
+    });
+  }
+  function tandaiDilihat(j) {
+    const seen = bacaBaru(j) || new Set(); idBaru[j]().forEach(i => seen.add(i)); simpanBaru(j, seen);
+    segarBaru(); drawTugasSiswa(); drawNilaiSiswa(); pasangLencana();
+  }
+  function hadirCard(m) {
+    const pct = m.total ? Math.round(m.H / m.total * 100) : null;
+    return `<div class="panel card"><div class="row"><h2 style="margin:0">${esc(m.mapel)}</h2><span class="nilai-pill">${pct === null ? '–' : pct + '%'}</span></div>
+      <div class="muted">${m.total ? 'kehadiran dari ' + m.total + ' pertemuan yang tercatat' : 'Belum ada pertemuan yang tercatat untukmu'}</div>
+      ${m.total ? `<div class="meter"><i style="width:${pct}%"></i></div>` : ''}
+      <div class="sum" style="margin-top:12px">${['H', 'S', 'I', 'A'].map(k => `<span class="chip"><b>${m[k]}</b> ${LB[k].toLowerCase()}</span>`).join('')}</div>
+      <details style="margin-top:8px"><summary>Lihat per pertemuan</summary>${m.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan, '', `<span class="tag">${s.status ? LB[s.status] : 'Belum dicatat'}</span>`)).join('')}</details></div>`;
+  }
+  async function loadHadir() {
+    $('sHadirBody').innerHTML = skBerisi(skPanel(3));
+    let r; try { r = await api('absensiSaya'); } catch (e) { $('sHadirBody').innerHTML = galat(e.message || 'Coba lagi sebentar.', 'hadir'); return; }
+    $('sHadirBody').innerHTML = r.mapel.length ? r.mapel.map(hadirCard).join('')
+      : '<div class="panel"><strong>Belum ada data kehadiran.</strong><br><span class="muted">Kehadiranmu muncul di sini setelah guru mengisi absensi.</span></div>';
+  }
+  $('sHadirBody').onclick = e => { if (e.target.dataset.retry) loadHadir(); };
 
   /* ---------------- Admin ---------------- */
   function tab(id) {
