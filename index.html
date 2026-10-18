@@ -192,6 +192,12 @@
   #abDaftar { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin: 8px 0 14px; max-width: 40rem; }
   #abRingkas { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 8px 0; }
   .chip.belum { border-color: var(--accent); }
+  .chips-q { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+  .qc { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 99px; padding: 3px 12px; min-height: 32px; font-weight: 400; font-size: .875rem; }
+  .qc.tambah { color: var(--accent); border-style: dashed; }
+  #dlgNilai { padding: 0; max-width: 34rem; }
+  #nlBody { padding: 16px; max-height: 68vh; overflow-y: auto; }
+  #dlgNilai .actions { padding: 12px 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
@@ -286,7 +292,7 @@
       <div id="sDash"></div>
     </div>
     <div id="sTugas" hidden><h1>Tugas</h1><div id="sList"></div></div>
-    <div id="sNilai" hidden><h1>Nilai</h1><div id="sNilaiBody"></div></div>
+    <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Rata-rata hanya dari tugas yang nilainya sudah dirilis, tanpa bobot. Nilai rapor dihitung guru dengan komponen lain.</p><div id="sNilaiBody"></div></div>
     <div id="kBlock" hidden>
       <h1 style="margin-bottom:8px">Rekap kelas</h1>
       <div class="bar"><label for="kTugas" style="margin:0">Tugas</label><select id="kTugas"></select><button class="ghost small" id="kSalin">Salin daftar yang belum kumpul</button></div>
@@ -362,14 +368,18 @@
       <button class="ghost small" id="btnBack">← Kembali</button>
       <h2 id="rJudul" style="margin-top:12px"></h2>
       <p class="muted" id="rInfo"></p>
-      <div class="bar"><button class="ghost small" id="btnEdit">Edit tugas</button><button class="ghost small" id="btnBagi">Bagikan ke WhatsApp</button><button class="ghost small" id="btnIngat">Ingatkan yang belum kumpul</button><button class="ghost small" id="btnHapus">Hapus tugas</button><button id="btnSimpanSemua" hidden>Simpan semua nilai</button></div>
+      <div class="banner" id="rRilis" hidden style="max-width:40rem"><div class="row"><span id="rRilisTeks"></span><button class="small" id="btnRilis" type="button"></button></div></div>
+      <div class="seg" id="rFilter" role="group" aria-label="Saring siswa" style="flex-wrap:wrap"></div>
+      <div class="bar" id="rChipsBar" style="margin-top:0"><span class="muted">Komentar cepat (klik kolom catatan dulu):</span></div>
+      <div class="chips-q" id="rChips"></div>
+      <div class="bar"><button class="small" id="btnNilaiCepat" type="button">Mulai menilai</button><button class="ghost small" id="btnEdit">Edit tugas</button><button class="ghost small" id="btnBagi">Bagikan ke WhatsApp</button><button class="ghost small" id="btnIngat">Ingatkan yang belum kumpul</button><button class="ghost small" id="btnHapus">Hapus tugas</button><button id="btnSimpanSemua" hidden>Simpan semua nilai</button></div>
       <div class="panel card" id="fEdit" hidden>
         <label for="eJudul">Judul</label><input id="eJudul" maxlength="150">
         <label for="eDesk">Deskripsi</label><textarea id="eDesk"></textarea>
         <label for="eBentuk">Bentuk pengumpulan</label><select id="eBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
         <label for="eDl">Deadline (WIB)</label><input id="eDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="eKelas" style="margin-bottom:14px"></div>
-        <p class="muted">Mengubah deadline tidak mengubah status "terlambat" yang sudah tercatat.</p>
+        <p class="muted">Status terlambat dihitung ulang otomatis dari waktu kumpul pertama siswa.</p>
         <button id="btnSimpanEdit">Simpan perubahan</button>
       </div>
       <div class="tablewrap"><table style="min-width:48rem">
@@ -435,6 +445,27 @@
   </section>
 </main>
 <div class="toast-wrap" id="toasts" role="status" aria-live="polite"></div>
+<dialog id="dlgNilai" aria-labelledby="nlJudul">
+  <div class="dlg-head"><strong id="nlJudul"></strong><button class="ghost small" id="nlX" type="button" aria-label="Tutup">✕</button></div>
+  <div id="nlBody">
+    <p class="muted" id="nlProg" style="margin-top:0"></p>
+    <h3 id="nlNama" style="margin:0 0 6px"></h3>
+    <div id="nlIsi" style="margin-bottom:14px"></div>
+    <label for="nlNilai">Nilai (0-100)</label><input id="nlNilai" type="number" min="0" max="100" step="any" inputmode="decimal">
+    <label for="nlCat">Catatan untuk siswa (opsional)</label><input id="nlCat" maxlength="500">
+    <div class="chips-q" id="nlChips"></div>
+    <div class="cerr" id="nlErr" role="alert"></div>
+  </div>
+  <div class="actions"><button class="ghost" id="nlRevisi" type="button">Minta revisi</button><button class="ghost" id="nlLewat" type="button">Lewati</button><button id="nlSimpan" type="button">Simpan dan berikutnya</button></div>
+</dialog>
+<dialog id="dlgRevisi">
+  <p id="rvJudul" style="font-weight:600;margin-top:0"></p>
+  <p class="muted" style="margin-top:0">Siswa akan melihat catatan ini di kartu tugasnya dan bisa mengumpulkan ulang.</p>
+  <textarea id="rvCat" maxlength="500" style="min-height:6rem"></textarea>
+  <div class="chips-q" id="rvChips"></div>
+  <div class="cerr" id="rvErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="rvBatal" type="button">Batal</button><button id="rvKirim" type="button">Kirim permintaan revisi</button></div>
+</dialog>
 <dialog id="dlgShare">
   <p id="shareTitle" style="font-weight:600;margin-top:0"></p>
   <p class="muted" style="margin-top:0">Pratinjau pesan. Boleh diubah dulu sebelum dikirim.</p>
@@ -491,6 +522,7 @@
     pertemuan_sudah_ada: 'Nomor pertemuan itu sudah ada untuk kelas ini. Pakai nomor lain atau buka yang sudah ada.',
     pertemuan_tidak_valid: 'Isi nomor pertemuan dengan angka 1 atau lebih.',
     absensi_tidak_ada: 'Data absensi tidak ditemukan.',
+    revisi_kosong: 'Tulis alasan revisinya dulu.',
     nilai_tidak_valid: 'Nilai harus angka 0-100.',
     belum_kumpul: 'Siswa ini belum mengumpulkan.',
     server_sibuk: 'Server sedang ramai. Coba lagi beberapa detik lagi.',
@@ -606,8 +638,10 @@
   }
   function statusOf(t) {
     const k = t.kumpul;
-    if (t.bentuk === 'nilai') return k && k.kunci ? 'dinilai' : 'menunggu';
-    return !k ? 'belum' : k.kunci ? 'dinilai' : 'terkumpul';
+    if (k && k.revisi && !k.revisi.dikirim) return 'belum'; // diminta merevisi: kembali jadi tugas yang perlu dikerjakan
+    const rilis = k && k.kunci && k.dirilis !== false; // dinilai DAN nilainya sudah dirilis guru
+    if (t.bentuk === 'nilai') return rilis ? 'dinilai' : 'menunggu';
+    return !k ? 'belum' : rilis ? 'dinilai' : 'terkumpul';
   }
   function ringkas(k) {
     const u = safeUrl(k.link);
@@ -626,20 +660,18 @@
     return `${linkF}${fileF}<label for="c-${id}">Catatan untuk guru (opsional)</label>
       <input id="c-${id}" data-f="catatan" maxlength="300" value="${esc(k ? k.catatan : '')}">
       <div class="cerr" role="alert"></div>
-      <button data-act="kumpul" data-id="${id}">${k ? 'Simpan perubahan' : 'Kumpulkan'}</button>`;
+      <button data-act="kumpul" data-id="${id}">${k && k.revisi && !k.revisi.dikirim ? 'Kirim revisi' : k ? 'Simpan perubahan' : 'Kumpulkan'}</button>`;
   }
   function card(t) {
     const k = t.kumpul, st = statusOf(t), lewat = new Date() > new Date(t.deadline);
-    const tag = { belum: lewat ? 'Lewat deadline' : 'Belum dikumpulkan', terkumpul: 'Terkumpul', menunggu: 'Belum dinilai', dinilai: 'Dinilai' }[st];
+    const rev = !!(k && k.revisi && !k.revisi.dikirim), tag = rev ? 'Perlu revisi' : { belum: lewat ? 'Lewat deadline' : 'Belum dikumpulkan', terkumpul: 'Terkumpul', menunggu: 'Belum dinilai', dinilai: 'Dinilai' }[st];
     const dl = t.bentuk === 'nilai' ? '' : `<p class="muted">Deadline ${fmt(t.deadline)}${st === 'belum' ? ` · <span class="${lewat || new Date(t.deadline) - Date.now() < 864e5 ? 'due-soon' : ''}">${rel(t.deadline)}</span>` : ''}</p>`;
     let body;
     if (st === 'dinilai') body = `<div class="banner nilai"><div class="muted">Nilai</div><div class="nilai-big">${esc(k.nilai)}</div>${k.catatanGuru ? `<p style="margin:8px 0 0">${esc(k.catatanGuru)}</p>` : ''}</div>${t.bentuk !== 'nilai' ? `<div class="muted">${ringkas(k)}</div>` : ''}`;
     else if (st === 'menunggu') body = '<p class="muted">Belum ada nilai dari guru.</p>';
     else if (st === 'terkumpul') body = `<div class="banner${k.terlambat ? ' warn' : ''}"><strong>${k.terlambat ? '✓ Terkumpul, tapi terlambat' : '✓ Berhasil dikumpulkan'}</strong>
-        <div class="muted">${fmt(k.waktu)}</div>${ringkas(k)}<div class="muted" style="margin-top:6px">Nilai akan muncul di sini setelah guru menilai.</div></div>
-      <button class="ghost small" data-act="ubah">Ubah pengumpulan</button>
-      <div class="form" hidden style="margin-top:14px">${formHtml(t)}</div>`;
-    else body = `<div class="form">${formHtml(t)}</div>`;
+        <div class="muted">${fmt(k.waktu)}</div>${ringkas(k)}<div class="muted" style="margin-top:6px">${k.kunci ? 'Sudah diperiksa guru. Nilai akan muncul setelah dirilis.' : k.revisi ? 'Revisi terkirim. Menunggu guru menilai ulang.' : 'Nilai akan muncul di sini setelah guru menilai.'}</div></div>${k.kunci ? '' : `<button class="ghost small" data-act="ubah">Ubah pengumpulan</button><div class="form" hidden style="margin-top:14px">${formHtml(t)}</div>`}`;
+    else body = (rev ? `<div class="banner warn"><strong>Perlu revisi</strong><div>${esc(k.revisi.catatan)}</div></div>` : '') + `<div class="form">${formHtml(t)}</div>`;
     return `<div class="panel card" data-id="${esc(t.id)}"><div class="row"><span class="muted">${esc(t.mapel)}</span><span class="tag">${tag}</span></div>
       <h3>${esc(t.judul)}</h3>${t.deskripsi ? `<p>${esc(t.deskripsi)}</p>` : ''}${dl}${body}</div>`;
   }
@@ -700,13 +732,13 @@
     if (t.bentuk === 'file' && !adaFile) return fail('Pilih file tugasmu dulu.');
     if (t.bentuk === 'link+file' && !link && !adaFile) return fail('Isi link atau pilih file dulu.');
     if (fl && fl.size > 5 * 1024 * 1024) return fail(ERR.file_terlalu_besar);
-    const sebelumnya = !!t.kumpul;
+    const sebelumnya = !!t.kumpul, adaRevisi = !!(t.kumpul && t.kumpul.revisi && !t.kumpul.revisi.dikirim);
     btn.disabled = true; btn.textContent = fl ? 'Mengunggah… jangan tutup halaman' : 'Mengirim…';
     try {
       const file = fl ? { name: fl.name, data: await toB64(fl) } : null;
       await api('kumpul', { id: t.id, link, catatan: c.querySelector('[data-f=catatan]').value, file, rid: newRid() },
         { onRetry: (n, m) => { btn.textContent = `Server sedang ramai, mencoba lagi (${n}/${m})…`; } });
-      toast(sebelumnya ? 'Perubahan tersimpan.' : 'Berhasil dikumpulkan. Terima kasih!');
+      toast(adaRevisi ? 'Revisi terkirim. Terima kasih!' : sebelumnya ? 'Perubahan tersimpan.' : 'Berhasil dikumpulkan. Terima kasih!');
       await loadTugasSiswa(t.id);
     } catch (err) { if (err.message) fail(err.message); btn.disabled = false; btn.textContent = label; }
   };
@@ -814,7 +846,7 @@
     const segera = [...by.belum].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     const rows = segera.slice(0, 3).map(t => {
       const lewat = new Date(t.deadline) < Date.now(), dekat = lewat || new Date(t.deadline) - Date.now() < 864e5;
-      return item(esc(t.mapel), esc(t.judul), `<div class="${dekat ? 'due-soon' : 'muted'}">${rel(t.deadline)}</div>`, `<button class="small" data-go="sTugas" data-sorot="${esc(t.id)}">Kumpulkan</button>`);
+      return item(esc(t.mapel), esc(t.judul), `<div class="${dekat ? 'due-soon' : 'muted'}">${t.kumpul && t.kumpul.revisi && !t.kumpul.revisi.dikirim ? 'Perlu revisi, ' : ''}${rel(t.deadline)}</div>`, `<button class="small" data-go="sTugas" data-sorot="${esc(t.id)}">Kumpulkan</button>`);
     }).join('');
     const baru = [...nilaiT].sort(desc).slice(0, 3).map(t => item(esc(t.mapel), esc(t.judul), '', `<div class="nilai-pill">${esc(t.kumpul.nilai)}</div>`)).join('');
     const mp = {};
@@ -824,8 +856,8 @@
       if (t.kumpul && t.kumpul.kunci && typeof t.kumpul.nilai === 'number') m.nil.push(t.kumpul.nilai);
     });
     const prog = Object.keys(mp).sort().map(n => { const m = mp[n], p = m.total ? Math.round(m.kumpul / m.total * 100) : 0, r = avg(m.nil);
-      return `<div class="item"><div class="grow"><div class="t">${esc(n)}</div><div class="muted">${m.total ? `${m.kumpul} dari ${m.total} tugas dikumpulkan` : 'Dinilai langsung oleh guru'}${r !== null ? ` · rata-rata nilai ${r}` : ''}</div>${m.total ? `<div class="meter"><i style="width:${p}%"></i></div>` : ''}</div></div>`; }).join('');
-    $('sDash').innerHTML = `<div class="stats">${stat(by.belum.length, 'perlu dikumpulkan', 'sTugas', by.belum.length > 0)}${stat(by.terkumpul.length + by.menunggu.length, 'menunggu nilai', 'sTugas')}${stat(rata === null ? '–' : rata, 'rata-rata nilai', 'sNilai')}</div>`
+      return `<div class="item"><div class="grow"><div class="t">${esc(n)}</div><div class="muted">${m.total ? `${m.kumpul} dari ${m.total} tugas dikumpulkan` : 'Dinilai langsung oleh guru'}${r !== null ? ` · rata-rata nilai tugas ${r}` : ''}</div>${m.total ? `<div class="meter"><i style="width:${p}%"></i></div>` : ''}</div></div>`; }).join('');
+    $('sDash').innerHTML = `<div class="stats">${stat(by.belum.length, 'perlu dikumpulkan', 'sTugas', by.belum.length > 0)}${stat(by.terkumpul.length + by.menunggu.length, 'menunggu nilai', 'sTugas')}${stat(rata === null ? '–' : rata, 'rata-rata nilai tugas', 'sNilai')}</div>`
       + (me.role === 'ketua' ? '<div class="panel"><div class="row"><div><strong>Rekap kelas</strong><div class="muted">Lihat siapa yang belum kumpul dan bantu teman yang kendala.</div></div><button class="small" data-go="kBlock">Buka</button></div></div>' : '')
       + `<div class="grid2"><div class="panel"><h2>Segera dikumpulkan</h2>${rows || '<p class="muted">Semua tugas sudah beres. Mantap!</p>'}${segera.length > 3 ? `<button class="ghost small" data-go="sTugas">Lihat semua (${segera.length})</button>` : ''}</div>`
       + `<div class="panel"><h2>Nilai terbaru</h2>${baru || '<p class="muted">Belum ada nilai.</p>'}</div></div>`
@@ -1013,6 +1045,16 @@
   $('shareWa').onclick = () => window.open('https://wa.me/?text=' + encodeURIComponent($('shareText').value), '_blank', 'noopener');
   $('shareCopy').onclick = async () => { await salin($('shareText').value); toast('Teks disalin.'); };
   $('shareClose').onclick = () => $('dlgShare').close();
+  const pesanNilai = t => `*Nilai tugas sudah keluar: ${t.judul}*\n${t.mapel} · ${t.kelas.join(', ')}\n\nBuka aplikasi untuk melihat nilai dan catatan dari guru: ${appUrl()}`;
+  $('btnRilis').onclick = async () => {
+    const rilis = !curTugas.rilis, belum = curRows.filter(s => s.kumpul && !s.kunci).length;
+    if (rilis && belum && !confirm(`Masih ada ${belum} pengumpulan yang belum dinilai. Tetap rilis nilai yang sudah ada?`)) return;
+    try {
+      await api('rilisNilai', { id: rekapId, rilis }); await openRekap(rekapId);
+      toast(rilis ? 'Nilai dirilis ke siswa.' : 'Nilai disembunyikan dari siswa.');
+      if (rilis) bagikan('Nilai dirilis. Umumkan ke kelas?', pesanNilai(curTugas));
+    } catch (e) { msg('adminMsg', e.message); }
+  };
   $('btnBagi').onclick = () => bagikan('Bagikan tugas ke WhatsApp', pesanTugas(curTugas));
   $('btnIngat').onclick = () => {
     const p = pesanIngat(curTugas, curRows);
@@ -1111,6 +1153,93 @@
     try { await api('hapusAbsensi', { id: ab.id }); abAsli = abSnap(); toast('Absensi dihapus.'); await muatAbList(); } catch (e) { msg('adminMsg', e.message); }
   };
 
+  /* ---------------- Menilai cepat, komentar cepat, minta revisi ---------------- */
+  const KOMENTAR = ['Rapi dan sesuai instruksi', 'Bagus, pertahankan', 'Komposisi perlu dirapikan', 'Kontras warna kurang', 'Hasil belum lengkap', 'Link tidak bisa dibuka'];
+  const ALASAN = ['Link tidak bisa dibuka. Atur akses ke "siapa saja yang memiliki link", lalu kirim ulang.', 'Belum sesuai instruksi tugas. Baca lagi petunjuknya lalu perbaiki.', 'Hasil belum lengkap. Mohon dilengkapi.', 'File rusak atau tidak bisa dibuka. Mohon unggah ulang.'];
+  let qcTarget = null, rFilter = 'semua', nlAntri = [], nlTotal = 0, nlSelesai = 0, rvNis = null, rvDone = null;
+  const komentarList = () => { try { const x = JSON.parse(localStorage.getItem('komentar') || 'null'); if (Array.isArray(x) && x.length) return x; } catch (e) {} return KOMENTAR; };
+  const chipsHtml = () => komentarList().map((k, i) => `<button class="qc" type="button" data-k="${i}">${esc(k)}</button>`).join('') + '<button class="qc tambah" type="button" data-tambah="1">+ Tambah</button>';
+  const refreshChips = () => { $('rChips').innerHTML = chipsHtml(); $('nlChips').innerHTML = chipsHtml(); };
+  $('rvChips').innerHTML = ALASAN.map((a, i) => `<button class="qc" type="button" data-alasan="${i}">${esc(a.length > 44 ? a.slice(0, 44) + '…' : a)}</button>`).join('');
+  document.addEventListener('focusin', e => { if (e.target.matches('#rBody [data-f=cat], #nlCat')) qcTarget = e.target; });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.qc'); if (!b) return;
+    if (b.dataset.alasan !== undefined) { $('rvCat').value = ALASAN[b.dataset.alasan]; $('rvCat').focus(); return; }
+    if (b.dataset.tambah) { const t = prompt('Tulis komentar cepat baru:'); if (t && t.trim()) { try { localStorage.setItem('komentar', JSON.stringify([...komentarList(), t.trim().slice(0, 120)])); } catch (err) {} refreshChips(); } return; }
+    if (!qcTarget || !qcTarget.isConnected) return toast('Klik kolom catatan dulu, lalu pilih komentar.', true);
+    const tx = komentarList()[b.dataset.k], el = qcTarget;
+    el.value = el.value ? el.value.replace(/[.\s]+$/, '') + '. ' + tx : tx; el.dispatchEvent(new Event('input', { bubbles: true })); el.focus();
+  });
+
+  // saring daftar siswa di halaman tugas
+  const stRow = s => !s.kumpul ? 'belum' : (s.revisi && !s.revisi.dikirim) ? 'revisi' : s.kunci ? 'dinilai' : 'menunggu';
+  function renderFilter() {
+    const c = { semua: curRows.length, belum: 0, menunggu: 0, dinilai: 0, revisi: 0 };
+    curRows.forEach(s => { c[stRow(s)]++; });
+    if (rFilter !== 'semua' && !c[rFilter]) rFilter = 'semua';
+    const lab = { semua: 'Semua', belum: 'Belum kumpul', menunggu: 'Belum dinilai', dinilai: 'Sudah dinilai', revisi: 'Perlu revisi' };
+    $('rFilter').innerHTML = Object.keys(lab).filter(k => k === 'semua' || c[k]).map(k => `<button class="ghost small${rFilter === k ? ' on' : ''}" data-fl="${k}" type="button">${lab[k]} (${c[k]})</button>`).join('');
+    $('rBody').querySelectorAll('tr').forEach(tr => { tr.hidden = rFilter !== 'semua' && tr.dataset.st !== rFilter; });
+    $('btnNilaiCepat').textContent = `Mulai menilai (${c.menunggu})`; $('btnNilaiCepat').disabled = !c.menunggu;
+  }
+  $('rFilter').onclick = e => { const b = e.target.closest('[data-fl]'); if (b) { rFilter = b.dataset.fl; renderFilter(); } };
+
+  // minta revisi
+  function mintaRevisi(nis, selesai) {
+    rvNis = nis; rvDone = selesai || null; const s = curRows.find(x => x.nis === nis);
+    $('rvJudul').textContent = 'Minta revisi: ' + s.nama; $('rvCat').value = ''; $('rvErr').textContent = ''; $('dlgRevisi').showModal(); $('rvCat').focus();
+  }
+  $('rvBatal').onclick = () => $('dlgRevisi').close();
+  $('rvKirim').onclick = async () => {
+    const c = $('rvCat').value.trim(); if (c.length < 3) { $('rvErr').textContent = ERR.revisi_kosong; return; }
+    $('rvKirim').disabled = true;
+    try {
+      await api('mintaRevisi', { id: rekapId, nis: rvNis, catatan: c });
+      const s = curRows.find(x => x.nis === rvNis); s.kunci = false; s.revisi = { catatan: c, pada: new Date().toISOString(), dikirim: false };
+      $('dlgRevisi').close(); toast('Permintaan revisi dikirim ke siswa.');
+      if (rvDone) rvDone(); else await openRekap(rekapId);
+    } catch (e) { $('rvErr').textContent = e.message; }
+    $('rvKirim').disabled = false;
+  };
+
+  // menilai satu per satu: simpan lalu otomatis lanjut ke siswa berikutnya
+  const nlRow = () => curRows.find(x => x.nis === nlAntri[0]);
+  function bukaNilaiCepat() {
+    nlAntri = curRows.filter(s => stRow(s) === 'menunggu').map(s => s.nis);
+    if (!nlAntri.length) return toast('Tidak ada pengumpulan yang menunggu dinilai.');
+    nlTotal = nlAntri.length; nlSelesai = 0; $('dlgNilai').showModal(); tampilNl();
+  }
+  function tampilNl() {
+    const s = nlRow(), u = safeUrl(s.link);
+    $('nlJudul').textContent = 'Menilai: ' + curTugas.judul;
+    $('nlProg').textContent = `${nlSelesai + 1} dari ${nlTotal} yang menunggu nilai`;
+    $('nlNama').textContent = s.nama + ' (' + s.kelas + ')';
+    $('nlIsi').innerHTML = [u ? `<div>Link: <a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u.length > 52 ? u.slice(0, 52) + '…' : u)}</a></div>` : '',
+      s.fileId ? `<div>File: <a href="https://drive.google.com/file/d/${esc(s.fileId)}/view" target="_blank" rel="noopener noreferrer">${esc(s.fileNama || 'File')}</a></div>` : '',
+      s.catatan ? `<div class="muted">Catatan siswa: ${esc(s.catatan)}</div>` : '',
+      `<div class="muted">Kumpul ${fmt(s.waktu)}${s.terlambat ? ', terlambat' : ''}${s.diubahSetelah ? ', diubah setelah deadline' : ''}</div>`].join('');
+    $('nlNilai').value = s.nilai ?? ''; $('nlCat').value = s.catatanGuru || ''; $('nlErr').textContent = '';
+    $('nlChips').innerHTML = chipsHtml(); qcTarget = $('nlCat'); $('nlNilai').focus();
+  }
+  async function nlSimpan() {
+    const s = nlRow(), v = $('nlNilai').value.trim(), n = Number(v);
+    if (v === '' || !(n >= 0 && n <= 100)) { $('nlErr').textContent = ERR.nilai_tidak_valid; $('nlNilai').focus(); return; }
+    $('nlSimpan').disabled = true;
+    try {
+      await api('nilai', { id: rekapId, nis: s.nis, nilai: v, catatan: $('nlCat').value });
+      s.kunci = true; s.nilai = n; s.catatanGuru = $('nlCat').value; s.revisi = null; nlAntri.shift(); nlSelesai++;
+      if (nlAntri.length) tampilNl(); else { $('dlgNilai').close(); toast('Semua pengumpulan sudah dinilai.'); }
+    } catch (e) { $('nlErr').textContent = e.message; }
+    $('nlSimpan').disabled = false;
+  }
+  $('btnNilaiCepat').onclick = bukaNilaiCepat;
+  $('nlSimpan').onclick = nlSimpan;
+  $('nlLewat').onclick = () => { if (nlAntri.length > 1) { nlAntri.push(nlAntri.shift()); tampilNl(); } else toast('Ini yang terakhir.'); };
+  $('nlRevisi').onclick = () => mintaRevisi(nlAntri[0], () => { nlAntri.shift(); nlSelesai++; if (nlAntri.length) tampilNl(); else $('dlgNilai').close(); });
+  $('nlX').onclick = () => $('dlgNilai').close();
+  $('dlgNilai').addEventListener('close', () => { if (nlSelesai) { nlSelesai = 0; openRekap(rekapId); } }); // tabel ikut diperbarui setelah selesai atau ditutup
+  $('nlNilai').onkeydown = $('nlCat').onkeydown = e => { if (e.key === 'Enter') nlSimpan(); };
+
   /* ---------------- Admin ---------------- */
   function tab(id) {
     ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo', 'pAbsen'].forEach(p => $(p).hidden = p !== id);
@@ -1129,7 +1258,7 @@
       drawKelasBox();
       $('tList').innerHTML = r.tugas.length ? r.tugas.map(t => `<div class="panel card"><div class="row">
         <div><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}</div><h3>${esc(t.judul)}</h3>
-        <div class="muted">Deadline ${fmt(t.deadline)} · ${t.kumpul} dari ${t.total} sudah kumpul</div></div>
+        <div class="muted">Deadline ${fmt(t.deadline)} · ${t.kumpul} dari ${t.total} sudah kumpul</div>${!t.rilis && t.kumpul - t.belumDinilai > 0 ? '<div class="due-soon">Nilai belum dirilis ke siswa</div>' : ''}</div>
         <button class="ghost small" data-id="${esc(t.id)}">Buka</button></div></div>`).join('')
         : '<p class="muted">Belum ada tugas. Klik "Tugas baru" untuk membuat yang pertama.</p>';
     } catch (e) { msg('adminMsg', e.message); }
@@ -1166,10 +1295,12 @@
     try {
       const r = await api('rekapTugas', { id });
       curTugas = r.tugas; $('fEdit').hidden = true;
+      $('rRilis').hidden = false; $('rRilisTeks').textContent = r.tugas.rilis ? 'Nilai sudah dirilis: siswa bisa melihat nilai dan catatanmu.' : 'Nilai belum dirilis: siswa belum bisa melihat nilai dan catatan.';
+      $('btnRilis').textContent = r.tugas.rilis ? 'Sembunyikan nilai' : 'Rilis nilai ke siswa'; $('btnRilis').className = r.tugas.rilis ? 'ghost small' : 'small';
       const sudah = r.rows.filter(x => x.kumpul).length;
       $('rJudul').textContent = r.tugas.mapel + ': ' + r.tugas.judul;
       const modeNilai = r.tugas.bentuk === 'nilai';
-      $('btnSimpanSemua').hidden = !modeNilai; $('btnBagi').hidden = modeNilai; $('btnIngat').hidden = modeNilai; curRows = r.rows;
+      $('btnSimpanSemua').hidden = !modeNilai; $('btnNilaiCepat').hidden = modeNilai; $('rFilter').hidden = modeNilai; $('rChipsBar').hidden = modeNilai; $('rChips').hidden = modeNilai; $('btnBagi').hidden = modeNilai; $('btnIngat').hidden = modeNilai; curRows = r.rows;
       $('rHead').innerHTML = modeNilai ? '<tr><th>Nama</th><th>Nilai (0-100)</th></tr>'
         : '<tr><th>Nama</th><th>Status</th><th>Link</th><th>Nilai</th><th>Catatan guru</th><th></th></tr>';
       $('rInfo').textContent = modeNilai ? `${esc0(r.tugas.jenis)} · ${sudah} dari ${r.rows.length} sudah ada nilai. Kosongkan kolom yang belum mau diisi.`
@@ -1180,20 +1311,22 @@
         return tab('pRekap');
       }
       $('rBody').innerHTML = r.rows.map(s => {
-        const st = !s.kumpul ? '<span class="muted">Belum</span>' : s.kunci ? '<span class="ok">Dinilai</span>' : s.terlambat ? '<span class="late">Terlambat</span>' : 'Terkumpul';
+        const st = !s.kumpul ? '<span class="muted">Belum</span>' : (s.revisi && !s.revisi.dikirim) ? '<span class="late">Perlu revisi</span>' : (s.revisi && s.revisi.dikirim && !s.kunci) ? '<span class="ok">Revisi terkirim</span>' : s.kunci ? '<span class="ok">Dinilai</span>' : s.terlambat ? '<span class="late">Terlambat</span>' : 'Terkumpul';
         const u = safeUrl(s.link);
-        return `<tr data-nis="${esc(s.nis)}"><td>${esc(s.nama)}<div class="muted">${esc(s.kelas)}</div></td><td>${st}</td>
+        return `<tr data-nis="${esc(s.nis)}" data-st="${stRow(s)}"><td>${esc(s.nama)}<div class="muted">${esc(s.kelas)}</div></td><td>${st}${s.waktu ? `<div class="muted">kumpul ${fmt(s.waktu)}</div>` : ''}${s.diubahSetelah ? '<div class="late">diubah setelah deadline</div>' : ''}${s.dinilai ? `<div class="muted">dinilai ${fmtTgl(s.dinilai)}</div>` : ''}</td>
           <td>${s.kumpul ? [u ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">Link</a>` : '', s.fileId ? `<a href="https://drive.google.com/file/d/${esc(s.fileId)}/view" target="_blank" rel="noopener noreferrer">${esc(s.fileNama || 'File')}</a>` : ''].filter(Boolean).join('<br>') || '-' : ''}${s.kumpul && s.catatan ? `<div class="muted">${esc(s.catatan)}</div>` : ''}</td>
           <td>${s.kumpul ? `<input data-f="nilai" type="number" min="0" max="100" value="${s.nilai ?? ''}">` : ''}</td>
           <td>${s.kumpul ? `<input data-f="cat" maxlength="500" value="${esc(s.catatanGuru)}">` : ''}</td>
-          <td>${s.kumpul ? `<button class="small" data-act="nilai">Simpan</button>` : ''}${s.kunci ? ` <button class="ghost small" data-act="buka">Buka kunci</button>` : ''}</td></tr>`;
+          <td>${s.kumpul ? `<button class="small" data-act="nilai">Simpan</button> <button class="ghost small" data-act="revisi">Revisi</button>` : ''}${s.kunci ? ` <button class="ghost small" data-act="buka">Buka kunci</button>` : ''}</td></tr>`;
       }).join('');
+      renderFilter(); refreshChips();
       tab('pRekap');
     } catch (e) { msg('adminMsg', e.message); if ($('rBody').querySelector('.sk')) { tab('pTugas'); loadTugasAdmin(); } }
   }
   $('rBody').onclick = async e => {
     const act = e.target.dataset.act; if (!act) return;
     const tr = e.target.closest('tr'), nis = tr.dataset.nis, btn = e.target, nama = tr.firstElementChild.firstChild.textContent;
+    if (act === 'revisi') return mintaRevisi(nis);
     btn.disabled = true;
     try {
       if (act === 'nilai') {
@@ -1212,7 +1345,7 @@
   $('rBody').onkeydown = e => {
     if (e.key !== 'Enter' || !e.target.matches('input')) return;
     const tr = e.target.closest('tr'), simpan = tr.querySelector('[data-act=nilai]');
-    if (simpan) simpan.click(); else { const nx = tr.nextElementSibling; if (nx) nx.querySelector('input').focus(); } // mode input massal: Enter pindah ke baris berikutnya
+    if (simpan) { simpan.click(); let nx = tr.nextElementSibling; while (nx && nx.hidden) nx = nx.nextElementSibling; const ni = nx && nx.querySelector('[data-f=nilai]'); if (ni) { ni.focus(); ni.select(); } } else { const nx = tr.nextElementSibling; if (nx) nx.querySelector('input').focus(); } // mode input massal: Enter pindah ke baris berikutnya
   };
 
   /* edit & hapus tugas */
