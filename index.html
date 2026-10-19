@@ -321,6 +321,7 @@
     <div id="pHome">
       <h1 id="aHello" style="margin-bottom:4px"></h1>
       <p class="muted" id="aDate"></p>
+      <div id="aVersi"></div>
       <div id="aDash"></div>
     </div>
 
@@ -563,6 +564,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
+  const VERSI_WEB = '2026.10.19-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -609,7 +611,11 @@
       if (sementara && i < maks) { if (opt && opt.onRetry) opt.onRetry(i + 1, maks); await tunggu(jedaDasar * 2 ** i + Math.random() * jedaDasar); continue; }
       if (!j) throw new Error('Tidak bisa terhubung ke server. Cek internet lalu coba lagi.');
       if (!j.ok) {
-        if (j.error === 'token_invalid') { logout('Sesi habis. Masuk lagi dengan Google.'); throw new Error(''); }
+        if (j.error === 'token_invalid') {
+          console.warn('Login ditolak server:', j.alasan || '(tanpa alasan)');
+          logout(j.alasan === 'client_id_beda' ? 'Pengaturan belum cocok: CLIENT_ID di Code.gs berbeda dengan di index.html. Hubungi guru.' : 'Sesi habis. Masuk lagi dengan Google.');
+          throw new Error('');
+        }
         throw new Error(ERR[j.error] || ERR.server_error);
       }
       return j;
@@ -629,7 +635,10 @@
     $('who').hidden = true; $('btnBell').hidden = true; $('navbar').hidden = true; msg('loginMsg', m); show('vLogin');
   }
 
+  // token login hanya berlaku sekitar satu jam; token lama yang tersisa di tab ini dibuang diam-diam, tanpa pesan "sesi habis"
+  const tokenBasi = t => { try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).exp * 1000 < Date.now() + 60000; } catch (e) { return true; } };
   async function boot() {
+    if (token && tokenBasi(token)) { token = null; try { sessionStorage.removeItem('tok'); } catch (e) {} }
     if (!token) return logout();
     try { render((await api('me')).me); }
     catch (e) { if (e.message) { show('vLogin'); msg('loginMsg', e.message); } }
@@ -921,12 +930,14 @@
       <div class="muted">${jadwal}</div>${c.galat ? `<div class="due-soon">Gagal terakhir: ${esc(c.galat)}</div>` : ''}</div>
       <button class="ghost small" data-cadang="1">Cadangkan sekarang</button></div></div>`;
   }
+  const sistemPanel = () => `<div class="panel"><div class="row"><div class="grow"><h2 style="margin-bottom:4px">Kesehatan sistem</h2><div class="muted">Periksa sheet, izin Drive, cadangan, dan versi.</div></div><button class="ghost small" data-cek="1">Periksa sekarang</button></div><div id="aCekHasil" style="margin-top:8px"></div></div>`;
   async function loadDash() {
     $('aHello').textContent = greet() + '!';
     $('aDate').textContent = new Date().toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     if (!$('aDash').innerHTML) $('aDash').innerHTML = skBerisi(skStats(4) + `<div class="grid2">${skPanel(3)}${skPanel(3)}</div>` + skPanel(3));
     let r;
     try { r = await api('listTugas', { cadangan: true }); opsi = r; } catch (e) { $('aDash').innerHTML = galat(e.message, 'dash'); return; }
+    $('aVersi').innerHTML = (r.versi || 'lama') !== VERSI_WEB ? `<div class="banner warn" style="max-width:40rem"><strong>Versi halaman dan server tidak sama.</strong><div>Halaman ${esc(VERSI_WEB)}, server ${esc(r.versi || 'lama')}. Pastikan Code.gs sudah di-deploy sebagai versi baru (Manage deployments, Edit, New version) dan index.html sudah diupload.</div></div>` : '';
     const now = Date.now();
     const aktif = r.tugas.filter(t => new Date(t.deadline) > now && t.bentuk !== 'nilai').sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     const perlu = r.tugas.filter(t => t.belumDinilai > 0).sort((a, b) => b.belumDinilai - a.belumDinilai);
@@ -944,10 +955,20 @@
       + `<div class="stats">${stat(totalPerlu, 'pengumpulan perlu dinilai', 'pTugas', totalPerlu > 0)}${stat(aktif.length, 'tugas aktif', 'pTugas')}${stat(`${r.siswaTerhubung}/${r.siswaTotal}`, `${pct}% akun siswa terhubung`, 'pSiswa')}${stat(r.tugas.length, 'total tugas', 'pTugas')}</div>`
       + `<div class="grid2"><div class="panel"><h2>Perlu dinilai</h2>${perluH || '<p class="muted">Semua pengumpulan sudah dinilai.</p>'}</div>`
       + `<div class="panel"><h2>Deadline terdekat</h2>${aktifH || '<p class="muted">Tidak ada tugas dengan deadline berjalan.</p>'}</div></div>`
-      + `<div class="panel"><h2>Akun terhubung per kelas</h2>${kelasH}</div>` + cadanganPanel(r.cadangan);
+      + `<div class="panel"><h2>Akun terhubung per kelas</h2>${kelasH}</div>` + cadanganPanel(r.cadangan) + sistemPanel();
   }
   $('aDash').onclick = async e => {
     if (e.target.dataset.retry) { $('aDash').innerHTML = ''; return loadDash(); }
+    const ck = e.target.closest('[data-cek]');
+    if (ck) {
+      ck.disabled = true; ck.textContent = 'Memeriksa…';
+      try {
+        const r = await api('cekSistem'), nama = { ok: 'Baik', peringatan: 'Perhatian', gagal: 'Perlu diperbaiki' };
+        if (r.versi !== VERSI_WEB) r.hasil.push({ nama: 'Versi', status: 'gagal', detail: `Halaman ${VERSI_WEB}, server ${r.versi}. Deploy ulang Code.gs atau upload index.html yang terbaru.` });
+        $('aCekHasil').innerHTML = r.hasil.map(x => item('', esc(x.nama), `<div class="${x.status === 'gagal' ? 'late' : 'muted'}">${esc(x.detail)}</div>`, `<span class="tag">${nama[x.status]}</span>`)).join('');
+      } catch (err) { msg('adminMsg', err.message); }
+      ck.disabled = false; ck.textContent = 'Periksa lagi'; return;
+    }
     const cd = e.target.closest('[data-cadang]');
     if (cd) {
       cd.disabled = true; cd.textContent = 'Mencadangkan…';
