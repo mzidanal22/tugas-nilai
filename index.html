@@ -517,10 +517,11 @@
   <div class="actions"><button class="ghost" id="dlgCancel" type="button">Batal</button><button id="dlgOk" type="button">Kumpulkan</button></div>
 </dialog>
 
+<script src="config.js"></script>
 <script>
-  // ISI dua nilai ini
-  const CLIENT_ID = '261058291495-k31m0bmb2b4tt8ggr11ifjbiurcui3c7.apps.googleusercontent.com';
-  const API_URL   = 'https://script.google.com/macros/s/AKfycbz9fOmcReztL1uTLXpw96LZaeYwfPF5yaIgXK4DjM1Qv4YmYFMKsHJh18SA-gOxwjAO/exec';
+  // CLIENT_ID dan API_URL dibaca dari config.js (diisi sekali, tidak ikut berubah saat aplikasi diperbarui)
+  const CFG = window.APP_CONFIG || {};
+  const CLIENT_ID = CFG.CLIENT_ID || '', API_URL = CFG.API_URL || '';
 
   const ERR = {
     data_tidak_cocok: 'Nama atau NIS/kode tidak cocok dengan daftar, atau sudah dipakai akun lain. Cek lagi, atau hubungi guru.',
@@ -564,7 +565,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.10.19-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.10.19-b'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -1757,6 +1758,10 @@
   }
 
   function initGoogle() {
+    const kosong = v => !v || v.indexOf('ISI_') === 0;
+    if (kosong(CLIENT_ID) || kosong(API_URL)) { // config.js belum dibuat atau belum diisi
+      show('vLogin'); msg('loginMsg', 'Aplikasi belum dikonfigurasi. Isi CLIENT_ID dan API_URL di file config.js (satu folder dengan index.html).'); return;
+    }
     google.accounts.id.initialize({
       client_id: CLIENT_ID, auto_select: true,
       callback: r => { token = r.credential; try { sessionStorage.setItem('tok', token); } catch (e) {} msg('loginMsg'); boot(); }
