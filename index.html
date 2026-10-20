@@ -565,7 +565,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.10.19-b'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.10.19-c'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -638,9 +638,21 @@
 
   // token login hanya berlaku sekitar satu jam; token lama yang tersisa di tab ini dibuang diam-diam, tanpa pesan "sesi habis"
   const tokenBasi = t => { try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).exp * 1000 < Date.now() + 60000; } catch (e) { return true; } };
+  // Data terakhir siswa disimpan di HP ini (per akun) supaya Beranda langsung tampil lalu diperbarui di belakang layar,
+  // dan tetap terlihat saat sinyal jelek. Dihapus saat siswa menekan Keluar.
+  const kunciCache = em => 'cache_' + String(em).toLowerCase();
+  const bacaCache = em => { try { const c = JSON.parse(localStorage.getItem(kunciCache(em)) || 'null'); return c && Date.now() - c.t < 7 * 864e5 ? c : null; } catch (e) { return null; } };
+  const simpanCache = (em, o) => { try { localStorage.setItem(kunciCache(em), JSON.stringify({ t: Date.now(), me: o.me, tugas: o.tugas })); } catch (e) {} };
+  const emailToken = t => { try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).email || ''; } catch (e) { return ''; } };
   async function boot() {
     if (token && tokenBasi(token)) { token = null; try { sessionStorage.removeItem('tok'); } catch (e) {} }
     if (!token) return logout();
+    const em = emailToken(token), c = em && bacaCache(em);
+    if (c && c.me && (c.me.role === 'siswa' || c.me.role === 'ketua')) { // tampil dulu dari data terakhir, lalu pastikan ke server
+      tugasSiswa = c.tugas || []; render(c.me);
+      try { const baru = (await api('me')).me; if (JSON.stringify(baru) !== JSON.stringify(c.me)) render(baru); } catch (e) { if (e.message) toast(e.message, true); }
+      return;
+    }
     try { render((await api('me')).me); }
     catch (e) { if (e.message) { show('vLogin'); msg('loginMsg', e.message); } }
   }
@@ -668,7 +680,7 @@
   $('fNama').onkeydown = e => { if (e.key === 'Enter') $('fNis').focus(); };
   $('fNis').onkeydown = e => { if (e.key === 'Enter') $('btnClaim').click(); };
   $('cOut').onclick = e => { e.preventDefault(); logout(); };
-  $('btnOut').onclick = () => logout();
+  $('btnOut').onclick = () => { if (me && me.email) { try { localStorage.removeItem(kunciCache(me.email)); } catch (e) {} } logout(); };
 
   /* ---------------- Siswa & ketua ---------------- */
   let tugasSiswa = [], kRows = [], dlgNis = null;
@@ -738,7 +750,14 @@
       $('sDash').innerHTML = skBerisi(skStats(3) + `<div class="grid2">${skPanel(3)}${skPanel(2)}</div>` + skPanel(2));
       $('sNilaiBody').innerHTML = skBerisi(skPanel(3));
     }
-    try { tugasSiswa = (await api('tugasSaya')).tugas; } catch (e) { $('sList').innerHTML = ''; $('sNilaiBody').innerHTML = ''; $('sDash').innerHTML = galat(e.message, 'siswa'); return; }
+    if (tugasSiswa.length && !$('sList').innerHTML) { segarBaru(); drawTugasSiswa(); drawDashSiswa(); drawNilaiSiswa(); pasangLencana(); } // dari cache
+    try { tugasSiswa = (await api('tugasSaya')).tugas; }
+    catch (e) {
+      if (!e.message) return; // sesi habis: sudah diarahkan ke halaman masuk
+      if (tugasSiswa.length) { toast('Tidak bisa memperbarui. Menampilkan data terakhir.', true); return; }
+      $('sList').innerHTML = ''; $('sNilaiBody').innerHTML = ''; $('sDash').innerHTML = galat(e.message, 'siswa'); return;
+    }
+    if (me && me.email) simpanCache(me.email, { me: me, tugas: tugasSiswa });
     segarBaru(); drawTugasSiswa(); drawDashSiswa(); drawNilaiSiswa(); pasangLencana();
     if (highlight) {
       const el = $('sList').querySelector(`[data-id="${CSS.escape(highlight)}"]`);
