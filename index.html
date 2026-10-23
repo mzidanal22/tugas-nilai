@@ -482,6 +482,7 @@
     <div id="nlIsi" style="margin-bottom:14px"></div>
     <label for="nlNilai">Nilai (0-100)</label><input id="nlNilai" type="number" min="0" max="100" step="any" inputmode="decimal">
     <label for="nlCat">Catatan untuk siswa (opsional)</label><input id="nlCat" maxlength="500">
+    <button class="ghost small" id="nlAi" type="button" style="margin-top:6px" title="Baca file karya dan buat draf catatan. Tetap perlu kamu cek dan edit.">Saran komentar AI</button>
     <div class="chips-q" id="nlChips"></div>
     <div class="cerr" id="nlErr" role="alert"></div>
   </div>
@@ -513,6 +514,8 @@
 <dialog id="dlgLink">
   <p id="dlgTitle" style="font-weight:600"></p>
   <input id="dlgInput" placeholder="https://" inputmode="url" autocomplete="off">
+  <input id="dlgFile" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,.zip" style="margin-top:8px">
+  <p class="muted hint" id="dlgFileInfo">Maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP.</p>
   <div class="cerr" id="dlgErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="dlgCancel" type="button">Batal</button><button id="dlgOk" type="button">Kumpulkan</button></div>
 </dialog>
@@ -536,6 +539,17 @@
     tugas_bukan_untukmu: 'Tugas ini bukan untuk kelas ini.',
     link_tidak_valid: 'Link harus diawali http:// atau https://',
     sudah_dinilai: 'Tugas sudah dinilai dan terkunci. Hubungi guru kalau perlu dibuka.',
+    ai_belum_aktif: 'Fitur AI belum diaktifkan. Isi ANTHROPIC_API_KEY di Script properties.',
+    ai_butuh_file: 'Saran AI butuh file (PNG, JPG, WEBP, atau PDF). Pengumpulan berupa link belum bisa dibaca.',
+    ai_tipe_tidak_didukung: 'Tipe file ini belum bisa dibaca AI (hanya PNG, JPG, WEBP, PDF).',
+    ai_file_besar: 'File terlalu besar untuk dibaca AI (maks. 4 MB).',
+    ai_file_hilang: 'File tugasnya tidak ditemukan di Drive.',
+    ai_batas_harian: 'Batas saran AI hari ini sudah habis. Coba lagi besok.',
+    ai_key_salah: 'API key ditolak. Cek ANTHROPIC_API_KEY di Script properties.',
+    ai_sibuk: 'Layanan AI sedang sibuk. Coba lagi sebentar lagi.',
+    ai_gagal: 'Saran AI gagal dibuat. Coba lagi. Detailnya ada di menu Executions Apps Script.',
+    link_tidak_terbuka: 'Linknya tersimpan, tapi guru belum bisa membukanya. Ubah izin berbagi jadi "Siapa saja yang memiliki link", lalu kumpulkan lagi.',
+    sudah_dikumpul_teman: 'Teman ini sudah mengumpulkan sendiri, jadi kiriman tidak bisa ditimpa.',
     kelas_sudah_ada_kumpulan: 'Kelas yang sudah punya pengumpulan tidak bisa dilepas dari tugas ini.',
     drive_gagal: 'File belum bisa disimpan karena penyimpanan di server bermasalah. Kabari guru ya.',
     pengumuman_kosong: 'Isi judul, lalu tulis isi atau pilih gambar.',
@@ -565,7 +579,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.10.22-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.10.23-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -799,8 +813,9 @@
     btn.disabled = true; btn.textContent = fl ? 'Mengunggah… jangan tutup halaman' : 'Mengirim…';
     try {
       const file = fl ? { name: fl.name, data: await toB64(fl) } : null;
-      await api('kumpul', { id: t.id, link, catatan: c.querySelector('[data-f=catatan]').value, file, rid: newRid() },
+      const hasil = await api('kumpul', { id: t.id, link, catatan: c.querySelector('[data-f=catatan]').value, file, rid: newRid() },
         { onRetry: (n, m) => { btn.textContent = `Server sedang ramai, mencoba lagi (${n}/${m})…`; } });
+      if (hasil.peringatan) toast(ERR[hasil.peringatan], true);
       toast(adaRevisi ? 'Revisi terkirim. Terima kasih!' : sebelumnya ? 'Perubahan tersimpan.' : 'Berhasil dikumpulkan. Terima kasih!');
       await loadTugasSiswa(t.id);
     } catch (err) { if (err.message) fail(err.message); btn.disabled = false; btn.textContent = label; }
@@ -824,7 +839,7 @@
     try {
       const r = await api('rekapKelas', { id: $('kTugas').value });
       const tg = tugasSiswa.find(t => t.id === $('kTugas').value), nilaiType = tg && tg.bentuk === 'nilai';
-      const bisa = tg && tg.bentuk !== 'file' && tg.bentuk !== 'nilai';
+      const bisa = tg && tg.bentuk !== 'nilai';
       kRows = [...r.rows].sort((a, b) => (a.kumpul - b.kumpul) || String(a.nama).localeCompare(String(b.nama))); // yang belum kumpul di atas
       $('kNilaiTh').hidden = !r.nilaiTampil; $('kSalin').hidden = !!nilaiType;
       $('kInfo').textContent = nilaiType ? 'Tugas ini dinilai langsung oleh guru, tanpa pengumpulan.' : `${kRows.filter(s => s.kumpul).length} dari ${kRows.length} sudah mengumpulkan.`;
@@ -847,19 +862,36 @@
   };
   $('kBody').onclick = e => {
     const nis = e.target.dataset.nis; if (!nis) return;
-    dlgNis = nis; $('dlgTitle').textContent = 'Tempel link tugas ' + kRows.find(s => s.nis === nis).nama;
-    $('dlgInput').value = ''; $('dlgErr').textContent = ''; $('dlgLink').showModal(); $('dlgInput').focus();
+    const tg = tugasSiswa.find(t => t.id === $('kTugas').value);
+    dlgNis = nis; $('dlgTitle').textContent = (tg.bentuk === 'file' ? 'Upload file tugas ' : tg.bentuk === 'link' ? 'Tempel link tugas ' : 'Kumpulkan tugas ') + kRows.find(s => s.nis === nis).nama;
+    $('dlgInput').hidden = tg.bentuk === 'file'; $('dlgFile').hidden = $('dlgFileInfo').hidden = tg.bentuk === 'link';
+    $('dlgInput').value = ''; $('dlgFile').value = ''; $('dlgFileInfo').textContent = 'Maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP.';
+    $('dlgErr').textContent = ''; $('dlgLink').showModal(); (tg.bentuk === 'file' ? $('dlgFile') : $('dlgInput')).focus();
   };
   $('dlgCancel').onclick = () => $('dlgLink').close();
   $('dlgInput').onkeydown = e => { if (e.key === 'Enter') $('dlgOk').click(); };
+  $('dlgFile').onchange = () => {
+    const f = $('dlgFile').files[0]; $('dlgErr').textContent = '';
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { $('dlgErr').textContent = ERR.file_terlalu_besar; $('dlgFile').value = ''; return; }
+    $('dlgFileInfo').textContent = `Dipilih: ${f.name} (${(f.size / 1048576).toFixed(1)} MB)`;
+  };
   $('dlgOk').onclick = async () => {
-    let link = $('dlgInput').value.trim();
-    if (!link) { $('dlgErr').textContent = 'Tempel linknya dulu.'; return; }
-    if (!/^https?:\/\//i.test(link)) link = 'https://' + link;
+    const tg = tugasSiswa.find(t => t.id === $('kTugas').value), fl = !$('dlgFile').hidden && $('dlgFile').files[0];
+    let link = $('dlgInput').hidden ? '' : $('dlgInput').value.trim();
+    if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+    if (link && !/^https?:\/\/\S+$/i.test(link)) { $('dlgErr').textContent = ERR.link_tidak_valid; return; }
+    if (!link && !fl) { $('dlgErr').textContent = tg.bentuk === 'file' ? 'Pilih file tugasnya dulu.' : tg.bentuk === 'link' ? 'Tempel linknya dulu.' : 'Isi link atau pilih file dulu.'; return; }
+    if (fl && fl.size > 5 * 1024 * 1024) { $('dlgErr').textContent = ERR.file_terlalu_besar; return; }
     const nama = kRows.find(s => s.nis === dlgNis).nama; $('dlgOk').disabled = true; $('dlgErr').textContent = '';
-    try { await api('kumpul', { id: $('kTugas').value, nis: dlgNis, link, rid: newRid() }); $('dlgLink').close(); toast('Link ' + nama + ' berhasil dikumpulkan.'); await loadRekapKelas(); }
-    catch (err) { $('dlgErr').textContent = err.message; }
-    $('dlgOk').disabled = false;
+    $('dlgOk').textContent = fl ? 'Mengunggah…' : 'Mengirim…';
+    try {
+      const file = fl ? { name: fl.name, data: await toB64(fl) } : null;
+      const hasil = await api('kumpul', { id: tg.id, nis: dlgNis, link, file, rid: newRid() });
+      if (hasil.peringatan) toast(ERR[hasil.peringatan], true);
+      $('dlgLink').close(); toast('Tugas ' + nama + ' berhasil dikumpulkan.'); await loadRekapKelas();
+    } catch (err) { $('dlgErr').textContent = err.message; }
+    $('dlgOk').disabled = false; $('dlgOk').textContent = 'Kumpulkan';
   };
 
   /* ---------------- Navigasi & beranda ---------------- */
@@ -1282,6 +1314,19 @@
   };
 
   // menilai satu per satu: simpan lalu otomatis lanjut ke siswa berikutnya
+  // peringatan otomatis: file kembar antar siswa dan link Drive yang tidak bisa dibuka guru
+  const flagHtml = s => (s.kembar && s.kembar.length ? `<div class="late">File sama persis dengan: ${esc(s.kembar.join(', '))}</div>` : '')
+    + (s.cekLink === 'privat' ? '<div class="late">Link Drive belum bisa dibuka guru (izin berbagi tertutup)</div>' : '');
+  // draf catatan dari AI: hanya mengisi kolom catatan, guru yang menilai dan menyimpan
+  async function saranAi(s, tulis, btn) {
+    const label = btn.textContent; btn.disabled = true; btn.textContent = 'Membaca karya…';
+    try {
+      const r = await api('saranKomentar', { id: rekapId, nis: s.nis, ulang: !!s._saranDipakai });
+      s.saran = r.saran; s._saranDipakai = true; tulis(r.saran);
+      toast(r.tersimpan ? 'Saran tersimpan dipakai. Klik lagi untuk membuat ulang.' : 'Draf AI terisi. Cek dan edit dulu sebelum disimpan.');
+    } catch (e) { toast(e.message, true); }
+    btn.disabled = false; btn.textContent = label;
+  }
   const nlRow = () => curRows.find(x => x.nis === nlAntri[0]);
   function bukaNilaiCepat() {
     nlAntri = curRows.filter(s => stRow(s) === 'menunggu').map(s => s.nis);
@@ -1296,7 +1341,9 @@
     $('nlIsi').innerHTML = [u ? `<div>Link: <a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u.length > 52 ? u.slice(0, 52) + '…' : u)}</a></div>` : '',
       s.fileId ? `<div>File: <a href="https://drive.google.com/file/d/${esc(s.fileId)}/view" target="_blank" rel="noopener noreferrer">${esc(s.fileNama || 'File')}</a></div>` : '',
       s.catatan ? `<div class="muted">Catatan siswa: ${esc(s.catatan)}</div>` : '',
-      `<div class="muted">Kumpul ${fmt(s.waktu)}${s.terlambat ? ', terlambat' : ''}${s.diubahSetelah ? ', diubah setelah deadline' : ''}</div>`].join('');
+      `<div class="muted">Kumpul ${fmt(s.waktu)}${s.terlambat ? ', terlambat' : ''}${s.diubahSetelah ? ', diubah setelah deadline' : ''}</div>`,
+      flagHtml(s)].join('');
+    $('nlAi').hidden = !s.fileId;
     $('nlNilai').value = s.nilai ?? ''; $('nlCat').value = s.catatanGuru || ''; $('nlErr').textContent = '';
     $('nlChips').innerHTML = chipsHtml(); qcTarget = $('nlCat'); $('nlNilai').focus();
   }
@@ -1312,6 +1359,7 @@
     $('nlSimpan').disabled = false;
   }
   $('btnNilaiCepat').onclick = bukaNilaiCepat;
+  $('nlAi').onclick = () => saranAi(nlRow(), v => { $('nlCat').value = v; }, $('nlAi'));
   $('nlSimpan').onclick = nlSimpan;
   $('nlLewat').onclick = () => { if (nlAntri.length > 1) { nlAntri.push(nlAntri.shift()); tampilNl(); } else toast('Ini yang terakhir.'); };
   $('nlRevisi').onclick = () => mintaRevisi(nlAntri[0], () => { nlAntri.shift(); nlSelesai++; if (nlAntri.length) tampilNl(); else $('dlgNilai').close(); });
@@ -1485,11 +1533,11 @@
       $('rBody').innerHTML = r.rows.map(s => {
         const st = !s.kumpul ? '<span class="muted">Belum</span>' : (s.revisi && !s.revisi.dikirim) ? '<span class="late">Perlu revisi</span>' : (s.revisi && s.revisi.dikirim && !s.kunci) ? '<span class="ok">Revisi terkirim</span>' : s.kunci ? '<span class="ok">Dinilai</span>' : s.terlambat ? '<span class="late">Terlambat</span>' : 'Terkumpul';
         const u = safeUrl(s.link);
-        return `<tr data-nis="${esc(s.nis)}" data-st="${stRow(s)}"><td>${esc(s.nama)}<div class="muted">${esc(s.kelas)}</div></td><td>${st}${s.waktu ? `<div class="muted">kumpul ${fmt(s.waktu)}</div>` : ''}${s.diubahSetelah ? '<div class="late">diubah setelah deadline</div>' : ''}${s.dinilai ? `<div class="muted">dinilai ${fmtTgl(s.dinilai)}</div>` : ''}</td>
+        return `<tr data-nis="${esc(s.nis)}" data-st="${stRow(s)}"><td>${esc(s.nama)}<div class="muted">${esc(s.kelas)}</div></td><td>${st}${s.waktu ? `<div class="muted">kumpul ${fmt(s.waktu)}</div>` : ''}${s.diubahSetelah ? '<div class="late">diubah setelah deadline</div>' : ''}${flagHtml(s)}${s.dinilai ? `<div class="muted">dinilai ${fmtTgl(s.dinilai)}</div>` : ''}</td>
           <td>${s.kumpul ? [u ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">Link</a>` : '', s.fileId ? `<a href="https://drive.google.com/file/d/${esc(s.fileId)}/view" target="_blank" rel="noopener noreferrer">${esc(s.fileNama || 'File')}</a>` : ''].filter(Boolean).join('<br>') || '-' : ''}${s.kumpul && s.catatan ? `<div class="muted">${esc(s.catatan)}</div>` : ''}</td>
           <td>${s.kumpul ? `<input data-f="nilai" type="number" min="0" max="100" value="${s.nilai ?? ''}">` : ''}</td>
           <td>${s.kumpul ? `<input data-f="cat" maxlength="500" value="${esc(s.catatanGuru)}">` : ''}</td>
-          <td>${s.kumpul ? `<button class="small" data-act="nilai">Simpan</button> <button class="ghost small" data-act="revisi">Revisi</button>` : ''}${s.kunci ? ` <button class="ghost small" data-act="buka">Buka kunci</button>` : ''}</td></tr>`;
+          <td>${s.kumpul ? `<button class="small" data-act="nilai">Simpan</button> <button class="ghost small" data-act="revisi">Revisi</button>` : ''}${s.kunci ? ` <button class="ghost small" data-act="buka">Buka kunci</button>` : ''}${s.kumpul && s.fileId ? ` <button class="ghost small" data-act="ai" title="Buat draf catatan dengan AI">AI</button>` : ''}</td></tr>`;
       }).join('');
       renderFilter(); refreshChips();
       tab('pRekap');
@@ -1499,6 +1547,7 @@
     const act = e.target.dataset.act; if (!act) return;
     const tr = e.target.closest('tr'), nis = tr.dataset.nis, btn = e.target, nama = tr.firstElementChild.firstChild.textContent;
     if (act === 'revisi') return mintaRevisi(nis);
+    if (act === 'ai') return saranAi(curRows.find(x => x.nis === nis), v => { tr.querySelector('[data-f=cat]').value = v; }, btn);
     btn.disabled = true;
     try {
       if (act === 'nilai') {
