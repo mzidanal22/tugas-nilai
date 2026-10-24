@@ -539,13 +539,13 @@
     tugas_bukan_untukmu: 'Tugas ini bukan untuk kelas ini.',
     link_tidak_valid: 'Link harus diawali http:// atau https://',
     sudah_dinilai: 'Tugas sudah dinilai dan terkunci. Hubungi guru kalau perlu dibuka.',
-    ai_belum_aktif: 'Fitur AI belum diaktifkan. Isi ANTHROPIC_API_KEY di Script properties.',
+    ai_belum_aktif: 'Fitur AI belum diaktifkan. Isi GEMINI_API_KEY di Script properties.',
     ai_butuh_file: 'Saran AI butuh file (PNG, JPG, WEBP, atau PDF). Pengumpulan berupa link belum bisa dibaca.',
     ai_tipe_tidak_didukung: 'Tipe file ini belum bisa dibaca AI (hanya PNG, JPG, WEBP, PDF).',
     ai_file_besar: 'File terlalu besar untuk dibaca AI (maks. 4 MB).',
     ai_file_hilang: 'File tugasnya tidak ditemukan di Drive.',
     ai_batas_harian: 'Batas saran AI hari ini sudah habis. Coba lagi besok.',
-    ai_key_salah: 'API key ditolak. Cek ANTHROPIC_API_KEY di Script properties.',
+    ai_key_salah: 'API key ditolak. Cek GEMINI_API_KEY di Script properties.',
     ai_sibuk: 'Layanan AI sedang sibuk. Coba lagi sebentar lagi.',
     ai_gagal: 'Saran AI gagal dibuat. Coba lagi. Detailnya ada di menu Executions Apps Script.',
     link_tidak_terbuka: 'Linknya tersimpan, tapi guru belum bisa membukanya. Ubah izin berbagi jadi "Siapa saja yang memiliki link", lalu kumpulkan lagi.',
@@ -579,7 +579,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.10.23-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.10.24-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
