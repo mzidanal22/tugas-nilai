@@ -302,7 +302,7 @@
       <div id="sDash"></div>
     </div>
     <div id="sTugas" hidden><h1>Tugas</h1><div id="sList"></div></div>
-    <div id="sHadir" hidden><h1>Kehadiran</h1><div id="sHadirBody"></div></div>
+    <div id="sHadir" hidden><h1>Kehadiran</h1><div id="sHadirBody"></div><input type="file" id="suratFile" accept="image/*" hidden></div>
     <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Rata-rata hanya dari tugas yang nilainya sudah dirilis, tanpa bobot. Nilai rapor dihitung guru dengan komponen lain.</p><div id="sNilaiBody"></div></div>
     <div id="kBlock" hidden>
       <h1 style="margin-bottom:8px">Rekap kelas</h1>
@@ -510,6 +510,12 @@
   <textarea id="shareText" style="min-height:12rem"></textarea>
   <div class="actions"><button class="ghost" id="shareClose" type="button">Nanti saja</button><button class="ghost" id="shareCopy" type="button">Salin</button><button id="shareWa" type="button">Buka WhatsApp</button></div>
 </dialog>
+<dialog id="dlgSurat" aria-labelledby="srHead">
+  <div class="dlg-head"><strong id="srHead">Surat</strong><button class="ghost small" id="srX" type="button" aria-label="Tutup">✕</button></div>
+  <p class="muted" id="srInfo" style="margin-top:0"></p>
+  <img id="srImg" alt="Foto surat dari siswa" style="max-width:100%;border-radius:8px;display:block">
+  <div class="actions"><button class="ghost" id="srTutup" type="button">Tutup</button></div>
+</dialog>
 <dialog id="dlgPeng" aria-labelledby="pengHead">
   <div class="dlg-head"><strong id="pengHead">Pengumuman</strong><button class="ghost small" id="pengX" type="button" aria-label="Tutup">✕</button></div>
   <div id="pengBody"></div>
@@ -557,6 +563,9 @@
     ai_sibuk: 'Layanan AI sedang sibuk. Coba lagi sebentar lagi.',
     ai_gagal: 'Saran AI gagal dibuat. Coba lagi. Detailnya ada di menu Executions Apps Script.',
     link_tidak_terbuka: 'Linknya tersimpan, tapi guru belum bisa membukanya. Ubah izin berbagi jadi "Siapa saja yang memiliki link", lalu kumpulkan lagi.',
+    surat_tidak_perlu: 'Surat hanya untuk pertemuan yang tercatat sakit atau izin.',
+    surat_kosong: 'Pilih foto suratnya dulu.',
+    surat_tidak_ada: 'Surat belum diupload siswa.',
     sudah_dikumpul_teman: 'Teman ini sudah mengumpulkan sendiri, jadi kiriman tidak bisa ditimpa.',
     kelas_sudah_ada_kumpulan: 'Kelas yang sudah punya pengumpulan tidak bisa dilepas dari tugas ini.',
     drive_gagal: 'File belum bisa disimpan karena penyimpanan di server bermasalah. Kabari guru ya.',
@@ -587,7 +596,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.10.25-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.10.26-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -606,7 +615,7 @@
   const padTo = (a, n) => Array.from({ length: n }, (_, i) => a[i] ?? null);
   const fmt = iso => iso ? new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'medium', timeStyle: 'short' }) + ' WIB' : '';
   const safeUrl = u => /^https?:\/\/\S+$/i.test(u) ? u : '';
-  let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null, curTugas = null, curRows = [], nData = null;
+  let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null, curTugas = null, curRows = [], nData = null, suratBelum = 0;
   try { token = sessionStorage.getItem('tok'); } catch (e) {}
 
   function show(id) { $('vLoad').hidden = true; ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); anim($(id)); }
@@ -619,7 +628,7 @@
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
   let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
-  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
+  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'suratFoto', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
@@ -773,7 +782,7 @@
       $('sNilaiBody').innerHTML = skBerisi(skPanel(3));
     }
     if (tugasSiswa.length && !$('sList').innerHTML) { segarBaru(); drawTugasSiswa(); drawDashSiswa(); drawNilaiSiswa(); pasangLencana(); } // dari cache
-    try { tugasSiswa = (await api('tugasSaya')).tugas; }
+    try { const rt = await api('tugasSaya'); tugasSiswa = rt.tugas; suratBelum = rt.suratBelum || 0; }
     catch (e) {
       if (!e.message) return; // sesi habis: sudah diarahkan ke halaman masuk
       if (tugasSiswa.length) { toast('Tidak bisa memperbarui. Menampilkan data terakhir.', true); return; }
@@ -964,7 +973,8 @@
     });
     const prog = Object.keys(mp).sort().map(n => { const m = mp[n], p = m.total ? Math.round(m.kumpul / m.total * 100) : 0, r = avg(m.nil);
       return `<div class="item"><div class="grow"><div class="t">${esc(n)}</div><div class="muted">${m.total ? `${m.kumpul} dari ${m.total} tugas dikumpulkan` : 'Dinilai langsung oleh guru'}${r !== null ? ` · rata-rata nilai tugas ${r}` : ''}</div>${m.total ? `<div class="meter"><i style="width:${p}%"></i></div>` : ''}</div></div>`; }).join('');
-    $('sDash').innerHTML = `<div class="stats">${stat(by.belum.length, 'perlu dikumpulkan', 'sTugas', by.belum.length > 0)}${stat(by.terkumpul.length + by.menunggu.length, 'menunggu nilai', 'sTugas')}${stat(rata === null ? '–' : rata, 'rata-rata nilai tugas', 'sNilai')}</div>`
+    $('sDash').innerHTML = (suratBelum > 0 ? `<div class="panel"><div class="row"><div><strong>Upload surat sakit</strong><div class="late">${suratBelum} pertemuan tercatat sakit, tapi suratnya belum diupload.</div></div><button class="small" data-go="sHadir">Upload</button></div></div>` : '')
+      + `<div class="stats">${stat(by.belum.length, 'perlu dikumpulkan', 'sTugas', by.belum.length > 0)}${stat(by.terkumpul.length + by.menunggu.length, 'menunggu nilai', 'sTugas')}${stat(rata === null ? '–' : rata, 'rata-rata nilai tugas', 'sNilai')}</div>`
       + (me.role === 'ketua' ? '<div class="panel"><div class="row"><div><strong>Rekap kelas</strong><div class="muted">Lihat siapa yang belum kumpul dan bantu teman yang kendala.</div></div><button class="small" data-go="kBlock">Buka</button></div></div>' : '')
       + `<div class="grid2"><div class="panel"><h2>Segera dikumpulkan</h2>${rows || '<p class="muted">Semua tugas sudah beres. Mantap!</p>'}${segera.length > 3 ? `<button class="ghost small" data-go="sTugas">Lihat semua (${segera.length})</button>` : ''}</div>`
       + `<div class="panel"><h2>Nilai terbaru</h2>${baru || '<p class="muted">Belum ada nilai.</p>'}</div></div>`
@@ -1208,7 +1218,7 @@
     abData = r; abTerakhir = { mapel: $('abMapel').value, kelas: $('abKelas').value };
     $('abList').innerHTML = `<div class="bar"><button id="abBaru" type="button">Pertemuan baru (ke-${r.berikut})</button></div>`
       + (r.sesi.length ? '<div class="panel card">' + r.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan,
-          `<div class="muted">Hadir ${s.ringkas.H}, sakit ${s.ringkas.S}, izin ${s.ringkas.I}, alpa ${s.ringkas.A}${s.ringkas.belum ? ', belum ' + s.ringkas.belum : ''}</div>`,
+          `<div class="muted">Hadir ${s.ringkas.H}, sakit ${s.ringkas.S}, izin ${s.ringkas.I}, alpa ${s.ringkas.A}${s.ringkas.belum ? ', belum ' + s.ringkas.belum : ''}</div>${s.suratBelum ? `<div class="late">${s.suratBelum} surat sakit belum diupload</div>` : ''}`,
           `<button class="ghost small" data-buka="${esc(s.id)}" type="button">Buka</button>`)).join('') + '</div>'
         : '<p class="muted">Belum ada absensi untuk kelas ini. Mulai dari "Pertemuan baru".</p>');
   }
@@ -1218,9 +1228,9 @@
   $('abList').onclick = e => { if (e.target.id === 'abBaru') bukaAb(null); else if (e.target.dataset.buka) bukaAb(e.target.dataset.buka); };
 
   async function bukaAb(id) { // id kosong = pertemuan baru
-    let st = {}, tgl = hariIni(), ke = abData.berikut;
-    if (id) { try { const r = await api('absensiSesi', { id }); st = r.data; tgl = r.tanggal; ke = r.pertemuan; } catch (e) { return msg('adminMsg', e.message); } }
-    ab = { id: id || null, sis: abData.siswa, status: { ...st } };
+    let st = {}, tgl = hariIni(), ke = abData.berikut, sr = {};
+    if (id) { try { const r = await api('absensiSesi', { id }); st = r.data; tgl = r.tanggal; ke = r.pertemuan; sr = r.surat || {}; } catch (e) { return msg('adminMsg', e.message); } }
+    ab = { id: id || null, sis: abData.siswa, status: { ...st }, surat: sr };
     $('abList').hidden = true; $('abForm').hidden = false; anim($('abForm'));
     $('abJudul').textContent = id ? `Pertemuan ke-${ke}` : 'Pertemuan baru';
     $('abTgl').value = tgl; $('abKe').value = ke; $('abHapus').hidden = !id;
@@ -1228,7 +1238,7 @@
     const r1 = $('abDaftar').querySelector('.abrow'); if (r1) r1.focus();
   }
   function gambarAb() {
-    $('abDaftar').innerHTML = ab.sis.length ? ab.sis.map((s, i) => `<div class="abrow" tabindex="0" data-nis="${esc(s.nis)}"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)}</span>`
+    $('abDaftar').innerHTML = ab.sis.length ? ab.sis.map((s, i) => `<div class="abrow" tabindex="0" data-nis="${esc(s.nis)}"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)}<span class="absurat"></span></span>`
       + `<span class="abtns" role="group" aria-label="Status ${esc(s.nama)}">${ST.map(k => `<button class="abtn" type="button" data-s="${k}" title="${NAMA_ST[k]}" aria-label="${NAMA_ST[k]}">${k}</button>`).join('')}</span></div>`).join('')
       : '<p class="muted" style="padding:12px">Belum ada siswa di kelas ini.</p>';
     segarkanAb();
@@ -1239,8 +1249,23 @@
     const belum = ab.sis.length - c.H - c.S - c.I - c.A;
     $('abRingkas').innerHTML = ST.map(k => `<span class="chip"><b>${c[k]}</b> ${NAMA_ST[k]}</span>`).join('') + `<span class="chip${belum ? ' belum' : ''}"><b>${belum}</b> belum</span>`;
     $('abDaftar').querySelectorAll('.abrow').forEach(r => r.querySelectorAll('.abtn').forEach(b => { const on = ab.status[r.dataset.nis] === b.dataset.s; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }));
+    $('abDaftar').querySelectorAll('.abrow').forEach(r => { // status surat untuk yang sakit atau izin
+      const nis = r.dataset.nis, st = ab.status[nis], el = r.querySelector('.absurat'); if (!el) return;
+      el.innerHTML = st !== 'S' && st !== 'I' ? '' : ab.surat && ab.surat[nis] ? ` <button class="ghost small" type="button" data-lihat="${esc(nis)}">Lihat surat</button>`
+        : st === 'S' ? ' <span class="late">surat belum ada</span>' : ' <span class="muted">(surat opsional)</span>';
+    });
     return belum;
   }
+  $('abDaftar').addEventListener('click', async e => { // buka foto surat milik siswa
+    const b = e.target.closest('[data-lihat]'); if (!b || !ab || !ab.id) return;
+    const nis = b.dataset.lihat, s = ab.sis.find(x => x.nis === nis); b.disabled = true;
+    try {
+      const r = await api('suratFoto', { id: ab.id, nis });
+      $('srHead').textContent = 'Surat ' + (s ? s.nama : ''); $('srInfo').textContent = 'Diunggah ' + fmt(r.waktu); $('srImg').src = r.dataUrl; $('dlgSurat').showModal();
+    } catch (err) { toast(err.message, true); }
+    b.disabled = false;
+  });
+  $('srX').onclick = $('srTutup').onclick = () => $('dlgSurat').close();
   $('abDaftar').addEventListener('click', e => { // klik status yang sama sekali lagi = batalkan
     const b = e.target.closest('.abtn'); if (!b) return;
     const nis = b.closest('.abrow').dataset.nis;
@@ -1248,7 +1273,7 @@
     segarkanAb();
   });
   $('abDaftar').addEventListener('keydown', e => { // mengabsen dengan keyboard sambil memanggil nama
-    const row = e.target.closest('.abrow'); if (!row || e.target.classList.contains('abtn') && (e.key === 'Enter' || e.key === ' ')) return;
+    const row = e.target.closest('.abrow'); if (!row || e.target.closest('button') && (e.key === 'Enter' || e.key === ' ')) return;
     const k = e.key.toUpperCase(), geser = d => { const n = d > 0 ? row.nextElementSibling : row.previousElementSibling; if (n) n.focus(); };
     if (ST.includes(k) && e.key.length === 1) { e.preventDefault(); ab.status[row.dataset.nis] = k; segarkanAb(); geser(1); }
     else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); delete ab.status[row.dataset.nis]; segarkanAb(); }
@@ -1418,15 +1443,34 @@
       <div class="muted">${m.total ? 'kehadiran dari ' + m.total + ' pertemuan yang tercatat' : 'Belum ada pertemuan yang tercatat untukmu'}</div>
       ${m.total ? `<div class="meter"><i style="width:${pct}%"></i></div>` : ''}
       <div class="sum" style="margin-top:12px">${['H', 'S', 'I', 'A'].map(k => `<span class="chip"><b>${m[k]}</b> ${LB[k].toLowerCase()}</span>`).join('')}</div>
-      <details style="margin-top:8px"><summary>Lihat per pertemuan</summary>${m.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan, '', `<span class="tag">${s.status ? LB[s.status] : 'Belum dicatat'}</span>`)).join('')}</details></div>`;
+      <details style="margin-top:8px"${m.sesi.some(s => s.status === 'S' && !s.surat) ? ' open' : ''}><summary>Lihat per pertemuan</summary>${m.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan,
+        s.status === 'S' && !s.surat ? '<div class="late">Surat sakit wajib diupload</div>' : s.status === 'I' && !s.surat ? '<div class="muted">Surat izin opsional</div>' : '',
+        `<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center"><span class="tag">${s.status ? LB[s.status] : 'Belum dicatat'}</span>`
+        + (s.status === 'S' || s.status === 'I' ? (s.surat ? '<span class="tag">Surat terkirim</span>' : '') + `<button class="small${s.surat ? ' ghost' : ''}" type="button" data-surat="${esc(s.id)}">${s.surat ? 'Ganti foto' : 'Upload surat'}</button>` : '') + '</div>')).join('')}</details></div>`;
   }
   async function loadHadir() {
     $('sHadirBody').innerHTML = skBerisi(skPanel(3));
     let r; try { r = await api('absensiSaya'); } catch (e) { $('sHadirBody').innerHTML = galat(e.message || 'Coba lagi sebentar.', 'hadir'); return; }
-    $('sHadirBody').innerHTML = r.mapel.length ? r.mapel.map(hadirCard).join('')
-      : '<div class="panel"><strong>Belum ada data kehadiran.</strong><br><span class="muted">Kehadiranmu muncul di sini setelah guru mengisi absensi.</span></div>';
+    suratBelum = r.suratBelum || 0; if (tugasSiswa.length) drawDashSiswa();
+    $('sHadirBody').innerHTML = (suratBelum ? `<div class="panel"><div class="late"><strong>${suratBelum} surat sakit belum diupload.</strong> Tekan "Upload surat" di pertemuan yang ditandai.</div></div>` : '') + (r.mapel.length ? r.mapel.map(hadirCard).join('')
+      : '<div class="panel"><strong>Belum ada data kehadiran.</strong><br><span class="muted">Kehadiranmu muncul di sini setelah guru mengisi absensi.</span></div>');
   }
-  $('sHadirBody').onclick = e => { if (e.target.dataset.retry) loadHadir(); };
+  let suratId = null;
+  $('sHadirBody').onclick = e => {
+    if (e.target.dataset.retry) return loadHadir();
+    const b = e.target.closest('[data-surat]'); if (!b) return;
+    suratId = b.dataset.surat; $('suratFile').value = ''; $('suratFile').click();
+  };
+  $('suratFile').onchange = async e => { // foto surat dikecilkan di browser, lalu dikirim
+    const f = e.target.files[0]; if (!f || !suratId) return;
+    toast('Mengunggah surat…');
+    try {
+      const u = await kecilkan(f);
+      await api('uploadSurat', { id: suratId, file: { name: f.name, data: u.split(',')[1] }, rid: newRid() });
+      toast('Surat terkirim. Terima kasih.');
+    } catch (err) { toast(err.message === 'gambar_rusak' ? 'Foto tidak bisa dibaca. Coba foto lain (JPG atau PNG).' : (err.message || 'Gagal mengunggah. Coba lagi.'), true); }
+    loadHadir();
+  };
 
   /* ---------------- Kelola siswa & pemeriksa data ---------------- */
   let sdLama = null, kelasList = [];
@@ -1479,6 +1523,7 @@
     k.absensi.forEach(a => {
       L.push(`${a.mapel}, pertemuan ${a.pertemuan} (${tglPendek(a.tanggal)}): hadir ${a.H}, sakit ${a.S}, izin ${a.I}, alpa ${a.A}`);
       lpNama.forEach(([lb, f]) => { if (a[f].length) L.push(`${lb}: ${a[f].join(', ')}`); });
+      if (a.suratBelum && a.suratBelum.length) L.push('Surat sakit belum diupload: ' + a.suratBelum.join(', '));
     });
     L.push('', '*Tugas*');
     const adaBelum = k.jatuhTempo.filter(t => t.belum.length);
@@ -1492,7 +1537,7 @@
   }
   function lpKartu(k, i) {
     const abs = k.absensi.length ? k.absensi.map(a => `<div class="item"><div class="grow"><div class="t">${esc(a.mapel)} · pertemuan ${a.pertemuan}</div><div class="muted">${tglPendek(a.tanggal)} · hadir ${a.H}, sakit ${a.S}, izin ${a.I}, alpa ${a.A}</div>`
-      + lpNama.filter(([, f]) => a[f].length).map(([lb, f]) => `<div class="${lb === 'Alpa' ? 'late' : 'muted'}">${lb}: ${esc(a[f].join(', '))}</div>`).join('') + '</div></div>').join('')
+      + lpNama.filter(([, f]) => a[f].length).map(([lb, f]) => `<div class="${lb === 'Alpa' ? 'late' : 'muted'}">${lb}: ${esc(a[f].join(', '))}</div>`).join('') + (a.suratBelum && a.suratBelum.length ? `<div class="late">Surat sakit belum diupload: ${esc(a.suratBelum.join(', '))}</div>` : '') + '</div></div>').join('')
       : '<p class="muted">Tidak ada absensi tercatat di rentang ini.</p>';
     const tg = k.jatuhTempo.length ? k.jatuhTempo.map(t => `<div class="item"><div class="grow"><div class="muted">${esc(t.mapel)}</div><div class="t">${esc(t.judul)}</div><div class="muted">Deadline ${fmt(t.deadline)}</div>`
       + (t.belum.length ? `<div class="late">Belum kumpul (${t.belum.length} dari ${t.total}): ${esc(t.belum.join(', '))}</div>` : '<div class="muted">Semua sudah kumpul.</div>') + '</div></div>').join('')
