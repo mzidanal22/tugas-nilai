@@ -303,6 +303,7 @@
     </div>
     <div id="sTugas" hidden><h1>Tugas</h1><div id="sList"></div></div>
     <div id="sHadir" hidden><h1>Kehadiran</h1><div id="sHadirBody"></div><input type="file" id="suratFile" accept="image/*" hidden></div>
+    <div id="sKelas" hidden><h1>Kelasku</h1><div id="sKelasBody"></div></div>
     <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Rata-rata hanya dari tugas yang nilainya sudah dirilis, tanpa bobot. Nilai rapor dihitung guru dengan komponen lain.</p><div id="sNilaiBody"></div></div>
     <div id="kBlock" hidden>
       <h1 style="margin-bottom:8px">Rekap kelas</h1>
@@ -345,6 +346,11 @@
         <div id="abDaftar"></div>
         <button id="abSimpan" type="button">Simpan absensi</button>
       </div>
+    </div>
+
+    <div id="pKelas" hidden>
+      <div class="row"><h1 style="margin:0">Kelas wali</h1><button class="ghost small" id="kmBack" type="button">← Beranda</button></div>
+      <div id="pKelasBody"></div>
     </div>
 
     <div id="pLapor" hidden>
@@ -479,6 +485,8 @@
   <label for="sdNis">NIS atau kode</label><input id="sdNis" maxlength="40" autocomplete="off">
   <label for="sdKelas">Kelas</label><select id="sdKelas" style="width:100%;margin-bottom:14px"></select>
   <label for="sdRole">Peran</label><select id="sdRole" style="width:100%;margin-bottom:14px"><option value="siswa">Siswa</option><option value="ketua">Ketua kelas</option></select>
+  <label>Jabatan pengurus (opsional)</label>
+  <div id="sdJab" style="display:flex;gap:6px 16px;flex-wrap:wrap;margin-bottom:14px"><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="wakil" style="width:auto;margin:0"> Wakil ketua</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="sekretaris" style="width:auto;margin:0"> Sekretaris</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="bendahara" style="width:auto;margin:0"> Bendahara</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="kebersihan" style="width:auto;margin:0"> Divisi kebersihan</label></div>
   <div class="cerr" id="sdErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="sdHapus" type="button" style="margin-right:auto">Hapus siswa</button><button class="ghost" id="sdBatal" type="button">Batal</button><button id="sdSimpan" type="button">Simpan</button></div>
 </dialog>
@@ -509,6 +517,14 @@
   <p class="muted" style="margin-top:0">Pratinjau pesan. Boleh diubah dulu sebelum dikirim.</p>
   <textarea id="shareText" style="min-height:12rem"></textarea>
   <div class="actions"><button class="ghost" id="shareClose" type="button">Nanti saja</button><button class="ghost" id="shareCopy" type="button">Salin</button><button id="shareWa" type="button">Buka WhatsApp</button></div>
+</dialog>
+<dialog id="dlgInfoKelas" aria-labelledby="ikHead">
+  <p id="ikHead" style="font-weight:600;margin-top:0">Info kelas</p>
+  <label for="ikJudul">Judul</label><input id="ikJudul" maxlength="120">
+  <label for="ikIsi">Isi</label><textarea id="ikIsi" maxlength="2000" style="min-height:8rem"></textarea>
+  <label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:10px 0 14px"><input id="ikSemat" type="checkbox" style="width:auto;margin:0"> Sematkan di atas</label>
+  <div class="cerr" id="ikErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="ikBatal" type="button">Batal</button><button id="ikSimpan" type="button">Simpan</button></div>
 </dialog>
 <dialog id="dlgSurat" aria-labelledby="srHead">
   <div class="dlg-head"><strong id="srHead">Surat</strong><button class="ghost small" id="srX" type="button" aria-label="Tutup">✕</button></div>
@@ -563,6 +579,11 @@
     ai_sibuk: 'Layanan AI sedang sibuk. Coba lagi sebentar lagi.',
     ai_gagal: 'Saran AI gagal dibuat. Coba lagi. Detailnya ada di menu Executions Apps Script.',
     link_tidak_terbuka: 'Linknya tersimpan, tapi guru belum bisa membukanya. Ubah izin berbagi jadi "Siapa saja yang memiliki link", lalu kumpulkan lagi.',
+    jabatan_penuh: 'Jabatan itu sudah penuh di kelas ini. Lepas dulu dari siswa lain.',
+    jabatan_tidak_valid: 'Jabatan tidak dikenal.',
+    kelas_tidak_aktif: 'Modul kelas belum diaktifkan untuk kelas ini.',
+    info_kosong: 'Judul dan isi info wajib diisi.',
+    info_tidak_ada: 'Info itu sudah tidak ada.',
     surat_tidak_perlu: 'Surat hanya untuk pertemuan yang tercatat sakit atau izin.',
     surat_kosong: 'Pilih foto suratnya dulu.',
     surat_tidak_ada: 'Surat belum diupload siswa.',
@@ -596,7 +617,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.10.26-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.10.29-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -616,6 +637,8 @@
   const fmt = iso => iso ? new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'medium', timeStyle: 'short' }) + ' WIB' : '';
   const safeUrl = u => /^https?:\/\/\S+$/i.test(u) ? u : '';
   let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null, curTugas = null, curRows = [], nData = null, suratBelum = 0;
+  let kelasData = null, kelasEl = 'sKelasBody';
+  const JAB_NAMA = { wakil: 'Wakil ketua', sekretaris: 'Sekretaris', bendahara: 'Bendahara', kebersihan: 'Divisi kebersihan' };
   try { token = sessionStorage.getItem('tok'); } catch (e) {}
 
   function show(id) { $('vLoad').hidden = true; ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); anim($(id)); }
@@ -628,7 +651,7 @@
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
   let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
-  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'suratFoto', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
+  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'suratFoto', 'kelasSaya', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
@@ -695,7 +718,7 @@
     if (m.role === 'belum_terdaftar') { $('navbar').hidden = true; $('cEmail').textContent = m.email; return show('vClaim'); }
     if (m.role === 'admin') { buildNav('admin'); show('vAdmin'); return goAdmin('pHome'); }
     $('sHello').textContent = greet() + ', ' + m.nama.split(' ')[0];
-    $('sInfo').textContent = 'Kelas ' + m.kelas + (m.role === 'ketua' ? ' · Ketua kelas' : '');
+    $('sInfo').textContent = 'Kelas ' + m.kelas + (m.role === 'ketua' ? ' · Ketua kelas' : '') + (m.jabatan || []).map(j => ' · ' + (JAB_NAMA[j] || j)).join('');
     buildNav(m.role === 'ketua' ? 'ketua' : 'siswa'); show('vSiswa'); goSiswa('sHome'); loadTugasSiswa(); loadPengumumanSiswa();
   }
 
@@ -919,19 +942,20 @@
     rapor: '<path d="M7 3h7l4 4v14H7z M14 3v4h4 M10 12h5 M10 16h5"/>',
     info: '<path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/>',
     absen: '<path d="M4 6h16v14H4z M4 10h16 M8 3v4 M16 3v4 M9 15l2 2 4-4"/>',
+    kelas: '<path d="M5 21V4 M5 4h11l-2.5 4 2.5 4H5"/>',
     users: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6 M16 5.5a3 3 0 0 1 0 5.5 M18 14c2 .6 3.5 2.5 3.5 5"/>'
   };
   const ico = n => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
   const NAV = {
     admin: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pAbsen', 'Absen', 'absen'], ['pNilai', 'Nilai', 'nilai'], ['pSiswa', 'Siswa', 'users'], ['pInfo', 'Info', 'info']],
-    siswa: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Hadir', 'absen']],
-    ketua: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Hadir', 'absen'], ['kBlock', 'Kelas', 'users']]
+    siswa: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Hadir', 'absen'], ['sKelas', 'Kelasku', 'kelas']],
+    ketua: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Hadir', 'absen'], ['sKelas', 'Kelasku', 'kelas'], ['kBlock', 'Rekap', 'users']]
   };
   function buildNav(kind) {
-    $('nav').innerHTML = NAV[kind].map(([id, label, ic]) => `<button data-go="${id}">${ico(ic)}<span>${label}</span></button>`).join('');
+    $('nav').innerHTML = NAV[kind].filter(([id]) => id !== 'sKelas' || (me && me.modulKelas)).map(([id, label, ic]) => `<button data-go="${id}">${ico(ic)}<span>${label}</span></button>`).join('');
     $('navbar').hidden = false;
   }
-  function setActive(id) { document.querySelectorAll('#nav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === (id === 'pRekap' ? 'pTugas' : id === 'pProfil' ? 'pSiswa' : id === 'pLapor' ? 'pHome' : id))); }
+  function setActive(id) { document.querySelectorAll('#nav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === (id === 'pRekap' ? 'pTugas' : id === 'pProfil' ? 'pSiswa' : id === 'pLapor' || id === 'pKelas' ? 'pHome' : id))); }
   $('nav').onclick = e => { const b = e.target.closest('[data-go]'); if (!b || (me.role === 'admin' && !izinPindah())) return; (me.role === 'admin' ? goAdmin : goSiswa)(b.dataset.go); };
 
   const greet = () => { const j = Number(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false })) % 24; return j < 11 ? 'Selamat pagi' : j < 15 ? 'Selamat siang' : j < 18 ? 'Selamat sore' : 'Selamat malam'; };
@@ -942,8 +966,9 @@
     if (panelAktif === 'sTugas' && id !== 'sTugas') tandaiDilihat('tugas'); // yang sudah dibuka tidak lagi bertanda baru
     if (panelAktif === 'sNilai' && id !== 'sNilai') tandaiDilihat('nilai');
     panelAktif = id;
-    ['sHome', 'sTugas', 'sNilai', 'sHadir', 'kBlock'].forEach(p => $(p).hidden = p !== id);
+    ['sHome', 'sTugas', 'sNilai', 'sHadir', 'sKelas', 'kBlock'].forEach(p => $(p).hidden = p !== id);
     if (id === 'sHadir') loadHadir();
+    if (id === 'sKelas') loadKelas('sKelasBody');
     setActive(id); window.scrollTo(0, 0); anim($(id));
     if (sorot) { const el = $('sList').querySelector(`[data-id="${CSS.escape(sorot)}"]`); if (el) { el.scrollIntoView({ block: 'start' }); el.classList.add('flash'); } }
   }
@@ -1013,7 +1038,7 @@
     const perlu = r.tugas.filter(t => t.belumDinilai > 0).sort((a, b) => b.belumDinilai - a.belumDinilai);
     const totalPerlu = perlu.reduce((x, t) => x + t.belumDinilai, 0), pct = r.siswaTotal ? Math.round(r.siswaTerhubung / r.siswaTotal * 100) : 0;
     const stat = (n, l, go, hot) => `<button class="stat${hot ? ' hot' : ''}" data-go="${go}"><div class="n">${n}</div><div class="l">${l}</div></button>`;
-    const aksi = '<div class="bar"><button data-baru="1">+ Tugas baru</button><button class="ghost" data-go="pLapor">Laporan mingguan</button><button class="ghost" data-go="pNilai" data-mode="rapor">Rekap rapor</button><button class="ghost" data-go="pInfo">Pengumuman</button></div>';
+    const aksi = '<div class="bar"><button data-baru="1">+ Tugas baru</button><button class="ghost" data-go="pLapor">Laporan mingguan</button><button class="ghost" data-go="pKelas">Kelas wali</button><button class="ghost" data-go="pNilai" data-mode="rapor">Rekap rapor</button><button class="ghost" data-go="pInfo">Pengumuman</button></div>';
     if (!r.tugas.length) { $('aDash').innerHTML = aksi + '<div class="panel"><h2>Mulai dari tugas pertama</h2><p class="muted">Belum ada tugas. Buat satu, pilih mapel dan kelas tujuan, lalu siswa bisa langsung mengumpulkan.</p></div>'
       + `<div class="stats">${stat(`${r.siswaTerhubung}/${r.siswaTotal}`, `${pct}% akun siswa terhubung`, 'pSiswa')}</div>`; return; }
     const perluH = perlu.slice(0, 5).map(t => item(`${esc(t.mapel)} · ${esc(t.kelas.join(', '))}`, esc(t.judul), '', `<button class="small" data-open="${esc(t.id)}">Nilai (${t.belumDinilai})</button>`)).join('');
@@ -1487,12 +1512,14 @@
     $('sdKelas').innerHTML = kelasList.map(k => `<option>${esc(k)}</option>`).join('');
     $('sdKelas').value = sdLama ? sdLama.kelas : ($('aKelas').value || kelasList[0] || '');
     $('sdRole').value = sdLama ? sdLama.role : 'siswa';
+    $('sdJab').querySelectorAll('input').forEach(i => { i.checked = !!(sdLama && (sdLama.jabatan || []).includes(i.value)); });
     $('sdHapus').hidden = !sdLama; $('sdErr').textContent = ''; $('dlgSiswa').showModal(); $('sdNama').focus();
   }
   $('btnTambahSiswa').onclick = () => bukaSiswa('');
   $('sdBatal').onclick = () => $('dlgSiswa').close();
   $('sdSimpan').onclick = async () => {
     const nama = $('sdNama').value.trim(), nis = $('sdNis').value.trim(), kelas = $('sdKelas').value, role = $('sdRole').value;
+    const jabatan = [...$('sdJab').querySelectorAll('input:checked')].map(i => i.value);
     if (!nama || !nis) { $('sdErr').textContent = ERR.data_siswa_kurang; return; }
     const pesan = [];
     if (sdLama && sdLama.kelas !== kelas) pesan.push('Pindah kelas: tugas dan nilai dari kelas lama tidak ikut tampil di kelas baru.');
@@ -1502,7 +1529,7 @@
     if (pesan.length && !confirm(pesan.join('\n') + '\n\nLanjutkan?')) return;
     $('sdSimpan').disabled = true;
     try {
-      await api('simpanSiswa', { nisLama: sdLama ? sdLama.nis : '', nis, nama, kelas, role, gantiKetua: !!kt });
+      await api('simpanSiswa', { nisLama: sdLama ? sdLama.nis : '', nis, nama, kelas, role, jabatan, gantiKetua: !!kt });
       $('dlgSiswa').close(); toast(sdLama ? 'Data siswa disimpan.' : 'Siswa ditambahkan.'); await loadSiswa();
     } catch (e) { $('sdErr').textContent = e.message; }
     $('sdSimpan').disabled = false;
@@ -1563,14 +1590,65 @@
     const k = lpData.kelas[Number(b.dataset.wa)]; bagikan('Laporan mingguan ' + k.kelas, pesanLaporan(k, lpData));
   };
 
+  /* ---------------- Kelasku: info kelas dan susunan pengurus ---------------- */
+  const tglPanjang = iso => new Date(iso).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'long', year: 'numeric' });
+  function kelasHtml(r) {
+    const pengurus = r.pengurus.map(p => item(esc(p.nama), p.orang.length ? esc(p.orang.join(', ')) : '<span class="muted">Belum ditentukan</span>', '', '')).join('');
+    const info = r.info.length ? r.info.map(i => `<div class="item"><div class="grow"><div class="t">${esc(i.judul)}${i.sematkan ? ' <span class="tag">Disematkan</span>' : ''}</div>`
+      + `<div class="muted">${tglPanjang(i.dibuat)}${i.olehNama ? ' · ' + esc(i.olehNama) : ''}</div><div style="white-space:pre-wrap;margin-top:4px">${esc(i.isi)}</div></div>`
+      + (r.izin.info ? `<div style="display:flex;flex-direction:column;gap:6px"><button class="ghost small" type="button" data-kedit="${esc(i.id)}">Ubah</button><button class="ghost small" type="button" data-khapus="${esc(i.id)}">Hapus</button></div>` : '') + '</div>').join('')
+      : '<p class="muted">Belum ada info kelas.</p>';
+    return `<div class="panel"><h2 style="margin:0">${esc(r.kelas)}</h2><div class="muted">${r.wali ? 'Wali kelas: ' + esc(r.wali) + ' · ' : ''}${r.jumlah} siswa</div></div>`
+      + `<div class="panel"><h2>Pengurus kelas</h2>${pengurus}</div>`
+      + `<div class="panel"><div class="row"><h2 style="margin:0">Info kelas</h2>${r.izin.info ? '<button class="small" type="button" data-kbaru="1">Tulis info</button>' : ''}</div>${info}</div>`;
+  }
+  async function loadKelas(elId, kelas) {
+    const el = $(elId); kelasEl = elId; el.innerHTML = skBerisi(skPanel(3));
+    try {
+      const r = await api('kelasSaya', kelas ? { kelas } : {}); kelasData = r;
+      el.innerHTML = (r.kelasAktif && r.kelasAktif.length > 1 ? `<div class="bar"><label for="kSel" style="margin:0">Kelas</label><select id="kSel" style="width:auto;margin:0">${r.kelasAktif.map(k => `<option${k === r.kelas ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select></div>` : '') + kelasHtml(r);
+    } catch (e) { el.innerHTML = galat(e.message || 'Coba lagi sebentar.', 'kelas'); }
+  }
+  let ikId = null;
+  function bukaInfoKelas(id) { // id kosong = info baru
+    const i = id ? kelasData.info.find(x => x.id === id) : null; ikId = id || null;
+    $('ikHead').textContent = i ? 'Ubah info kelas' : 'Tulis info kelas';
+    $('ikJudul').value = i ? i.judul : ''; $('ikIsi').value = i ? i.isi : ''; $('ikSemat').checked = !!(i && i.sematkan);
+    $('ikErr').textContent = ''; $('dlgInfoKelas').showModal(); $('ikJudul').focus();
+  }
+  async function kelasKlik(e) {
+    const d = e.target.dataset;
+    if (d.retry === 'kelas') return loadKelas(kelasEl, kelasData && kelasData.kelas);
+    if (d.kbaru) return bukaInfoKelas(null);
+    if (d.kedit) return bukaInfoKelas(d.kedit);
+    if (d.khapus) {
+      if (!confirm('Hapus info ini?')) return;
+      try { await api('hapusInfoKelas', { id: d.khapus, kelas: kelasData.kelas }); toast('Info dihapus.'); loadKelas(kelasEl, kelasData.kelas); } catch (err) { toast(err.message, true); }
+    }
+  }
+  $('sKelasBody').onclick = $('pKelasBody').onclick = kelasKlik;
+  $('pKelasBody').onchange = e => { if (e.target.id === 'kSel') loadKelas('pKelasBody', e.target.value); };
+  $('kmBack').onclick = () => goAdmin('pHome');
+  $('ikBatal').onclick = () => $('dlgInfoKelas').close();
+  $('ikSimpan').onclick = async () => {
+    const judul = $('ikJudul').value.trim(), isi = $('ikIsi').value.trim();
+    if (!judul || !isi) { $('ikErr').textContent = ERR.info_kosong; return; }
+    $('ikSimpan').disabled = true;
+    try {
+      await api('simpanInfoKelas', { id: ikId, kelas: kelasData.kelas, judul, isi, sematkan: $('ikSemat').checked });
+      $('dlgInfoKelas').close(); toast('Info kelas tersimpan.'); loadKelas(kelasEl, kelasData.kelas);
+    } catch (err) { $('ikErr').textContent = err.message; }
+    $('ikSimpan').disabled = false;
+  };
+
   /* ---------------- Admin ---------------- */
   function tab(id) {
-    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo', 'pAbsen', 'pProfil', 'pLapor'].forEach(p => $(p).hidden = p !== id);
+    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo', 'pAbsen', 'pProfil', 'pLapor', 'pKelas'].forEach(p => $(p).hidden = p !== id);
     setActive(id); msg('adminMsg'); window.scrollTo(0, 0); anim($(id));
   }
   function goAdmin(id) {
     tab(id);
-    ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pAbsen: loadAbsenOpsi, pSiswa: loadSiswa, pInfo: loadInfo, pLapor: loadLaporan })[id]();
+    ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pAbsen: loadAbsenOpsi, pSiswa: loadSiswa, pInfo: loadInfo, pLapor: loadLaporan, pKelas: () => loadKelas('pKelasBody', kelasData && kelasData.kelas) })[id]();
   }
 
   async function loadTugasAdmin() {
@@ -1853,7 +1931,7 @@
     $('aSummary').textContent = rows.length ? `${done} dari ${rows.length} siswa sudah menghubungkan akun.`
       : 'Belum ada siswa. Isi sheet "Siswa" di Google Sheets, lalu muat ulang halaman ini.';
     $('aBody').innerHTML = rows.map(s => `<tr><td>${esc(s.nis)}</td>
-      <td>${esc(s.nama)} ${s.role === 'ketua' ? '<span class="tag">Ketua</span>' : ''}</td><td>${esc(s.kelas)}</td>
+      <td>${esc(s.nama)} ${s.role === 'ketua' ? '<span class="tag">Ketua</span>' : ''}${(s.jabatan || []).map(j => ` <span class="tag">${esc(JAB_NAMA[j] || j)}</span>`).join('')}</td><td>${esc(s.kelas)}</td>
       <td>${s.terdaftar ? '<span class="ok">Terhubung</span>' : '<span class="muted">Belum</span>'}</td>
       <td>${s.terdaftar ? `<button class="ghost small" data-nis="${esc(s.nis)}">Lepas akun</button>` : ''} <button class="ghost small" data-profil="${esc(s.nis)}">Profil</button> <button class="ghost small" data-ubah="${esc(s.nis)}">Ubah</button></td></tr>`).join('');
   }
