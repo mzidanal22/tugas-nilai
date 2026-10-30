@@ -302,7 +302,7 @@
       <div id="sDash"></div>
     </div>
     <div id="sTugas" hidden><h1>Tugas</h1><div id="sList"></div></div>
-    <div id="sHadir" hidden><h1>Kehadiran</h1><div id="sHadirBody"></div><input type="file" id="suratFile" accept="image/*" hidden></div>
+    <div id="sHadir" hidden><h1>Kehadiran</h1><div id="sHadirBody"></div></div>
     <div id="sKelas" hidden><h1>Kelasku</h1><div id="sKelasBody"></div></div>
     <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Rata-rata hanya dari tugas yang nilainya sudah dirilis, tanpa bobot. Nilai rapor dihitung guru dengan komponen lain.</p><div id="sNilaiBody"></div></div>
     <div id="kBlock" hidden>
@@ -518,6 +518,93 @@
   <textarea id="shareText" style="min-height:12rem"></textarea>
   <div class="actions"><button class="ghost" id="shareClose" type="button">Nanti saja</button><button class="ghost" id="shareCopy" type="button">Salin</button><button id="shareWa" type="button">Buka WhatsApp</button></div>
 </dialog>
+<dialog id="dlgPiketJadwal" aria-labelledby="pjHead">
+  <div class="dlg-head"><strong id="pjHead">Jadwal piket</strong><button class="ghost small" id="pjX" type="button" aria-label="Tutup">✕</button></div>
+  <p class="muted" style="margin-top:0">Pilih hari piket tiap siswa. Satu siswa satu hari, Senin sampai Sabtu.</p>
+  <div id="pjDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0 14px;max-height:50vh;overflow:auto"></div>
+  <div class="cerr" id="pjErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="pjBatal" type="button">Batal</button><button id="pjSimpan" type="button">Simpan jadwal</button></div>
+</dialog>
+<dialog id="dlgPiketLapor" aria-labelledby="plHead">
+  <div class="dlg-head"><strong id="plHead">Catat piket</strong><button class="ghost small" id="plX" type="button" aria-label="Tutup">✕</button></div>
+  <div class="bar"><label for="plTgl" style="margin:0">Tanggal</label><input id="plTgl" type="date" style="width:auto;margin:0"><span class="muted" id="plHari"></span></div>
+  <div id="plDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0 14px;max-height:40vh;overflow:auto"></div>
+  <label for="plKondisi">Kondisi kelas setelah piket</label>
+  <select id="plKondisi"><option value="">(belum dinilai)</option><option value="bersih">Bersih</option><option value="cukup">Cukup</option><option value="kotor">Kotor</option></select>
+  <label for="plCatatan">Catatan (opsional)</label><input id="plCatatan" maxlength="300">
+  <div class="cerr" id="plErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="plBatal" type="button">Batal</button><button id="plSimpan" type="button">Simpan</button></div>
+</dialog>
+<dialog id="dlgAturKelas" aria-labelledby="atHead">
+  <div class="dlg-head"><strong id="atHead">Atur kelas</strong><button class="ghost small" id="atX" type="button" aria-label="Tutup">✕</button></div>
+  <label for="atWali">Wali kelas</label><input id="atWali" maxlength="80">
+  <p class="muted" style="margin:14px 0 0">Pengurus kelas. Susunan lama diganti sesuai pilihan di bawah.</p>
+  <div id="atBody" style="max-height:48vh;overflow:auto"></div>
+  <div class="cerr" id="atErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="atBatal" type="button">Batal</button><button id="atSimpan" type="button">Simpan</button></div>
+</dialog>
+<dialog id="dlgBarang" aria-labelledby="bgHead">
+  <div class="dlg-head"><strong id="bgHead">Tambah barang</strong><button class="ghost small" id="bgX" type="button" aria-label="Tutup">✕</button></div>
+  <label for="bgNama">Nama barang</label><input id="bgNama" maxlength="60" placeholder="Contoh: Sapu">
+  <label for="bgBaik">Jumlah yang baik</label><input id="bgBaik" type="number" inputmode="numeric" min="0" step="1">
+  <label for="bgRusak">Jumlah yang rusak</label><input id="bgRusak" type="number" inputmode="numeric" min="0" step="1">
+  <label for="bgHilang">Jumlah yang hilang</label><input id="bgHilang" type="number" inputmode="numeric" min="0" step="1">
+  <label for="bgKet">Keterangan (opsional)</label><input id="bgKet" maxlength="100" placeholder="Contoh: disimpan di lemari belakang">
+  <div class="cerr" id="bgErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="bgHapus" type="button" style="margin-right:auto" hidden>Hapus barang</button><button class="ghost" id="bgBatal" type="button">Batal</button><button id="bgSimpan" type="button">Simpan</button></div>
+</dialog>
+<dialog id="dlgInvRiwayat" aria-labelledby="ivHead">
+  <div class="dlg-head"><strong id="ivHead">Riwayat perubahan inventaris</strong><button class="ghost small" id="ivX" type="button" aria-label="Tutup">✕</button></div>
+  <div id="ivDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0 14px;max-height:55vh;overflow:auto"></div>
+  <div class="actions"><button class="ghost" id="ivTutup" type="button">Tutup</button></div>
+</dialog>
+<dialog id="dlgKasTrx" aria-labelledby="ktHead">
+  <div class="dlg-head"><strong id="ktHead">Catat transaksi kas</strong><button class="ghost small" id="ktX" type="button" aria-label="Tutup">✕</button></div>
+  <label for="ktJenis">Jenis</label>
+  <select id="ktJenis"><option value="keluar">Pengeluaran</option><option value="masuk">Pemasukan lain (bukan iuran)</option></select>
+  <label for="ktTgl">Tanggal</label><input id="ktTgl" type="date">
+  <label for="ktJumlah">Jumlah (Rp)</label><input id="ktJumlah" type="number" inputmode="numeric" min="1" step="1">
+  <label for="ktKet">Keterangan</label><input id="ktKet" maxlength="120" placeholder="Contoh: beli spidol dan penghapus">
+  <label for="ktNota">Foto nota (opsional, disarankan untuk pengeluaran)</label><input id="ktNota" type="file" accept="image/*">
+  <div class="cerr" id="ktErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="ktBatal" type="button">Batal</button><button id="ktSimpan" type="button">Simpan</button></div>
+</dialog>
+<dialog id="dlgIuran" aria-labelledby="iuHead">
+  <div class="dlg-head"><strong id="iuHead">Iuran siswa</strong><button class="ghost small" id="iuX" type="button" aria-label="Tutup">✕</button></div>
+  <div class="bar"><label for="iuSel" style="margin:0">Iuran</label><select id="iuSel" style="width:auto;margin:0"></select><button class="ghost small" id="iuBaru" type="button">Iuran baru</button></div>
+  <div id="iuFormBaru" hidden>
+    <label for="iuJudul">Judul iuran</label><input id="iuJudul" maxlength="80" placeholder="Contoh: Kas minggu 1 November">
+    <label for="iuNominal">Nominal per siswa (Rp)</label><input id="iuNominal" type="number" inputmode="numeric" min="1" step="1">
+    <div class="actions"><button class="ghost" id="iuBatalBaru" type="button">Batal</button><button id="iuBuat" type="button">Buat iuran</button></div>
+  </div>
+  <div id="iuIsi" hidden>
+    <div class="bar"><label for="iuTgl" style="margin:0">Tanggal bayar</label><input id="iuTgl" type="date" style="width:auto;margin:0"></div>
+    <div class="muted" id="iuRingkas" style="margin-bottom:6px"></div>
+    <div id="iuDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0 14px;max-height:45vh;overflow:auto"></div>
+  </div>
+  <div class="cerr" id="iuErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="iuTutup" type="button">Tutup</button><button id="iuSimpan" type="button">Simpan pembayaran</button></div>
+</dialog>
+<dialog id="dlgKasRiwayat" aria-labelledby="rwHead">
+  <div class="dlg-head"><strong id="rwHead">Riwayat kas dan cek saldo</strong><button class="ghost small" id="rwX" type="button" aria-label="Tutup">✕</button></div>
+  <h3 style="margin:0 0 4px">Cocokkan dengan uang fisik</h3>
+  <div class="muted" id="rwSaldo"></div>
+  <div class="bar"><input id="rwFisik" type="number" inputmode="numeric" min="0" step="1" placeholder="Uang yang dipegang (Rp)" style="width:auto;margin:0" aria-label="Uang fisik"><input id="rwKet" maxlength="200" placeholder="Catatan (opsional)" style="width:auto;margin:0" aria-label="Catatan cek"><button class="small" id="rwCek" type="button">Catat</button></div>
+  <div id="rwCekHasil" role="status" style="margin-bottom:8px"></div>
+  <h3 style="margin:12px 0 4px">Transaksi terakhir</h3>
+  <div id="rwDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0 14px;max-height:42vh;overflow:auto"></div>
+  <div class="actions"><button class="ghost" id="rwTutup" type="button">Tutup</button></div>
+</dialog>
+<input type="file" id="suratFile" accept="image/*" hidden>
+<dialog id="dlgAbsKelas" aria-labelledby="akHead">
+  <div class="dlg-head"><strong id="akHead">Absensi harian</strong><button class="ghost small" id="akX" type="button" aria-label="Tutup">✕</button></div>
+  <div class="bar"><label for="akTgl" style="margin:0">Tanggal</label><input id="akTgl" type="date" style="width:auto;margin:0"></div>
+  <div class="sum" id="akRingkas"></div>
+  <div class="bar"><button class="ghost small" id="akSisa" type="button">Tandai sisanya hadir</button></div>
+  <div id="akDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0 14px;max-height:50vh;overflow:auto"></div>
+  <div class="cerr" id="akErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="akHapus" type="button" style="margin-right:auto" hidden>Hapus hari ini</button><button id="akSimpan" type="button">Simpan absensi</button></div>
+</dialog>
 <dialog id="dlgInfoKelas" aria-labelledby="ikHead">
   <p id="ikHead" style="font-weight:600;margin-top:0">Info kelas</p>
   <label for="ikJudul">Judul</label><input id="ikJudul" maxlength="120">
@@ -579,6 +666,21 @@
     ai_sibuk: 'Layanan AI sedang sibuk. Coba lagi sebentar lagi.',
     ai_gagal: 'Saran AI gagal dibuat. Coba lagi. Detailnya ada di menu Executions Apps Script.',
     link_tidak_terbuka: 'Linknya tersimpan, tapi guru belum bisa membukanya. Ubah izin berbagi jadi "Siapa saja yang memiliki link", lalu kumpulkan lagi.',
+    jumlah_barang_tidak_valid: 'Jumlah barang harus angka bulat 0 sampai 9999.',
+    barang_nama_kosong: 'Nama barang wajib diisi (minimal 2 huruf).',
+    barang_kosong: 'Total jumlah minimal 1. Kalau barangnya sudah tidak ada, pakai tombol Hapus.',
+    barang_sudah_ada: 'Sudah ada barang dengan nama itu. Ubah jumlahnya saja.',
+    barang_tidak_ada: 'Barang itu sudah tidak ada di daftar.',
+    jumlah_tidak_valid: 'Jumlah harus angka bulat rupiah, minimal 1 dan maksimal 10.000.000.',
+    jumlah_melebihi: 'Pembayaran melebihi sisa tagihan siswa itu. Cek angkanya.',
+    kas_tidak_ada: 'Transaksi itu tidak ditemukan.',
+    kas_sudah_batal: 'Transaksi itu sudah dibatalkan.',
+    alasan_kosong: 'Tulis alasan pembatalannya (minimal 3 huruf).',
+    keterangan_kosong: 'Keterangan wajib diisi (minimal 3 huruf).',
+    iuran_tidak_ada: 'Iuran itu tidak ditemukan.',
+    judul_kosong: 'Judul iuran wajib diisi.',
+    nota_tidak_ada: 'Transaksi ini tidak punya foto nota.',
+    piket_tidak_valid: 'Data piket tidak valid. Muat ulang halamannya lalu coba lagi.',
     jabatan_penuh: 'Jabatan itu sudah penuh di kelas ini. Lepas dulu dari siswa lain.',
     jabatan_tidak_valid: 'Jabatan tidak dikenal.',
     kelas_tidak_aktif: 'Modul kelas belum diaktifkan untuk kelas ini.',
@@ -617,7 +719,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.10.29-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.02-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -651,7 +753,7 @@
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
   let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
-  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'suratFoto', 'kelasSaya', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
+  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'suratFoto', 'kelasSaya', 'absenKelasHari', 'piketHari', 'kasKelola', 'kasIuranDetail', 'kasLaporan', 'kasNota', 'inventarisRiwayat', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
@@ -998,7 +1100,7 @@
     });
     const prog = Object.keys(mp).sort().map(n => { const m = mp[n], p = m.total ? Math.round(m.kumpul / m.total * 100) : 0, r = avg(m.nil);
       return `<div class="item"><div class="grow"><div class="t">${esc(n)}</div><div class="muted">${m.total ? `${m.kumpul} dari ${m.total} tugas dikumpulkan` : 'Dinilai langsung oleh guru'}${r !== null ? ` · rata-rata nilai tugas ${r}` : ''}</div>${m.total ? `<div class="meter"><i style="width:${p}%"></i></div>` : ''}</div></div>`; }).join('');
-    $('sDash').innerHTML = (suratBelum > 0 ? `<div class="panel"><div class="row"><div><strong>Upload surat sakit</strong><div class="late">${suratBelum} pertemuan tercatat sakit, tapi suratnya belum diupload.</div></div><button class="small" data-go="sHadir">Upload</button></div></div>` : '')
+    $('sDash').innerHTML = (suratBelum > 0 ? `<div class="panel"><div class="row"><div><strong>Upload surat sakit</strong><div class="late">${suratBelum} hari tercatat sakit, tapi suratnya belum diupload.</div></div><button class="small" data-go="sKelas">Upload</button></div></div>` : '')
       + `<div class="stats">${stat(by.belum.length, 'perlu dikumpulkan', 'sTugas', by.belum.length > 0)}${stat(by.terkumpul.length + by.menunggu.length, 'menunggu nilai', 'sTugas')}${stat(rata === null ? '–' : rata, 'rata-rata nilai tugas', 'sNilai')}</div>`
       + (me.role === 'ketua' ? '<div class="panel"><div class="row"><div><strong>Rekap kelas</strong><div class="muted">Lihat siapa yang belum kumpul dan bantu teman yang kendala.</div></div><button class="small" data-go="kBlock">Buka</button></div></div>' : '')
       + `<div class="grid2"><div class="panel"><h2>Segera dikumpulkan</h2>${rows || '<p class="muted">Semua tugas sudah beres. Mantap!</p>'}${segera.length > 3 ? `<button class="ghost small" data-go="sTugas">Lihat semua (${segera.length})</button>` : ''}</div>`
@@ -1243,7 +1345,7 @@
     abData = r; abTerakhir = { mapel: $('abMapel').value, kelas: $('abKelas').value };
     $('abList').innerHTML = `<div class="bar"><button id="abBaru" type="button">Pertemuan baru (ke-${r.berikut})</button></div>`
       + (r.sesi.length ? '<div class="panel card">' + r.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan,
-          `<div class="muted">Hadir ${s.ringkas.H}, sakit ${s.ringkas.S}, izin ${s.ringkas.I}, alpa ${s.ringkas.A}${s.ringkas.belum ? ', belum ' + s.ringkas.belum : ''}</div>${s.suratBelum ? `<div class="late">${s.suratBelum} surat sakit belum diupload</div>` : ''}`,
+          `<div class="muted">Hadir ${s.ringkas.H}, sakit ${s.ringkas.S}, izin ${s.ringkas.I}, alpa ${s.ringkas.A}${s.ringkas.belum ? ', belum ' + s.ringkas.belum : ''}</div>`,
           `<button class="ghost small" data-buka="${esc(s.id)}" type="button">Buka</button>`)).join('') + '</div>'
         : '<p class="muted">Belum ada absensi untuk kelas ini. Mulai dari "Pertemuan baru".</p>');
   }
@@ -1253,9 +1355,9 @@
   $('abList').onclick = e => { if (e.target.id === 'abBaru') bukaAb(null); else if (e.target.dataset.buka) bukaAb(e.target.dataset.buka); };
 
   async function bukaAb(id) { // id kosong = pertemuan baru
-    let st = {}, tgl = hariIni(), ke = abData.berikut, sr = {};
-    if (id) { try { const r = await api('absensiSesi', { id }); st = r.data; tgl = r.tanggal; ke = r.pertemuan; sr = r.surat || {}; } catch (e) { return msg('adminMsg', e.message); } }
-    ab = { id: id || null, sis: abData.siswa, status: { ...st }, surat: sr };
+    let st = {}, tgl = hariIni(), ke = abData.berikut;
+    if (id) { try { const r = await api('absensiSesi', { id }); st = r.data; tgl = r.tanggal; ke = r.pertemuan; } catch (e) { return msg('adminMsg', e.message); } }
+    ab = { id: id || null, sis: abData.siswa, status: { ...st } };
     $('abList').hidden = true; $('abForm').hidden = false; anim($('abForm'));
     $('abJudul').textContent = id ? `Pertemuan ke-${ke}` : 'Pertemuan baru';
     $('abTgl').value = tgl; $('abKe').value = ke; $('abHapus').hidden = !id;
@@ -1263,7 +1365,7 @@
     const r1 = $('abDaftar').querySelector('.abrow'); if (r1) r1.focus();
   }
   function gambarAb() {
-    $('abDaftar').innerHTML = ab.sis.length ? ab.sis.map((s, i) => `<div class="abrow" tabindex="0" data-nis="${esc(s.nis)}"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)}<span class="absurat"></span></span>`
+    $('abDaftar').innerHTML = ab.sis.length ? ab.sis.map((s, i) => `<div class="abrow" tabindex="0" data-nis="${esc(s.nis)}"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)}</span>`
       + `<span class="abtns" role="group" aria-label="Status ${esc(s.nama)}">${ST.map(k => `<button class="abtn" type="button" data-s="${k}" title="${NAMA_ST[k]}" aria-label="${NAMA_ST[k]}">${k}</button>`).join('')}</span></div>`).join('')
       : '<p class="muted" style="padding:12px">Belum ada siswa di kelas ini.</p>';
     segarkanAb();
@@ -1274,22 +1376,8 @@
     const belum = ab.sis.length - c.H - c.S - c.I - c.A;
     $('abRingkas').innerHTML = ST.map(k => `<span class="chip"><b>${c[k]}</b> ${NAMA_ST[k]}</span>`).join('') + `<span class="chip${belum ? ' belum' : ''}"><b>${belum}</b> belum</span>`;
     $('abDaftar').querySelectorAll('.abrow').forEach(r => r.querySelectorAll('.abtn').forEach(b => { const on = ab.status[r.dataset.nis] === b.dataset.s; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }));
-    $('abDaftar').querySelectorAll('.abrow').forEach(r => { // status surat untuk yang sakit atau izin
-      const nis = r.dataset.nis, st = ab.status[nis], el = r.querySelector('.absurat'); if (!el) return;
-      el.innerHTML = st !== 'S' && st !== 'I' ? '' : ab.surat && ab.surat[nis] ? ` <button class="ghost small" type="button" data-lihat="${esc(nis)}">Lihat surat</button>`
-        : st === 'S' ? ' <span class="late">surat belum ada</span>' : ' <span class="muted">(surat opsional)</span>';
-    });
     return belum;
   }
-  $('abDaftar').addEventListener('click', async e => { // buka foto surat milik siswa
-    const b = e.target.closest('[data-lihat]'); if (!b || !ab || !ab.id) return;
-    const nis = b.dataset.lihat, s = ab.sis.find(x => x.nis === nis); b.disabled = true;
-    try {
-      const r = await api('suratFoto', { id: ab.id, nis });
-      $('srHead').textContent = 'Surat ' + (s ? s.nama : ''); $('srInfo').textContent = 'Diunggah ' + fmt(r.waktu); $('srImg').src = r.dataUrl; $('dlgSurat').showModal();
-    } catch (err) { toast(err.message, true); }
-    b.disabled = false;
-  });
   $('srX').onclick = $('srTutup').onclick = () => $('dlgSurat').close();
   $('abDaftar').addEventListener('click', e => { // klik status yang sama sekali lagi = batalkan
     const b = e.target.closest('.abtn'); if (!b) return;
@@ -1468,34 +1556,15 @@
       <div class="muted">${m.total ? 'kehadiran dari ' + m.total + ' pertemuan yang tercatat' : 'Belum ada pertemuan yang tercatat untukmu'}</div>
       ${m.total ? `<div class="meter"><i style="width:${pct}%"></i></div>` : ''}
       <div class="sum" style="margin-top:12px">${['H', 'S', 'I', 'A'].map(k => `<span class="chip"><b>${m[k]}</b> ${LB[k].toLowerCase()}</span>`).join('')}</div>
-      <details style="margin-top:8px"${m.sesi.some(s => s.status === 'S' && !s.surat) ? ' open' : ''}><summary>Lihat per pertemuan</summary>${m.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan,
-        s.status === 'S' && !s.surat ? '<div class="late">Surat sakit wajib diupload</div>' : s.status === 'I' && !s.surat ? '<div class="muted">Surat izin opsional</div>' : '',
-        `<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center"><span class="tag">${s.status ? LB[s.status] : 'Belum dicatat'}</span>`
-        + (s.status === 'S' || s.status === 'I' ? (s.surat ? '<span class="tag">Surat terkirim</span>' : '') + `<button class="small${s.surat ? ' ghost' : ''}" type="button" data-surat="${esc(s.id)}">${s.surat ? 'Ganti foto' : 'Upload surat'}</button>` : '') + '</div>')).join('')}</details></div>`;
+      <details style="margin-top:8px"><summary>Lihat per pertemuan</summary>${m.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan, '', `<span class="tag">${s.status ? LB[s.status] : 'Belum dicatat'}</span>`)).join('')}</details></div>`;
   }
   async function loadHadir() {
     $('sHadirBody').innerHTML = skBerisi(skPanel(3));
     let r; try { r = await api('absensiSaya'); } catch (e) { $('sHadirBody').innerHTML = galat(e.message || 'Coba lagi sebentar.', 'hadir'); return; }
-    suratBelum = r.suratBelum || 0; if (tugasSiswa.length) drawDashSiswa();
-    $('sHadirBody').innerHTML = (suratBelum ? `<div class="panel"><div class="late"><strong>${suratBelum} surat sakit belum diupload.</strong> Tekan "Upload surat" di pertemuan yang ditandai.</div></div>` : '') + (r.mapel.length ? r.mapel.map(hadirCard).join('')
-      : '<div class="panel"><strong>Belum ada data kehadiran.</strong><br><span class="muted">Kehadiranmu muncul di sini setelah guru mengisi absensi.</span></div>');
+    $('sHadirBody').innerHTML = r.mapel.length ? r.mapel.map(hadirCard).join('')
+      : '<div class="panel"><strong>Belum ada data kehadiran.</strong><br><span class="muted">Kehadiranmu muncul di sini setelah guru mengisi absensi.</span></div>';
   }
-  let suratId = null;
-  $('sHadirBody').onclick = e => {
-    if (e.target.dataset.retry) return loadHadir();
-    const b = e.target.closest('[data-surat]'); if (!b) return;
-    suratId = b.dataset.surat; $('suratFile').value = ''; $('suratFile').click();
-  };
-  $('suratFile').onchange = async e => { // foto surat dikecilkan di browser, lalu dikirim
-    const f = e.target.files[0]; if (!f || !suratId) return;
-    toast('Mengunggah surat…');
-    try {
-      const u = await kecilkan(f);
-      await api('uploadSurat', { id: suratId, file: { name: f.name, data: u.split(',')[1] }, rid: newRid() });
-      toast('Surat terkirim. Terima kasih.');
-    } catch (err) { toast(err.message === 'gambar_rusak' ? 'Foto tidak bisa dibaca. Coba foto lain (JPG atau PNG).' : (err.message || 'Gagal mengunggah. Coba lagi.'), true); }
-    loadHadir();
-  };
+  $('sHadirBody').onclick = e => { if (e.target.dataset.retry) loadHadir(); };
 
   /* ---------------- Kelola siswa & pemeriksa data ---------------- */
   let sdLama = null, kelasList = [];
@@ -1550,8 +1619,30 @@
     k.absensi.forEach(a => {
       L.push(`${a.mapel}, pertemuan ${a.pertemuan} (${tglPendek(a.tanggal)}): hadir ${a.H}, sakit ${a.S}, izin ${a.I}, alpa ${a.A}`);
       lpNama.forEach(([lb, f]) => { if (a[f].length) L.push(`${lb}: ${a[f].join(', ')}`); });
-      if (a.suratBelum && a.suratBelum.length) L.push('Surat sakit belum diupload: ' + a.suratBelum.join(', '));
     });
+    if (k.harian) {
+      L.push('', '*Absensi harian kelas*');
+      if (!k.harian.length) L.push('Belum ada absensi harian tercatat.');
+      k.harian.forEach(a => {
+        L.push(`${tglPendek(a.tanggal)}: hadir ${a.H}, sakit ${a.S}, izin ${a.I}, alpa ${a.A}`);
+        lpNama.forEach(([lb, f]) => { if (a[f].length) L.push(`${lb}: ${a[f].join(', ')}`); });
+        if (a.suratBelum.length) L.push('Surat sakit belum diupload: ' + a.suratBelum.join(', '));
+      });
+    }
+    if (k.piket) {
+      L.push('', '*Piket kelas*');
+      if (!k.piket.length) L.push('Belum ada catatan piket.');
+      k.piket.forEach(p => { L.push(`${p.hari}, ${tglPendek(p.tanggal)}: ${p.ya} piket, ${p.tidak} tidak${p.kondisi ? ', kelas ' + p.kondisi : ''}`); if (p.namaTidak.length) L.push('Tidak piket: ' + p.namaTidak.join(', ')); });
+    }
+    if (k.kas) {
+      L.push('', '*Kas kelas*', `Saldo: ${rp(k.kas.saldo)} (minggu ini masuk ${rp(k.kas.masuk)}, keluar ${rp(k.kas.keluar)})`);
+      k.kas.pengeluaran.forEach(x => L.push(`- ${tglPendek(x.tanggal)} ${x.ket}: ${rp(x.jumlah)}`));
+      k.kas.iuran.forEach(i => L.push(`${i.judul}: ${i.lunas} dari ${i.total} siswa sudah lunas`));
+    }
+    if (k.inventaris) {
+      L.push('', '*Inventaris kelas*', `${k.inventaris.jenis} jenis barang, ${k.inventaris.rusak} rusak, ${k.inventaris.hilang} hilang`);
+      k.inventaris.perubahan.forEach(x => L.push(`- ${tglPendek(x.tanggal)} ${x.nama} (${x.aksi}): ${x.ringkas}`));
+    }
     L.push('', '*Tugas*');
     const adaBelum = k.jatuhTempo.filter(t => t.belum.length);
     if (!k.jatuhTempo.length) L.push('Tidak ada tugas yang jatuh tempo.');
@@ -1564,15 +1655,24 @@
   }
   function lpKartu(k, i) {
     const abs = k.absensi.length ? k.absensi.map(a => `<div class="item"><div class="grow"><div class="t">${esc(a.mapel)} · pertemuan ${a.pertemuan}</div><div class="muted">${tglPendek(a.tanggal)} · hadir ${a.H}, sakit ${a.S}, izin ${a.I}, alpa ${a.A}</div>`
-      + lpNama.filter(([, f]) => a[f].length).map(([lb, f]) => `<div class="${lb === 'Alpa' ? 'late' : 'muted'}">${lb}: ${esc(a[f].join(', '))}</div>`).join('') + (a.suratBelum && a.suratBelum.length ? `<div class="late">Surat sakit belum diupload: ${esc(a.suratBelum.join(', '))}</div>` : '') + '</div></div>').join('')
+      + lpNama.filter(([, f]) => a[f].length).map(([lb, f]) => `<div class="${lb === 'Alpa' ? 'late' : 'muted'}">${lb}: ${esc(a[f].join(', '))}</div>`).join('') + '</div></div>').join('')
       : '<p class="muted">Tidak ada absensi tercatat di rentang ini.</p>';
+    const hr = k.harian ? '<h3 style="margin:14px 0 4px">Absensi harian kelas</h3>' + (k.harian.length ? k.harian.map(a => `<div class="item"><div class="grow"><div class="t">${tglPendek(a.tanggal)}</div><div class="muted">hadir ${a.H}, sakit ${a.S}, izin ${a.I}, alpa ${a.A}</div>`
+      + lpNama.filter(([, f]) => a[f].length).map(([lb, f]) => `<div class="${lb === 'Alpa' ? 'late' : 'muted'}">${lb}: ${esc(a[f].join(', '))}</div>`).join('')
+      + (a.suratBelum.length ? `<div class="late">Surat sakit belum diupload: ${esc(a.suratBelum.join(', '))}</div>` : '') + '</div></div>').join('') : '<p class="muted">Belum ada absensi harian di rentang ini.</p>') : '';
+    const pk = k.piket ? '<h3 style="margin:14px 0 4px">Piket kelas</h3>' + (k.piket.length ? k.piket.map(p => `<div class="item"><div class="grow"><div class="t">${esc(p.hari)}, ${tglPendek(p.tanggal)}${p.kondisi ? ' · kelas ' + esc(p.kondisi) : ''}</div><div class="muted">${p.ya} piket, ${p.tidak} tidak</div>`
+      + (p.namaTidak.length ? `<div class="late">Tidak piket: ${esc(p.namaTidak.join(', '))}</div>` : '') + (p.catatan ? `<div class="muted">${esc(p.catatan)}</div>` : '') + '</div></div>').join('') : '<p class="muted">Belum ada catatan piket di rentang ini.</p>') : '';
+    const ks = k.kas ? '<h3 style="margin:14px 0 4px">Kas kelas</h3>' + item('Saldo', `<strong>${rp(k.kas.saldo)}</strong>`, `Minggu ini: masuk ${rp(k.kas.masuk)}, keluar ${rp(k.kas.keluar)}`, '')
+      + k.kas.pengeluaran.map(x => `<div class="muted">${tglPendek(x.tanggal)}: ${esc(x.ket)} (${rp(x.jumlah)})</div>`).join('') + k.kas.iuran.map(i => `<div class="muted">${esc(i.judul)}: ${i.lunas} dari ${i.total} siswa lunas</div>`).join('') : '';
+    const iv = k.inventaris ? '<h3 style="margin:14px 0 4px">Inventaris kelas</h3>' + item('Kondisi sekarang', `${k.inventaris.jenis} jenis barang`, `<div class="${k.inventaris.rusak || k.inventaris.hilang ? 'late' : 'muted'}">${k.inventaris.rusak} rusak, ${k.inventaris.hilang} hilang</div>`, '')
+      + k.inventaris.perubahan.map(x => `<div class="muted">${tglPendek(x.tanggal)} · ${esc(x.nama)} (${esc(x.aksi)}): ${esc(x.ringkas)}</div>`).join('') : '';
     const tg = k.jatuhTempo.length ? k.jatuhTempo.map(t => `<div class="item"><div class="grow"><div class="muted">${esc(t.mapel)}</div><div class="t">${esc(t.judul)}</div><div class="muted">Deadline ${fmt(t.deadline)}</div>`
       + (t.belum.length ? `<div class="late">Belum kumpul (${t.belum.length} dari ${t.total}): ${esc(t.belum.join(', '))}</div>` : '<div class="muted">Semua sudah kumpul.</div>') + '</div></div>').join('')
       : '<p class="muted">Tidak ada tugas yang jatuh tempo di rentang ini.</p>';
     const tunggak = k.menunggak.length ? '<div class="muted" style="margin-top:8px"><strong>Masih ada yang belum kumpul dari sebelumnya:</strong><br>' + k.menunggak.map(t => `${esc(t.judul)} (${t.belum} siswa)`).join('<br>') + '</div>' : '';
     const akan = k.akan.length ? '<div class="muted" style="margin-top:8px"><strong>Segera jatuh tempo:</strong><br>' + k.akan.map(t => `${esc(t.judul)} (${fmt(t.deadline)})`).join('<br>') + '</div>' : '';
     return `<div class="panel"><div class="row"><h2 style="margin:0">${esc(k.kelas)}</h2><button class="ghost small" data-wa="${i}">Bagikan</button></div>`
-      + `<h3 style="margin:14px 0 4px">Absensi</h3>${abs}<h3 style="margin:14px 0 4px">Tugas</h3>${tg}${tunggak}${akan}</div>`;
+      + `<h3 style="margin:14px 0 4px">Absensi</h3>${abs}${hr}${pk}${ks}${iv}<h3 style="margin:14px 0 4px">Tugas</h3>${tg}${tunggak}${akan}</div>`;
   }
   async function loadLaporan() {
     if (!$('lpSampai').value) $('lpSampai').value = hariIni();
@@ -1592,13 +1692,71 @@
 
   /* ---------------- Kelasku: info kelas dan susunan pengurus ---------------- */
   const tglPanjang = iso => new Date(iso).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'long', year: 'numeric' });
+  const STN = { S: 'Sakit', I: 'Izin', A: 'Alpa' }, STATUS_TH = ['S', 'I', 'A'];
+  const tombolSurat = (id, ada) => `<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center">${ada ? '<span class="tag">Surat terkirim</span>' : ''}<button class="small${ada ? ' ghost' : ''}" type="button" data-usurat="${esc(id)}">${ada ? 'Ganti foto' : 'Upload surat'}</button></div>`;
+  function sayaHtml(r) { // kehadiran harian milik siswa yang sedang login
+    const s = r.saya; if (!s) return '';
+    const kepala = s.total ? `<div class="muted">${Math.round(s.H / s.total * 100)}% hadir dari ${s.total} hari tercatat</div><div class="sum" style="margin-top:8px">${ST.map(k => `<span class="chip"><b>${s[k]}</b> ${NAMA_ST[k]}</span>`).join('')}</div>`
+      : '<p class="muted">Belum ada absensi harian yang tercatat untukmu.</p>';
+    const warn = s.suratBelum ? `<div class="late" style="margin-top:8px"><strong>${s.suratBelum} surat sakit belum diupload.</strong></div>` : '';
+    const hari = s.hari.length ? '<h3 style="margin:14px 0 4px">Hari tidak hadir</h3>' + s.hari.map(x => item(esc(tglIndo(x.tanggal)), STN[x.status],
+      x.status === 'S' && !x.surat ? '<div class="late">Surat sakit wajib diupload</div>' : x.surat ? '' : '<div class="muted">Surat opsional</div>', tombolSurat(x.id, x.surat))).join('') : '';
+    return `<div class="panel"><h2>Kehadiranku</h2>${kepala}${warn}${hari}</div>`;
+  }
+  const rp = n => (Number(n) < 0 ? '-' : '') + 'Rp ' + Math.abs(Number(n) || 0).toLocaleString('id-ID');
+  function kasHtml(r) { // kas kelas: saldo, status iuran sendiri, pengeluaran, laporan bulanan
+    const k = r.kas; if (!k) return '';
+    const cek = k.cek ? `<div class="muted">Terakhir dicocokkan dengan uang fisik: ${esc(tglIndo(k.cek.tanggal))} · ${k.cek.cocok ? 'cocok' : k.izin ? 'selisih ' + rp(k.cek.selisih) + (k.cek.selisih < 0 ? ' (uang kurang)' : ' (uang lebih)') : 'belum cocok, sedang diperiksa'}</div>` : '<div class="muted">Belum pernah dicocokkan dengan uang fisik.</div>';
+    const tombol = k.izin ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0"><button class="small" type="button" data-kcatat="1">Catat transaksi</button><button class="ghost small" type="button" data-kiuran="1">Iuran siswa</button><button class="ghost small" type="button" data-kriwayat="1">Riwayat dan cek saldo</button></div>' : '';
+    const saya = k.saya && k.saya.length ? '<h3 style="margin:14px 0 4px">Iuranmu</h3>' + k.saya.map(i => item(esc(i.judul), `${rp(i.nominal)} per siswa`, '',
+      `<span class="tag">${i.status === 'lunas' ? 'Lunas' : i.status === 'kurang' ? 'Kurang ' + rp(i.nominal - i.dibayar) : 'Belum bayar'}</span>`)).join('') : '';
+    const keluar = '<h3 style="margin:14px 0 4px">Pengeluaran terakhir</h3>' + (k.pengeluaran.length ? k.pengeluaran.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), '',
+      `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><strong>${rp(x.jumlah)}</strong>${x.adaNota ? `<button class="ghost small" type="button" data-knota="${esc(x.id)}">Nota</button>` : ''}</div>`)).join('') : '<p class="muted">Belum ada pengeluaran.</p>');
+    const lain = k.lain.length ? '<h3 style="margin:14px 0 4px">Pemasukan lain</h3>' + k.lain.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), '', `<strong>${rp(x.jumlah)}</strong>`)).join('') : '';
+    const bulanan = `<h3 style="margin:14px 0 4px">Laporan bulanan</h3><div class="bar"><input id="kasBln" type="month" value="${esc(k.bulan)}" style="width:auto;margin:0" aria-label="Bulan"><button class="ghost small" type="button" data-kbulan="1">Lihat</button></div><div id="kasBulan"></div>`;
+    return `<div class="panel"><h2>Kas kelas</h2><div style="font-size:1.8rem;font-weight:700">${rp(k.saldo)}</div><div class="muted">Saldo kas saat ini</div>`
+      + `<div class="muted" style="margin-top:6px">Bulan ini: masuk ${rp(k.masukBulan)}, keluar ${rp(k.keluarBulan)}</div>${cek}${tombol}${saya}${keluar}${lain}${bulanan}</div>`;
+  }
+  function kasBulanHtml(r) {
+    const baris = (a, b, c) => item(a, b, '', c || '');
+    return baris('Saldo awal', rp(r.saldoAwal)) + baris('Pemasukan iuran', rp(r.masukIuran)) + baris('Pemasukan lain', rp(r.masukLain)) + baris('Pengeluaran', rp(r.keluar)) + baris('Saldo akhir', `<strong>${rp(r.saldoAkhir)}</strong>`)
+      + (r.pengeluaran.length ? '<h3 style="margin:14px 0 4px">Pengeluaran bulan ini</h3>' + r.pengeluaran.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), '', `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><strong>${rp(x.jumlah)}</strong>${x.adaNota ? `<button class="ghost small" type="button" data-knota="${esc(x.id)}">Nota</button>` : ''}</div>`)).join('') : '')
+      + (r.iuran.length ? '<h3 style="margin:14px 0 4px">Iuran</h3>' + r.iuran.map(i => item(esc(i.judul), `${i.lunas} dari ${i.jumlahSiswa} siswa lunas`, `<div class="muted">Terkumpul ${rp(i.terkumpul)} dari ${rp(i.target)}</div>`, '')).join('') : '')
+      + (r.dibatalkan ? `<div class="muted" style="margin-top:8px">${r.dibatalkan} transaksi dibatalkan bulan ini (tidak dihitung).</div>` : '');
+  }
+  function invHtml(r) { // inventaris kelas: ringkasan, daftar barang, dan tombol kelola untuk yang berizin
+    const v = r.inventaris; if (!v) return '';
+    const chips = `<div class="sum" style="margin:8px 0"><span class="chip"><b>${v.jenis}</b> jenis</span><span class="chip"><b>${v.baik}</b> baik</span><span class="chip"><b>${v.rusak}</b> rusak</span><span class="chip"><b>${v.hilang}</b> hilang</span></div>`;
+    const daftar = v.barang.length ? v.barang.map(b => item(esc(b.nama), `Baik ${b.baik} · Rusak ${b.rusak} · Hilang ${b.hilang}`,
+      (b.rusak || b.hilang ? `<div class="late">${[b.rusak ? b.rusak + ' rusak' : '', b.hilang ? b.hilang + ' hilang' : ''].filter(Boolean).join(', ')}</div>` : '') + (b.ket ? `<div class="muted">${esc(b.ket)}</div>` : ''),
+      v.izin ? `<button class="ghost small" type="button" data-bubah="${esc(b.id)}">Ubah</button>` : '')).join('') : '<p class="muted">Belum ada barang yang dicatat.</p>';
+    const tombol = v.izin ? '<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="small" type="button" data-btambah="1">Tambah barang</button><button class="ghost small" type="button" data-briwayat="1">Riwayat</button></div>' : '';
+    return `<div class="panel"><div class="row"><h2 style="margin:0">Inventaris kelas</h2>${tombol}</div>${chips}${daftar}</div>`;
+  }
+  function piketHtml(r) { // jadwal piket per hari, hari piket sendiri, dan catatan piket untuk yang berizin
+    const p = r.piket; if (!p) return '';
+    const jadwal = p.jadwal.map(j => item(esc(j.nama) + (p.hariIni === j.hari ? ' · hari ini' : ''), j.orang.length ? j.orang.map(o => esc(o.nama)).join(', ') : '<span class="muted">Belum ada jadwal</span>',
+      p.saya && p.saya.hari === j.hari ? '<div><span class="tag">Hari piketmu</span></div>' : '', '')).join('');
+    const rekap = p.saya && p.saya.total ? `<div class="muted" style="margin-top:8px">Piketmu tercatat ${p.saya.total} kali, terlaksana ${p.saya.ya} kali.</div>` : '';
+    const lapor = r.izin.piketLapor && p.laporan && p.laporan.length ? '<h3 style="margin:14px 0 4px">Catatan piket terakhir</h3>' + p.laporan.map(x => item(esc(tglIndo(x.tanggal)),
+      `${x.ya} piket, ${x.tidak} tidak${x.kondisi ? ' · kelas ' + esc(x.kondisi) : ''}`, '', `<button class="ghost small" type="button" data-plapor="${esc(x.tanggal)}">Buka</button>`)).join('') : '';
+    const tombol = (r.izin.piket ? '<button class="ghost small" type="button" data-pjadwal="1">Atur jadwal</button>' : '') + (r.izin.piketLapor ? `<button class="small" type="button" data-plapor="${hariIni()}">Catat piket</button>` : '');
+    return `<div class="panel"><div class="row"><h2 style="margin:0">Jadwal piket</h2><div style="display:flex;gap:6px;flex-wrap:wrap">${tombol}</div></div>${jadwal}${rekap}${lapor}</div>`;
+  }
+  function harianHtml(r) { // daftar hari absensi untuk yang boleh mengisi (sekretaris, ketua, wakil, guru)
+    if (!r.izin.absensi) return '';
+    const list = r.harian && r.harian.length ? r.harian.map(a => item(esc(tglIndo(a.tanggal)), `Hadir ${a.ringkas.H}, sakit ${a.ringkas.S}, izin ${a.ringkas.I}, alpa ${a.ringkas.A}${a.ringkas.belum ? ', belum ' + a.ringkas.belum : ''}`,
+      a.suratBelum ? `<div class="late">${a.suratBelum} surat sakit belum diupload</div>` : '', `<button class="ghost small" type="button" data-abuka="${esc(a.tanggal)}">Buka</button>`)).join('') : '<p class="muted">Belum ada absensi harian.</p>';
+    return `<div class="panel"><div class="row"><h2 style="margin:0">Absensi harian</h2><button class="small" type="button" data-abuka="${hariIni()}">Absen hari ini</button></div>${list}</div>`;
+  }
   function kelasHtml(r) {
     const pengurus = r.pengurus.map(p => item(esc(p.nama), p.orang.length ? esc(p.orang.join(', ')) : '<span class="muted">Belum ditentukan</span>', '', '')).join('');
     const info = r.info.length ? r.info.map(i => `<div class="item"><div class="grow"><div class="t">${esc(i.judul)}${i.sematkan ? ' <span class="tag">Disematkan</span>' : ''}</div>`
       + `<div class="muted">${tglPanjang(i.dibuat)}${i.olehNama ? ' · ' + esc(i.olehNama) : ''}</div><div style="white-space:pre-wrap;margin-top:4px">${esc(i.isi)}</div></div>`
       + (r.izin.info ? `<div style="display:flex;flex-direction:column;gap:6px"><button class="ghost small" type="button" data-kedit="${esc(i.id)}">Ubah</button><button class="ghost small" type="button" data-khapus="${esc(i.id)}">Hapus</button></div>` : '') + '</div>').join('')
       : '<p class="muted">Belum ada info kelas.</p>';
-    return `<div class="panel"><h2 style="margin:0">${esc(r.kelas)}</h2><div class="muted">${r.wali ? 'Wali kelas: ' + esc(r.wali) + ' · ' : ''}${r.jumlah} siswa</div></div>`
+    return `<div class="panel"><div class="row"><div><h2 style="margin:0">${esc(r.kelas)}</h2><div class="muted">${r.wali ? 'Wali kelas: ' + esc(r.wali) + ' · ' : ''}${r.jumlah} siswa</div></div>${me.role === 'admin' ? '<button class="ghost small" type="button" data-atur="1">Atur kelas</button>' : ''}</div></div>`
+      + sayaHtml(r) + harianHtml(r) + piketHtml(r) + kasHtml(r) + invHtml(r)
       + `<div class="panel"><h2>Pengurus kelas</h2>${pengurus}</div>`
       + `<div class="panel"><div class="row"><h2 style="margin:0">Info kelas</h2>${r.izin.info ? '<button class="small" type="button" data-kbaru="1">Tulis info</button>' : ''}</div>${info}</div>`;
   }
@@ -1620,6 +1778,20 @@
     const d = e.target.dataset;
     if (d.retry === 'kelas') return loadKelas(kelasEl, kelasData && kelasData.kelas);
     if (d.kbaru) return bukaInfoKelas(null);
+    if (d.abuka) return bukaAbsKelas(d.abuka);
+    if (d.atur) return bukaAturKelas();
+    if (d.btambah) return bukaBarang(null);
+    if (d.bubah) return bukaBarang(d.bubah);
+    if (d.briwayat) return bukaInvRiwayat();
+    if (d.kcatat) return bukaKasTrx();
+    if (d.kiuran) return bukaIuran();
+    if (d.kriwayat) return bukaKasRiwayat();
+    if (d.knota) return lihatNota(d.knota);
+    if (d.kbulan) return lihatKasBulan();
+    if (d.kbagi && kasBulanData) return bagikan('Laporan kas ' + kasBulanData.bulan, pesanKas(kasBulanData));
+    if (d.pjadwal) return bukaPiketJadwal();
+    if (d.plapor) return bukaPiketLapor(d.plapor);
+    if (d.usurat) { suratTarget = { id: d.usurat }; $('suratFile').value = ''; $('suratFile').click(); return; }
     if (d.kedit) return bukaInfoKelas(d.kedit);
     if (d.khapus) {
       if (!confirm('Hapus info ini?')) return;
@@ -1640,6 +1812,313 @@
     } catch (err) { $('ikErr').textContent = err.message; }
     $('ikSimpan').disabled = false;
   };
+
+  /* ---------------- Absensi harian kelas dan surat ---------------- */
+  let ak = null, suratTarget = null;
+  const sama = (a, b) => Object.keys({ ...a, ...b }).every(k => (a[k] || '') === (b[k] || ''));
+  const akUbah = () => !!ak && !sama(ak.status, ak.asli);
+  const akBoleh = () => me.role !== 'admin' && !!(kelasData && kelasData.izin.surat); // guru tidak mengunggah surat, hanya melihat
+  async function bukaAbsKelas(tanggal) {
+    let r;
+    try { r = await api('absenKelasHari', { kelas: kelasData.kelas, tanggal }); } catch (e) { toast(e.message, true); return; }
+    ak = { tanggal: r.tanggal, id: r.id, sis: r.siswa, status: { ...r.data }, asli: { ...r.data }, surat: r.surat || {} };
+    $('akTgl').value = ak.tanggal; $('akTgl').max = hariIni(); $('akErr').textContent = ''; $('akHapus').hidden = !(ak.id && me.role === 'admin');
+    $('akDaftar').innerHTML = ak.sis.length ? ak.sis.map((s, i) => `<div class="abrow" data-nis="${esc(s.nis)}"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)}<span class="absurat"></span></span>`
+      + `<span class="abtns" role="group" aria-label="Status ${esc(s.nama)}">${ST.map(k => `<button class="abtn" type="button" data-s="${k}" title="${NAMA_ST[k]}" aria-label="${NAMA_ST[k]}">${k}</button>`).join('')}</span></div>`).join('')
+      : '<p class="muted" style="padding:12px">Belum ada siswa di kelas ini.</p>';
+    segarkanAk(); if (!$('dlgAbsKelas').open) $('dlgAbsKelas').showModal();
+  }
+  function segarkanAk() {
+    const c = { H: 0, S: 0, I: 0, A: 0 };
+    ak.sis.forEach(s => { if (c[ak.status[s.nis]] !== undefined) c[ak.status[s.nis]]++; });
+    const belum = ak.sis.length - c.H - c.S - c.I - c.A;
+    $('akRingkas').innerHTML = ST.map(k => `<span class="chip"><b>${c[k]}</b> ${NAMA_ST[k]}</span>`).join('') + `<span class="chip${belum ? ' belum' : ''}"><b>${belum}</b> belum</span>`;
+    $('akDaftar').querySelectorAll('.abrow').forEach(r => {
+      const nis = r.dataset.nis, st = ak.status[nis], el = r.querySelector('.absurat');
+      r.querySelectorAll('.abtn').forEach(b => { const on = st === b.dataset.s; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+      if (!STATUS_TH.includes(st)) { el.innerHTML = ''; return; }
+      const ada = !!ak.surat[nis], tersimpan = !!ak.id && ak.asli[nis] === st;
+      let t = '';
+      if (ada) t += ' <span class="tag">Surat terkirim</span>' + (me.role === 'admin' ? ` <button class="ghost small" type="button" data-lihat="${esc(nis)}">Lihat</button>` : '');
+      else t += st === 'S' ? ' <span class="late">surat belum ada</span>' : ' <span class="muted">(surat opsional)</span>';
+      if (akBoleh()) t += tersimpan ? ` <button class="${ada ? 'ghost ' : ''}small" type="button" data-up="${esc(nis)}">${ada ? 'Ganti foto' : 'Upload surat'}</button>` : ' <span class="muted">(simpan dulu)</span>';
+      el.innerHTML = t;
+    });
+  }
+  $('akDaftar').onclick = async e => {
+    const b = e.target.closest('button'); if (!b || !ak) return;
+    const row = b.closest('.abrow'), nis = row && row.dataset.nis;
+    if (b.dataset.s) { if (ak.status[nis] === b.dataset.s) delete ak.status[nis]; else ak.status[nis] = b.dataset.s; segarkanAk(); }
+    else if (b.dataset.up) { suratTarget = { id: ak.id, nis: b.dataset.up }; $('suratFile').value = ''; $('suratFile').click(); }
+    else if (b.dataset.lihat) {
+      const s = ak.sis.find(x => x.nis === b.dataset.lihat); b.disabled = true;
+      try {
+        const r = await api('suratFoto', { id: ak.id, nis: b.dataset.lihat });
+        $('srHead').textContent = 'Surat ' + (s ? s.nama : ''); $('srInfo').textContent = 'Diunggah ' + fmt(r.waktu); $('srImg').src = r.dataUrl; $('dlgSurat').showModal();
+      } catch (err) { toast(err.message, true); }
+      b.disabled = false;
+    }
+  };
+  $('akSisa').onclick = () => { ak.sis.forEach(s => { if (!ak.status[s.nis]) ak.status[s.nis] = 'H'; }); segarkanAk(); };
+  $('akTgl').onchange = () => {
+    if (!$('akTgl').value) return;
+    if (akUbah() && !confirm('Perubahan belum disimpan. Pindah tanggal?')) { $('akTgl').value = ak.tanggal; return; }
+    bukaAbsKelas($('akTgl').value);
+  };
+  $('akSimpan').onclick = async () => {
+    $('akSimpan').disabled = true; $('akErr').textContent = '';
+    try { await api('simpanAbsenKelas', { kelas: kelasData.kelas, tanggal: ak.tanggal, data: ak.status }); toast('Absensi tersimpan.'); await bukaAbsKelas(ak.tanggal); loadKelas(kelasEl, kelasData.kelas); }
+    catch (e) { $('akErr').textContent = e.message; }
+    $('akSimpan').disabled = false;
+  };
+  $('akHapus').onclick = async () => {
+    if (!confirm('Hapus absensi tanggal ini beserta surat-suratnya?')) return;
+    try { await api('hapusAbsenKelas', { id: ak.id }); ak = null; $('dlgAbsKelas').close(); toast('Absensi dihapus.'); loadKelas(kelasEl, kelasData.kelas); }
+    catch (e) { $('akErr').textContent = e.message; }
+  };
+  const akTutup = () => { if (akUbah() && !confirm('Perubahan belum disimpan. Tutup?')) return; ak = null; $('dlgAbsKelas').close(); loadKelas(kelasEl, kelasData && kelasData.kelas); };
+  $('akX').onclick = akTutup;
+  $('dlgAbsKelas').oncancel = e => { e.preventDefault(); akTutup(); };
+  $('suratFile').onchange = async e => { // foto surat dikecilkan di browser, lalu dikirim
+    const f = e.target.files[0]; if (!f || !suratTarget) return;
+    toast('Mengunggah surat…');
+    try {
+      const u = await kecilkan(f);
+      await api('uploadSuratKelas', { id: suratTarget.id, nis: suratTarget.nis, file: { name: f.name, data: u.split(',')[1] }, rid: newRid() });
+      toast('Surat terkirim. Terima kasih.');
+    } catch (err) { toast(err.message === 'gambar_rusak' ? 'Foto tidak bisa dibaca. Coba foto lain (JPG atau PNG).' : (err.message || 'Gagal mengunggah. Coba lagi.'), true); }
+    if (ak && $('dlgAbsKelas').open) { // dialog absensi terbuka: hanya status surat yang disegarkan, centangan yang belum disimpan tetap
+      try { const r = await api('absenKelasHari', { kelas: kelasData.kelas, tanggal: ak.tanggal }); ak.surat = r.surat || {}; segarkanAk(); } catch (err) { /* abaikan */ }
+    } else loadKelas(kelasEl, kelasData && kelasData.kelas);
+  };
+
+  /* ---------------- Piket dan Atur kelas ---------------- */
+  const HARI_ID = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const muatUlangKelas = () => loadKelas(kelasEl, kelasData && kelasData.kelas);
+  function bukaPiketJadwal() {
+    const sis = kelasData.siswa || [];
+    $('pjDaftar').innerHTML = sis.length ? sis.map((s, i) => `<div class="abrow"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)}</span>`
+      + `<select data-nis="${esc(s.nis)}" style="width:auto;margin:0" aria-label="Hari piket ${esc(s.nama)}"><option value="0">Tidak piket</option>${[1, 2, 3, 4, 5, 6].map(x => `<option value="${x}"${s.hari === x ? ' selected' : ''}>${HARI_ID[x]}</option>`).join('')}</select></div>`).join('')
+      : '<p class="muted" style="padding:12px">Belum ada siswa di kelas ini.</p>';
+    $('pjErr').textContent = ''; $('dlgPiketJadwal').showModal();
+  }
+  $('pjX').onclick = $('pjBatal').onclick = () => $('dlgPiketJadwal').close();
+  $('pjSimpan').onclick = async () => {
+    const jadwal = {}; $('pjDaftar').querySelectorAll('select').forEach(s => { jadwal[s.dataset.nis] = Number(s.value); });
+    $('pjSimpan').disabled = true; $('pjErr').textContent = '';
+    try { await api('simpanPiket', { kelas: kelasData.kelas, jadwal }); $('dlgPiketJadwal').close(); toast('Jadwal piket tersimpan.'); muatUlangKelas(); }
+    catch (e) { $('pjErr').textContent = e.message; }
+    $('pjSimpan').disabled = false;
+  };
+
+  let pl = null;
+  async function bukaPiketLapor(tanggal) {
+    let r;
+    try { r = await api('piketHari', { kelas: kelasData.kelas, tanggal }); } catch (e) { toast(e.message, true); return; }
+    pl = { tanggal: r.tanggal, data: { ...r.data } };
+    $('plTgl').value = r.tanggal; $('plTgl').max = hariIni(); $('plHari').textContent = r.namaHari; $('plKondisi').value = r.kondisi || ''; $('plCatatan').value = r.catatan || ''; $('plErr').textContent = '';
+    $('plDaftar').innerHTML = r.anggota.length ? r.anggota.map(a => `<div class="abrow" data-nis="${esc(a.nis)}"><span class="abnama">${esc(a.nama)}</span>`
+      + '<span class="abtns"><button class="abtn" type="button" data-s="H" data-v="ya">Ya</button><button class="abtn" type="button" data-s="A" data-v="tidak">Tidak</button></span></div>').join('')
+      : `<p class="muted" style="padding:12px">Tidak ada yang dijadwalkan piket di hari ${esc(r.namaHari)}.</p>`;
+    segarkanPl(); if (!$('dlgPiketLapor').open) $('dlgPiketLapor').showModal();
+  }
+  function segarkanPl() {
+    $('plDaftar').querySelectorAll('.abrow').forEach(r => r.querySelectorAll('.abtn').forEach(b => { const on = pl.data[r.dataset.nis] === b.dataset.v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }));
+  }
+  $('plDaftar').onclick = e => {
+    const b = e.target.closest('.abtn'); if (!b || !pl) return;
+    const nis = b.closest('.abrow').dataset.nis;
+    if (pl.data[nis] === b.dataset.v) delete pl.data[nis]; else pl.data[nis] = b.dataset.v;
+    segarkanPl();
+  };
+  $('plTgl').onchange = () => { if ($('plTgl').value) bukaPiketLapor($('plTgl').value); };
+  $('plX').onclick = $('plBatal').onclick = () => $('dlgPiketLapor').close();
+  $('plSimpan').onclick = async () => {
+    $('plSimpan').disabled = true; $('plErr').textContent = '';
+    try {
+      await api('simpanPiketLapor', { kelas: kelasData.kelas, tanggal: pl.tanggal, data: pl.data, kondisi: $('plKondisi').value, catatan: $('plCatatan').value });
+      $('dlgPiketLapor').close(); toast('Catatan piket tersimpan.'); muatUlangKelas();
+    } catch (e) { $('plErr').textContent = e.message; }
+    $('plSimpan').disabled = false;
+  };
+
+  const JAB_ATUR = [['ketua', 'Ketua kelas', 1], ['wakil', 'Wakil ketua', 1], ['sekretaris', 'Sekretaris', 2], ['bendahara', 'Bendahara', 2], ['kebersihan', 'Divisi kebersihan', 2]];
+  function bukaAturKelas() {
+    const sis = kelasData.siswa || [], pn = kelasData.pengurusNis || {};
+    $('atWali').value = kelasData.wali || '';
+    $('atBody').innerHTML = JAB_ATUR.map(([j, nm, n]) => Array.from({ length: n }, (_, i) => {
+      const cur = (pn[j] || [])[i] || '';
+      return `<label for="at_${j}_${i}">${nm}${n > 1 ? ' ' + (i + 1) : ''}</label><select id="at_${j}_${i}" data-j="${j}"><option value="">(kosong)</option>`
+        + sis.map(s => `<option value="${esc(s.nis)}"${s.nis === cur ? ' selected' : ''}>${esc(s.nama)}</option>`).join('') + '</select>';
+    }).join('')).join('');
+    $('atErr').textContent = ''; $('dlgAturKelas').showModal();
+  }
+  $('atX').onclick = $('atBatal').onclick = () => $('dlgAturKelas').close();
+  $('atSimpan').onclick = async () => {
+    const pengurus = {};
+    $('atBody').querySelectorAll('select').forEach(s => { if (s.value) (pengurus[s.dataset.j] = pengurus[s.dataset.j] || []).push(s.value); });
+    if (Object.values(pengurus).some(l => l.some((n, i) => l.indexOf(n) !== i))) { $('atErr').textContent = 'Satu orang tidak boleh dipilih dua kali di jabatan yang sama.'; return; }
+    $('atSimpan').disabled = true; $('atErr').textContent = '';
+    try { await api('aturKelas', { kelas: kelasData.kelas, wali: $('atWali').value, pengurus }); $('dlgAturKelas').close(); toast('Kelas diperbarui.'); muatUlangKelas(); }
+    catch (e) { $('atErr').textContent = e.message; }
+    $('atSimpan').disabled = false;
+  };
+
+  /* ---------------- Kas kelas ---------------- */
+  let kk = null, kasBulanData = null, iuDet = null;
+  const muatKas = async () => { kk = await api('kasKelola', { kelas: kelasData.kelas }); return kk; };
+  async function lihatNota(id) { // nota boleh dilihat semua anggota kelas
+    try {
+      const r = await api('kasNota', { kelas: kelasData.kelas, id });
+      $('srHead').textContent = 'Nota kas'; $('srInfo').textContent = `${tglIndo(r.tanggal)} · ${rp(r.jumlah)} · ${r.ket}`; $('srImg').src = r.dataUrl; $('dlgSurat').showModal();
+    } catch (e) { toast(e.message, true); }
+  }
+  function pesanKas(r) {
+    const L = [`*Laporan kas ${kelasData.kelas}*`, `Bulan ${r.bulan}`, '', `Saldo awal: ${rp(r.saldoAwal)}`, `Pemasukan iuran: ${rp(r.masukIuran)}`, `Pemasukan lain: ${rp(r.masukLain)}`, `Pengeluaran: ${rp(r.keluar)}`, `*Saldo akhir: ${rp(r.saldoAkhir)}*`];
+    if (r.pengeluaran.length) { L.push('', '*Pengeluaran*'); r.pengeluaran.forEach(x => L.push(`- ${tglIndo(x.tanggal)} ${x.ket}: ${rp(x.jumlah)}`)); }
+    r.iuran.forEach(i => L.push(`${i.judul}: ${i.lunas} dari ${i.jumlahSiswa} siswa lunas`));
+    return L.join('\n');
+  }
+  async function lihatKasBulan() {
+    const b = $('kasBln').value; if (!b) return;
+    $('kasBulan').innerHTML = '<p class="muted">Memuat…</p>';
+    try {
+      const r = await api('kasLaporan', { kelas: kelasData.kelas, bulan: b }); kasBulanData = r;
+      $('kasBulan').innerHTML = kasBulanHtml(r) + (kelasData.kas && kelasData.kas.izin ? '<div style="margin-top:10px"><button class="ghost small" type="button" data-kbagi="1">Bagikan ke WhatsApp</button></div>' : '');
+    } catch (e) { $('kasBulan').innerHTML = ''; toast(e.message, true); }
+  }
+
+  // catat pemasukan lain / pengeluaran
+  function bukaKasTrx() {
+    $('ktJenis').value = 'keluar'; $('ktTgl').value = hariIni(); $('ktTgl').max = hariIni(); $('ktJumlah').value = ''; $('ktKet').value = ''; $('ktNota').value = ''; $('ktErr').textContent = '';
+    $('dlgKasTrx').showModal(); $('ktJumlah').focus();
+  }
+  $('ktX').onclick = $('ktBatal').onclick = () => $('dlgKasTrx').close();
+  $('ktSimpan').onclick = async () => {
+    const jumlah = Number($('ktJumlah').value), ket = $('ktKet').value.trim(), f = $('ktNota').files[0];
+    if (!Number.isInteger(jumlah) || jumlah < 1) { $('ktErr').textContent = ERR.jumlah_tidak_valid; return; }
+    if (ket.length < 3) { $('ktErr').textContent = ERR.keterangan_kosong; return; }
+    $('ktSimpan').disabled = true; $('ktErr').textContent = '';
+    try {
+      const nota = f ? { name: f.name, data: (await kecilkan(f)).split(',')[1] } : null;
+      await api('kasCatat', { kelas: kelasData.kelas, tanggal: $('ktTgl').value, jenis: $('ktJenis').value, jumlah, keterangan: ket, nota, rid: newRid() });
+      $('dlgKasTrx').close(); toast('Transaksi tercatat.'); muatUlangKelas();
+    } catch (e) { $('ktErr').textContent = e.message === 'gambar_rusak' ? 'Foto nota tidak bisa dibaca. Coba foto lain.' : e.message; }
+    $('ktSimpan').disabled = false;
+  };
+
+  // iuran: buat iuran dan catat pembayaran siswa
+  function isiIuSel(pilih) { $('iuSel').innerHTML = kk.iuran.map(i => `<option value="${esc(i.id)}"${i.id === pilih ? ' selected' : ''}>${esc(i.judul)} · ${rp(i.nominal)}</option>`).join(''); }
+  async function muatDetailIuran() {
+    if (!$('iuSel').value) { $('iuIsi').hidden = true; return; }
+    try { iuDet = await api('kasIuranDetail', { kelas: kelasData.kelas, id: $('iuSel').value }); } catch (e) { $('iuErr').textContent = e.message; return; }
+    const nom = iuDet.iuran.nominal;
+    $('iuDaftar').innerHTML = iuDet.siswa.map((s, i) => `<div class="abrow"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)} <span class="muted">· ${rp(s.dibayar)} / ${rp(nom)}</span></span>`
+      + (s.dibayar >= nom ? '<span class="tag">Lunas</span>' : `<span style="display:flex;gap:6px;align-items:center"><input type="number" inputmode="numeric" min="1" max="${nom - s.dibayar}" data-nis="${esc(s.nis)}" placeholder="Bayar" aria-label="Bayar ${esc(s.nama)}" style="width:96px;margin:0"><button class="ghost small" type="button" data-lunasi="${esc(s.nis)}" data-sisa="${nom - s.dibayar}">Lunasi</button></span>`) + '</div>').join('');
+    const ik = kk.iuran.find(i => i.id === iuDet.iuran.id);
+    $('iuRingkas').textContent = ik ? `${ik.lunas} lunas, ${ik.kurang} kurang, ${ik.belum} belum · terkumpul ${rp(ik.terkumpul)} dari ${rp(ik.target)}` : '';
+    $('iuIsi').hidden = false;
+  }
+  async function bukaIuran() {
+    try { await muatKas(); } catch (e) { toast(e.message, true); return; }
+    isiIuSel(); $('iuErr').textContent = ''; $('iuTgl').value = hariIni(); $('iuTgl').max = hariIni(); $('iuFormBaru').hidden = kk.iuran.length > 0; $('iuJudul').value = ''; $('iuNominal').value = '';
+    if (!$('dlgIuran').open) $('dlgIuran').showModal();
+    await muatDetailIuran();
+  }
+  $('iuSel').onchange = muatDetailIuran;
+  $('iuBaru').onclick = () => { $('iuFormBaru').hidden = !$('iuFormBaru').hidden; if (!$('iuFormBaru').hidden) $('iuJudul').focus(); };
+  $('iuBatalBaru').onclick = () => { $('iuFormBaru').hidden = true; };
+  $('iuBuat').onclick = async () => {
+    const judul = $('iuJudul').value.trim(), nominal = Number($('iuNominal').value);
+    if (!judul) { $('iuErr').textContent = ERR.judul_kosong; return; }
+    if (!Number.isInteger(nominal) || nominal < 1) { $('iuErr').textContent = ERR.jumlah_tidak_valid; return; }
+    $('iuBuat').disabled = true; $('iuErr').textContent = '';
+    try { const r = await api('kasBuatIuran', { kelas: kelasData.kelas, judul, nominal }); await muatKas(); isiIuSel(r.id); $('iuFormBaru').hidden = true; await muatDetailIuran(); toast('Iuran dibuat.'); }
+    catch (e) { $('iuErr').textContent = e.message; }
+    $('iuBuat').disabled = false;
+  };
+  $('iuDaftar').onclick = e => {
+    const b = e.target.closest('[data-lunasi]'); if (!b) return;
+    const inp = $('iuDaftar').querySelector(`input[data-nis="${b.dataset.lunasi}"]`); if (inp) inp.value = b.dataset.sisa;
+  };
+  $('iuX').onclick = $('iuTutup').onclick = () => { $('dlgIuran').close(); muatUlangKelas(); };
+  $('iuSimpan').onclick = async () => {
+    const bayar = {}; $('iuDaftar').querySelectorAll('input[data-nis]').forEach(i => { if (i.value) bayar[i.dataset.nis] = Number(i.value); });
+    if (!Object.keys(bayar).length) { $('iuErr').textContent = 'Isi jumlah pembayaran minimal satu siswa.'; return; }
+    $('iuSimpan').disabled = true; $('iuErr').textContent = '';
+    try {
+      const r = await api('kasBayarIuran', { kelas: kelasData.kelas, id: iuDet.iuran.id, tanggal: $('iuTgl').value, bayar, rid: newRid() });
+      toast(`${r.jumlah} pembayaran tercatat (${rp(r.total)}).`); const pilih = iuDet.iuran.id; await muatKas(); isiIuSel(pilih); await muatDetailIuran();
+    } catch (e) { $('iuErr').textContent = e.message; }
+    $('iuSimpan').disabled = false;
+  };
+
+  // riwayat transaksi, pembatalan, dan cek saldo fisik
+  function gambarRiwayat() {
+    const c = kk.cek[0];
+    $('rwSaldo').innerHTML = `Saldo di aplikasi: <strong>${rp(kk.saldo)}</strong>` + (c ? ` · cek terakhir ${esc(tglIndo(c.tanggal))}: ${c.selisih === 0 ? 'cocok' : 'selisih ' + rp(c.selisih)}` : '');
+    $('rwDaftar').innerHTML = kk.riwayat.length ? kk.riwayat.map(x => {
+      const label = x.iuran ? `${esc(x.iuran)}: ${esc(x.siswa)}` : esc(x.ket), isi = `${esc(tglIndo(x.tanggal))} · ${x.jenis === 'masuk' ? '+' : '−'}${rp(x.jumlah)} · ${label}`;
+      return `<div class="abrow" data-id="${esc(x.id)}"><span class="abnama" style="flex:1;min-width:0">${x.batal ? `<s>${isi}</s>` : isi}<div class="muted">${x.batal ? 'Dibatalkan: ' + esc(x.alasan) : 'Dicatat ' + (x.oleh ? esc(x.oleh) : 'guru')}</div></span>`
+        + `<span style="display:flex;gap:6px">${x.adaNota ? `<button class="ghost small" type="button" data-nota="${esc(x.id)}">Nota</button>` : ''}${x.batal ? '' : `<button class="ghost small" type="button" data-batal="${esc(x.id)}">Batalkan</button>`}</span></div>`;
+    }).join('') : '<p class="muted" style="padding:12px">Belum ada transaksi.</p>';
+  }
+  async function bukaKasRiwayat() {
+    try { await muatKas(); } catch (e) { toast(e.message, true); return; }
+    gambarRiwayat(); $('rwFisik').value = ''; $('rwKet').value = ''; $('rwCekHasil').textContent = ''; if (!$('dlgKasRiwayat').open) $('dlgKasRiwayat').showModal();
+  }
+  $('rwX').onclick = $('rwTutup').onclick = () => { $('dlgKasRiwayat').close(); muatUlangKelas(); };
+  $('rwDaftar').onclick = async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.nota) return lihatNota(b.dataset.nota);
+    if (b.dataset.batal) {
+      const alasan = prompt('Alasan membatalkan transaksi ini? (wajib, tercatat di riwayat)'); if (!alasan) return;
+      b.disabled = true;
+      try { await api('kasBatal', { kelas: kelasData.kelas, id: b.dataset.batal, alasan }); toast('Transaksi dibatalkan.'); await muatKas(); gambarRiwayat(); }
+      catch (err) { toast(err.message, true); b.disabled = false; }
+    }
+  };
+  $('rwCek').onclick = async () => {
+    const fisik = Number($('rwFisik').value);
+    if ($('rwFisik').value === '' || !Number.isInteger(fisik) || fisik < 0) { $('rwCekHasil').textContent = ERR.jumlah_tidak_valid; return; }
+    $('rwCek').disabled = true;
+    try {
+      const r = await api('kasCek', { kelas: kelasData.kelas, tanggal: hariIni(), fisik, catatan: $('rwKet').value });
+      $('rwCekHasil').innerHTML = r.cocok ? '<span class="tag">Cocok</span> Uang fisik sama dengan saldo catatan.' : `<span class="late">Selisih ${rp(r.selisih)}</span> (uang fisik ${rp(fisik)}, saldo catatan ${rp(r.catatan)}). ${r.selisih < 0 ? 'Uang fisik kurang.' : 'Uang fisik lebih.'} Cek lagi transaksi yang mungkin belum dicatat.`;
+      await muatKas(); gambarRiwayat();
+    } catch (e) { $('rwCekHasil').textContent = e.message; }
+    $('rwCek').disabled = false;
+  };
+
+  /* ---------------- Inventaris kelas ---------------- */
+  let bgId = null;
+  function bukaBarang(id) { // id kosong = barang baru
+    const b = id ? kelasData.inventaris.barang.find(x => x.id === id) : null; bgId = id || null;
+    $('bgHead').textContent = b ? 'Ubah barang' : 'Tambah barang';
+    $('bgNama').value = b ? b.nama : ''; $('bgBaik').value = b ? b.baik : 1; $('bgRusak').value = b ? b.rusak : 0; $('bgHilang').value = b ? b.hilang : 0; $('bgKet').value = b ? b.ket : '';
+    $('bgHapus').hidden = !b; $('bgErr').textContent = ''; $('dlgBarang').showModal(); $('bgNama').focus();
+  }
+  $('bgX').onclick = $('bgBatal').onclick = () => $('dlgBarang').close();
+  $('bgSimpan').onclick = async () => {
+    $('bgSimpan').disabled = true; $('bgErr').textContent = '';
+    try {
+      await api('simpanBarang', { kelas: kelasData.kelas, id: bgId, nama: $('bgNama').value, baik: $('bgBaik').value, rusak: $('bgRusak').value, hilang: $('bgHilang').value, keterangan: $('bgKet').value });
+      $('dlgBarang').close(); toast('Barang tersimpan.'); muatUlangKelas();
+    } catch (e) { $('bgErr').textContent = e.message; }
+    $('bgSimpan').disabled = false;
+  };
+  $('bgHapus').onclick = async () => {
+    const alasan = prompt('Alasan menghapus barang ini? (opsional, tercatat di riwayat)'); if (alasan === null) return;
+    try { await api('hapusBarang', { kelas: kelasData.kelas, id: bgId, alasan }); $('dlgBarang').close(); toast('Barang dihapus dari daftar.'); muatUlangKelas(); }
+    catch (e) { $('bgErr').textContent = e.message; }
+  };
+  async function bukaInvRiwayat() {
+    let r; try { r = await api('inventarisRiwayat', { kelas: kelasData.kelas }); } catch (e) { toast(e.message, true); return; }
+    $('ivDaftar').innerHTML = r.riwayat.length ? r.riwayat.map(x => item(esc(fmt(x.waktu)), `${esc(x.nama)} · ${esc(x.aksi)}`, `<div class="muted">${esc(x.ringkas)}</div>`, x.oleh ? `<span class="muted">${esc(x.oleh)}</span>` : '')).join('')
+      : '<p class="muted" style="padding:12px">Belum ada perubahan.</p>';
+    $('dlgInvRiwayat').showModal();
+  }
+  $('ivX').onclick = $('ivTutup').onclick = () => $('dlgInvRiwayat').close();
 
   /* ---------------- Admin ---------------- */
   function tab(id) {
