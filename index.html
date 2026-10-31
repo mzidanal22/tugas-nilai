@@ -304,6 +304,7 @@
     <div id="sTugas" hidden><h1>Tugas</h1><div id="sList"></div></div>
     <div id="sHadir" hidden><h1>Kehadiran</h1><div id="sHadirBody"></div></div>
     <div id="sKelas" hidden><h1>Kelasku</h1><div id="sKelasBody"></div></div>
+    <div id="sLapKelas" hidden><div id="sLapKelasBody"></div></div>
     <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Rata-rata hanya dari tugas yang nilainya sudah dirilis, tanpa bobot. Nilai rapor dihitung guru dengan komponen lain.</p><div id="sNilaiBody"></div></div>
     <div id="kBlock" hidden>
       <h1 style="margin-bottom:8px">Rekap kelas</h1>
@@ -351,6 +352,10 @@
     <div id="pKelas" hidden>
       <div class="row"><h1 style="margin:0">Kelas wali</h1><button class="ghost small" id="kmBack" type="button">← Beranda</button></div>
       <div id="pKelasBody"></div>
+    </div>
+
+    <div id="pLapKelas" hidden>
+      <div id="pLapKelasBody"></div>
     </div>
 
     <div id="pLapor" hidden>
@@ -543,6 +548,28 @@
   <div class="cerr" id="atErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="atBatal" type="button">Batal</button><button id="atSimpan" type="button">Simpan</button></div>
 </dialog>
+<dialog id="dlgJadwal" aria-labelledby="jwHead">
+  <div class="dlg-head"><strong id="jwHead">Atur jadwal pelajaran</strong><button class="ghost small" id="jwX" type="button" aria-label="Tutup">✕</button></div>
+  <div class="bar"><label for="jwHari" style="margin:0">Hari</label><select id="jwHari" style="width:auto;margin:0"></select></div>
+  <label for="jwSeragam">Seragam hari ini</label><input id="jwSeragam" maxlength="60" placeholder="Contoh: Putih hitam / koko">
+  <p class="muted" style="margin:12px 0 4px">Jam pelajaran (tulis BREAK untuk istirahat)</p>
+  <div id="jwBaris"></div>
+  <div class="bar"><button class="ghost small" id="jwTambah" type="button">+ Tambah jam</button><label for="jwSalin" style="margin:0">Salin dari</label><select id="jwSalin" style="width:auto;margin:0"></select><button class="ghost small" id="jwSalinBtn" type="button">Salin</button></div>
+  <datalist id="jwSaran"></datalist>
+  <label for="jwPenutup">Kalimat penutup briefing (dipakai semua hari)</label><input id="jwPenutup" maxlength="200" placeholder="Contoh: keep going guyss ✨">
+  <div class="cerr" id="jwErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="jwTutup" type="button">Tutup</button><button id="jwSimpan" type="button">Simpan hari ini</button></div>
+</dialog>
+<dialog id="dlgBriefing" aria-labelledby="bfHead">
+  <div class="dlg-head"><strong id="bfHead">Class briefing</strong><button class="ghost small" id="bfX" type="button" aria-label="Tutup">✕</button></div>
+  <div class="bar"><label for="bfTgl" style="margin:0">Untuk tanggal</label><input id="bfTgl" type="date" style="width:auto;margin:0"></div>
+  <div class="muted" id="bfInfo" style="margin-bottom:8px"></div>
+  <label for="bfPr">Tugas dan PR (satu baris satu item)</label><textarea id="bfPr" maxlength="600" style="min-height:5rem" placeholder="PAI : Hapalan Hadis"></textarea>
+  <label for="bfIng">Reminder</label><textarea id="bfIng" maxlength="600" style="min-height:4rem"></textarea>
+  <label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:10px 0 14px"><input id="bfTugas" type="checkbox" checked style="width:auto;margin:0"> Sertakan tugas dari aplikasi (deadline sampai 2 hari ke depan)</label>
+  <div class="cerr" id="bfErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="bfBatal" type="button">Batal</button><button class="ghost" id="bfSimpan" type="button">Simpan catatan</button><button id="bfBuat" type="button">Buat teks briefing</button></div>
+</dialog>
 <dialog id="dlgBarang" aria-labelledby="bgHead">
   <div class="dlg-head"><strong id="bgHead">Tambah barang</strong><button class="ghost small" id="bgX" type="button" aria-label="Tutup">✕</button></div>
   <label for="bgNama">Nama barang</label><input id="bgNama" maxlength="60" placeholder="Contoh: Sapu">
@@ -666,6 +693,8 @@
     ai_sibuk: 'Layanan AI sedang sibuk. Coba lagi sebentar lagi.',
     ai_gagal: 'Saran AI gagal dibuat. Coba lagi. Detailnya ada di menu Executions Apps Script.',
     link_tidak_terbuka: 'Linknya tersimpan, tapi guru belum bisa membukanya. Ubah izin berbagi jadi "Siapa saja yang memiliki link", lalu kumpulkan lagi.',
+    jadwal_tidak_valid: 'Jadwal tidak valid. Pastikan tiap baris punya nama mapel (maksimal 15 baris per hari).',
+    jam_tidak_valid: 'Jam tidak valid. Semua jam harus diisi, dan jam selesai harus setelah jam mulai.',
     jumlah_barang_tidak_valid: 'Jumlah barang harus angka bulat 0 sampai 9999.',
     barang_nama_kosong: 'Nama barang wajib diisi (minimal 2 huruf).',
     barang_kosong: 'Total jumlah minimal 1. Kalau barangnya sudah tidak ada, pakai tombol Hapus.',
@@ -719,7 +748,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.02-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.04-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -753,7 +782,7 @@
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
   let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
-  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'suratFoto', 'kelasSaya', 'absenKelasHari', 'piketHari', 'kasKelola', 'kasIuranDetail', 'kasLaporan', 'kasNota', 'inventarisRiwayat', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
+  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'suratFoto', 'kelasSaya', 'absenKelasHari', 'piketHari', 'kasKelola', 'kasIuranDetail', 'kasLaporan', 'kasNota', 'inventarisRiwayat', 'laporanKelas', 'briefingHari', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
@@ -1057,7 +1086,7 @@
     $('nav').innerHTML = NAV[kind].filter(([id]) => id !== 'sKelas' || (me && me.modulKelas)).map(([id, label, ic]) => `<button data-go="${id}">${ico(ic)}<span>${label}</span></button>`).join('');
     $('navbar').hidden = false;
   }
-  function setActive(id) { document.querySelectorAll('#nav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === (id === 'pRekap' ? 'pTugas' : id === 'pProfil' ? 'pSiswa' : id === 'pLapor' || id === 'pKelas' ? 'pHome' : id))); }
+  function setActive(id) { document.querySelectorAll('#nav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === (id === 'pRekap' ? 'pTugas' : id === 'pProfil' ? 'pSiswa' : id === 'pLapor' || id === 'pKelas' || id === 'pLapKelas' ? 'pHome' : id === 'sLapKelas' ? 'sKelas' : id))); }
   $('nav').onclick = e => { const b = e.target.closest('[data-go]'); if (!b || (me.role === 'admin' && !izinPindah())) return; (me.role === 'admin' ? goAdmin : goSiswa)(b.dataset.go); };
 
   const greet = () => { const j = Number(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false })) % 24; return j < 11 ? 'Selamat pagi' : j < 15 ? 'Selamat siang' : j < 18 ? 'Selamat sore' : 'Selamat malam'; };
@@ -1068,9 +1097,10 @@
     if (panelAktif === 'sTugas' && id !== 'sTugas') tandaiDilihat('tugas'); // yang sudah dibuka tidak lagi bertanda baru
     if (panelAktif === 'sNilai' && id !== 'sNilai') tandaiDilihat('nilai');
     panelAktif = id;
-    ['sHome', 'sTugas', 'sNilai', 'sHadir', 'sKelas', 'kBlock'].forEach(p => $(p).hidden = p !== id);
+    ['sHome', 'sTugas', 'sNilai', 'sHadir', 'sKelas', 'sLapKelas', 'kBlock'].forEach(p => $(p).hidden = p !== id);
     if (id === 'sHadir') loadHadir();
     if (id === 'sKelas') loadKelas('sKelasBody');
+    if (id === 'sLapKelas') loadLapKelas('sLapKelasBody');
     setActive(id); window.scrollTo(0, 0); anim($(id));
     if (sorot) { const el = $('sList').querySelector(`[data-id="${CSS.escape(sorot)}"]`); if (el) { el.scrollIntoView({ block: 'start' }); el.classList.add('flash'); } }
   }
@@ -1733,6 +1763,14 @@
     const tombol = v.izin ? '<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="small" type="button" data-btambah="1">Tambah barang</button><button class="ghost small" type="button" data-briwayat="1">Riwayat</button></div>' : '';
     return `<div class="panel"><div class="row"><h2 style="margin:0">Inventaris kelas</h2>${tombol}</div>${chips}${daftar}</div>`;
   }
+  function jadwalHtml(r) { // jadwal pelajaran + seragam (dibaca semua), tombol briefing dan atur jadwal untuk yang berizin
+    const j = r.jadwal; if (!j) return '';
+    const sekarang = new Date(hariIni() + 'T12:00:00+07:00').getUTCDay();
+    const baris = j.hari.map(x => item(esc(x.nama) + (x.hari === sekarang ? ' · hari ini' : ''), x.baris.length ? x.baris.map(b => `${jamTitik(b.mulai)} - ${jamTitik(b.selesai)} · ${esc(b.mapel)}`).join('<br>') : '<span class="muted">Belum ada jadwal</span>',
+      x.seragam ? `<div class="muted">Seragam: ${esc(x.seragam)}</div>` : '', '')).join('');
+    const tombol = r.izin.briefing ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button class="small" type="button" data-bfcepat="1">Briefing hari ini</button><button class="ghost small" type="button" data-bfdialog="1">Catatan dan tanggal lain</button><button class="ghost small" type="button" data-jwatur="1">Atur jadwal</button></div>' : '';
+    return `<div class="panel"><h2 style="margin:0">Jadwal pelajaran</h2>${tombol}${baris}</div>`;
+  }
   function piketHtml(r) { // jadwal piket per hari, hari piket sendiri, dan catatan piket untuk yang berizin
     const p = r.piket; if (!p) return '';
     const jadwal = p.jadwal.map(j => item(esc(j.nama) + (p.hariIni === j.hari ? ' · hari ini' : ''), j.orang.length ? j.orang.map(o => esc(o.nama)).join(', ') : '<span class="muted">Belum ada jadwal</span>',
@@ -1755,8 +1793,8 @@
       + `<div class="muted">${tglPanjang(i.dibuat)}${i.olehNama ? ' · ' + esc(i.olehNama) : ''}</div><div style="white-space:pre-wrap;margin-top:4px">${esc(i.isi)}</div></div>`
       + (r.izin.info ? `<div style="display:flex;flex-direction:column;gap:6px"><button class="ghost small" type="button" data-kedit="${esc(i.id)}">Ubah</button><button class="ghost small" type="button" data-khapus="${esc(i.id)}">Hapus</button></div>` : '') + '</div>').join('')
       : '<p class="muted">Belum ada info kelas.</p>';
-    return `<div class="panel"><div class="row"><div><h2 style="margin:0">${esc(r.kelas)}</h2><div class="muted">${r.wali ? 'Wali kelas: ' + esc(r.wali) + ' · ' : ''}${r.jumlah} siswa</div></div>${me.role === 'admin' ? '<button class="ghost small" type="button" data-atur="1">Atur kelas</button>' : ''}</div></div>`
-      + sayaHtml(r) + harianHtml(r) + piketHtml(r) + kasHtml(r) + invHtml(r)
+    return `<div class="panel"><div class="row"><div><h2 style="margin:0">${esc(r.kelas)}</h2><div class="muted">${r.wali ? 'Wali kelas: ' + esc(r.wali) + ' · ' : ''}${r.jumlah} siswa</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="small" type="button" data-lapkelas="1">Laporan kelas</button>${me.role === 'admin' ? '<button class="ghost small" type="button" data-atur="1">Atur kelas</button>' : ''}</div></div></div>`
+      + sayaHtml(r) + harianHtml(r) + jadwalHtml(r) + piketHtml(r) + kasHtml(r) + invHtml(r)
       + `<div class="panel"><h2>Pengurus kelas</h2>${pengurus}</div>`
       + `<div class="panel"><div class="row"><h2 style="margin:0">Info kelas</h2>${r.izin.info ? '<button class="small" type="button" data-kbaru="1">Tulis info</button>' : ''}</div>${info}</div>`;
   }
@@ -1779,6 +1817,10 @@
     if (d.retry === 'kelas') return loadKelas(kelasEl, kelasData && kelasData.kelas);
     if (d.kbaru) return bukaInfoKelas(null);
     if (d.abuka) return bukaAbsKelas(d.abuka);
+    if (d.bfcepat) return briefingCepat();
+    if (d.bfdialog) return bukaBriefing();
+    if (d.jwatur) return bukaJadwal();
+    if (d.lapkelas) return bukaLapKelas();
     if (d.atur) return bukaAturKelas();
     if (d.btambah) return bukaBarang(null);
     if (d.bubah) return bukaBarang(d.bubah);
@@ -2120,14 +2162,174 @@
   }
   $('ivX').onclick = $('ivTutup').onclick = () => $('dlgInvRiwayat').close();
 
+  /* ---------------- Laporan kelas terpadu (mingguan / bulanan) ---------------- */
+  // Boleh dibaca semua anggota kelas: hanya angka agregat, tanpa nama siswa yang absen, belum bayar, atau tidak piket.
+  let lapState = { mode: 'minggu', tanggal: hariIni(), bulan: hariIni().slice(0, 7), kelas: undefined }, lapData = null, lapEl = 'sLapKelasBody';
+  const pc = n => (n === null || n === undefined ? '–' : n + '%');
+  const bar = n => `<div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden" role="img" aria-label="${n}%"><div style="height:8px;width:${Math.max(0, Math.min(100, n))}%;background:var(--ok)"></div></div>`;
+  const angka = (n, l, hot) => `<div class="panel stat${hot ? ' hot' : ''}" style="margin:0"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  const lapJudul = r => r.mode === 'bulan' ? new Date(r.bulan + '-01T12:00:00+07:00').toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', month: 'long', year: 'numeric' }) : `${tglPendek(r.dari)} – ${tglPendek(r.sampai)} ${r.sampai.slice(0, 4)}`;
+  const pctDari = (a, b) => (b ? Math.round(a / b * 100) : 0);
+  function lapHtml(r) {
+    const a = r.absensi, p = r.piket, k = r.kas, v = r.inventaris, grid = x => `<div class="stats" style="margin:10px 0">${x}</div>`;
+    const kontrol = `<div class="row"><h1 style="margin:0">Laporan ${esc(r.kelas)}</h1><button class="ghost small" type="button" data-lback="1">← Kembali</button></div>`
+      + `<div class="sum" style="margin-top:10px"><button class="small${r.mode === 'minggu' ? '' : ' ghost'}" type="button" data-lmode="minggu">Mingguan</button><button class="small${r.mode === 'bulan' ? '' : ' ghost'}" type="button" data-lmode="bulan">Bulanan</button></div>`
+      + `<div class="row" style="margin:6px 0 12px"><button class="ghost small" type="button" data-lgeser="-1">‹ Sebelumnya</button><strong>${esc(lapJudul(r))}</strong><button class="ghost small" type="button" data-lgeser="1"${r.sampai >= hariIni() ? ' disabled' : ''}>Berikutnya ›</button></div>`
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><button class="ghost small" type="button" data-lbagi="1">Bagikan ke WhatsApp</button><button class="ghost small" type="button" data-lcetak="1">Cetak</button></div>';
+    const hadir = `<div class="panel"><h2>Kehadiran kelas</h2>${grid(angka(pc(a.persen), 'rata-rata hadir', true) + angka(a.S, 'sakit') + angka(a.I, 'izin') + angka(a.A, 'alpa'))}`
+      + (a.hari.length ? a.hari.map(x => { const n = pctDari(x.H, x.total); return `<div class="item"><div class="grow"><div class="muted">${esc(tglPendek(x.tanggal))}</div>${bar(n)}</div><strong>${n}%</strong></div>`; }).join('') : '<p class="muted">Belum ada absensi harian di periode ini.</p>')
+      + (a.saya ? `<div class="muted" style="margin-top:8px"><strong>Kehadiranmu:</strong> hadir ${a.saya.H}, sakit ${a.saya.S}, izin ${a.saya.I}, alpa ${a.saya.A}</div>` : '') + '</div>';
+    const piket = `<div class="panel"><h2>Piket</h2>${p.catatan ? grid(angka(pc(p.persen), 'piket terlaksana', true) + angka(p.kondisi.bersih, 'kelas bersih') + angka(p.kondisi.cukup, 'cukup') + angka(p.kondisi.kotor, 'kotor')) : '<p class="muted">Belum ada catatan piket di periode ini.</p>'}`
+      + (p.saya ? `<div class="muted"><strong>Piketmu:</strong> ${p.saya.hari ? 'hari ' + esc(p.saya.nama) : 'belum terjadwal'}${p.saya.tercatat ? `, tercatat ${p.saya.tercatat} kali, terlaksana ${p.saya.ya}` : ''}</div>` : '') + '</div>';
+    const kas = `<div class="panel"><h2>Kas kelas</h2>${grid(angka(rp(k.saldoAkhir), 'saldo akhir', true) + angka(rp(k.masuk), 'masuk') + angka(rp(k.keluar), 'keluar'))}`
+      + (k.pengeluaran.length ? '<h3 style="margin:10px 0 4px">Pengeluaran</h3>' + k.pengeluaran.map(x => item(esc(tglPendek(x.tanggal)), esc(x.ket), '', `<strong>${rp(x.jumlah)}</strong>`)).join('') : '')
+      + (k.iuran.length ? '<h3 style="margin:10px 0 4px">Iuran</h3>' + k.iuran.map(i => item(esc(i.judul), `${i.lunas} dari ${i.jumlahSiswa} siswa lunas`, bar(pctDari(i.terkumpul, i.nominal * i.jumlahSiswa)) + `<div class="muted">Terkumpul ${rp(i.terkumpul)} dari ${rp(i.nominal * i.jumlahSiswa)}</div>`, '')).join('') : '')
+      + (k.saya && k.saya.length ? '<div class="muted" style="margin-top:8px"><strong>Iuranmu:</strong> ' + k.saya.map(i => `${esc(i.judul)}: ${i.status === 'lunas' ? 'lunas' : i.status === 'kurang' ? 'kurang ' + rp(i.nominal - i.dibayar) : 'belum bayar'}`).join(' · ') + '</div>' : '') + '</div>';
+    const inv = `<div class="panel"><h2>Inventaris</h2>${grid(angka(v.jenis, 'jenis barang') + angka(v.baik, 'baik') + angka(v.rusak, 'rusak', v.rusak > 0) + angka(v.hilang, 'hilang', v.hilang > 0))}`
+      + (v.perubahan.length ? '<h3 style="margin:10px 0 4px">Perubahan di periode ini</h3>' + v.perubahan.map(x => `<div class="muted">${esc(tglPendek(x.tanggal))} · ${esc(x.nama)} (${esc(x.aksi)}): ${esc(x.ringkas)}</div>`).join('') : '<p class="muted">Tidak ada perubahan di periode ini.</p>') + '</div>';
+    const tugas = `<div class="panel"><h2>Tugas yang jatuh tempo</h2>` + (r.tugas.length ? r.tugas.map(t => item(esc(t.mapel), esc(t.judul), bar(pctDari(t.kumpul, t.total)) + `<div class="muted">${t.kumpul} dari ${t.total} siswa sudah mengumpulkan · deadline ${esc(fmt(t.deadline))}</div>`,
+      t.saya ? `<span class="tag">${t.saya === 'sudah' ? 'Sudah' : t.saya === 'terlambat' ? 'Terlambat' : 'Belum'}</span>` : '')).join('') : '<p class="muted">Tidak ada tugas yang jatuh tempo di periode ini.</p>') + '</div>';
+    const info = r.info.length ? `<div class="panel"><h2>Info kelas</h2>${r.info.map(i => `<div class="muted">${esc(tglPendek(i.tanggal))} · ${esc(i.judul)}</div>`).join('')}</div>` : '';
+    return kontrol + hadir + piket + kas + inv + tugas + info;
+  }
+  function pesanLapKelas(r) {
+    const a = r.absensi, p = r.piket, k = r.kas, v = r.inventaris;
+    const L = [`*Laporan ${r.kelas}*`, lapJudul(r), '', '*Kehadiran*', a.total ? `Rata-rata hadir ${pc(a.persen)} (${a.hari.length} hari tercatat: sakit ${a.S}, izin ${a.I}, alpa ${a.A})` : 'Belum ada absensi harian.',
+      '', '*Piket*', p.catatan ? `Terlaksana ${pc(p.persen)}. Kondisi kelas: bersih ${p.kondisi.bersih}, cukup ${p.kondisi.cukup}, kotor ${p.kondisi.kotor}` : 'Belum ada catatan piket.',
+      '', '*Kas*', `Saldo awal ${rp(k.saldoAwal)}, masuk ${rp(k.masuk)}, keluar ${rp(k.keluar)}, saldo akhir ${rp(k.saldoAkhir)}`];
+    k.pengeluaran.forEach(x => L.push(`- ${tglPendek(x.tanggal)} ${x.ket}: ${rp(x.jumlah)}`));
+    k.iuran.forEach(i => L.push(`${i.judul}: ${i.lunas} dari ${i.jumlahSiswa} siswa lunas`));
+    L.push('', '*Inventaris*', `${v.jenis} jenis barang, ${v.rusak} rusak, ${v.hilang} hilang`);
+    v.perubahan.forEach(x => L.push(`- ${tglPendek(x.tanggal)} ${x.nama} (${x.aksi}): ${x.ringkas}`));
+    if (r.tugas.length) { L.push('', '*Tugas*'); r.tugas.forEach(t => L.push(`- ${t.judul} (${t.mapel}): ${t.kumpul} dari ${t.total} sudah mengumpulkan`)); }
+    L.push('', 'Detail lengkap: ' + appUrl());
+    return L.join('\n');
+  }
+  async function loadLapKelas(elId) {
+    const el = $(elId); lapEl = elId; el.innerHTML = skBerisi(skPanel(3));
+    try { lapData = await api('laporanKelas', { kelas: lapState.kelas, mode: lapState.mode, tanggal: lapState.tanggal, bulan: lapState.bulan }); el.innerHTML = lapHtml(lapData); }
+    catch (e) { el.innerHTML = galat(e.message || 'Coba lagi sebentar.', 'lap'); }
+  }
+  function bukaLapKelas() {
+    lapState.kelas = me.role === 'admin' && kelasData ? kelasData.kelas : undefined;
+    if (me.role === 'admin') goAdmin('pLapKelas'); else goSiswa('sLapKelas');
+  }
+  function lapGeser(arah) {
+    if (lapState.mode === 'bulan') { const [y, m] = lapState.bulan.split('-').map(Number), d = new Date(Date.UTC(y, m - 1 + arah, 1)); lapState.bulan = d.toISOString().slice(0, 7); }
+    else lapState.tanggal = new Date(new Date(lapState.tanggal + 'T12:00:00+07:00').getTime() + arah * 7 * 864e5).toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+  }
+  function lapKlik(e) {
+    const b = e.target.closest('button'); if (!b) return;
+    const d = b.dataset;
+    if (d.retry === 'lap') return loadLapKelas(lapEl);
+    if (d.lmode) { lapState.mode = d.lmode; return loadLapKelas(lapEl); }
+    if (d.lgeser) { lapGeser(Number(d.lgeser)); return loadLapKelas(lapEl); }
+    if (d.lbagi && lapData) return bagikan('Laporan ' + lapData.kelas, pesanLapKelas(lapData));
+    if (d.lcetak) return window.print();
+    if (d.lback) return me.role === 'admin' ? goAdmin('pKelas') : goSiswa('sKelas');
+  }
+  $('sLapKelasBody').onclick = $('pLapKelasBody').onclick = lapKlik;
+
+  /* ---------------- Class briefing (teks harian untuk WhatsApp channel kelas) dan jadwal pelajaran ---------------- */
+  const KECIL = { a: 'ᴀ', b: 'ʙ', c: 'ᴄ', d: 'ᴅ', e: 'ᴇ', f: 'ꜰ', g: 'ɢ', h: 'ʜ', i: 'ɪ', j: 'ᴊ', k: 'ᴋ', l: 'ʟ', m: 'ᴍ', n: 'ɴ', o: 'ᴏ', p: 'ᴘ', q: 'ǫ', r: 'ʀ', s: 'ꜱ', t: 'ᴛ', u: 'ᴜ', v: 'ᴠ', w: 'ᴡ', x: 'x', y: 'ʏ', z: 'ᴢ' };
+  const kecil = s => String(s).toLowerCase().replace(/[a-z]/g, c => KECIL[c]); // huruf kapital kecil untuk judul bagian
+  const jamTitik = j => String(j).replace(':', '.');
+  const barisTeks = t => String(t || '').split('\n').map(x => x.trim()).filter(Boolean);
+  function pesanBriefing(r, denganTugas) {
+    const tgl = new Date(r.tanggal + 'T12:00:00+07:00').toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'long', year: 'numeric' });
+    const L = [`✨🎀 ${kecil('class briefing')} 🎀✨`, '', `🎀 ${r.namaHari} ${tgl}`, `][ ${r.kode} ][`, ''];
+    if (r.seragam) L.push(`👔 ${kecil('uniform')}`, r.seragam, '');
+    L.push(`📚 ${kecil('subject & schedule')}`);
+    if (r.jadwal.length) r.jadwal.forEach(j => L.push(`${jamTitik(j.mulai)} - ${jamTitik(j.selesai)} : ${j.mapel}`)); else L.push('Tidak ada jadwal pelajaran');
+    const tugas = barisTeks(r.pr);
+    if (denganTugas) r.tugas.forEach(t => tugas.push(`${t.mapel} : ${t.judul} (deadline ${t.kapan} ${jamTitik(t.jam)})`));
+    L.push('', `📝 ${kecil('tasks & homework')}`, ...(tugas.length ? tugas : ['Tidak ada']));
+    L.push('', `🧹 ${kecil('clean the class!')}`, ...(r.piket.length ? r.piket.map(n => `・${n}`) : ['Tidak ada jadwal piket']));
+    const ing = barisTeks(r.pengingat);
+    if (ing.length) L.push('', `📌 ${kecil('reminder')}`, ...ing);
+    if (r.penutup) L.push('', r.penutup);
+    return L.join('\n');
+  }
+  async function briefingCepat() { // satu tombol: briefing hari ini langsung muncul, tinggal salin
+    try { const r = await api('briefingHari', { kelas: kelasData.kelas }); bagikan('Class briefing', pesanBriefing(r, true)); }
+    catch (e) { toast(e.message, true); }
+  }
+  async function muatCatatan() {
+    $('bfErr').textContent = '';
+    try {
+      const r = await api('briefingHari', { kelas: kelasData.kelas, tanggal: $('bfTgl').value });
+      $('bfPr').value = r.pr; $('bfIng').value = r.pengingat;
+      $('bfInfo').textContent = `${r.namaHari}: ${r.jadwal.length} jam pelajaran, ${r.piket.length} orang piket, ${r.tugas.length} tugas dari aplikasi`;
+    } catch (e) { $('bfErr').textContent = e.message; }
+  }
+  async function bukaBriefing() {
+    $('bfTgl').value = hariIni(); $('bfTugas').checked = true; $('bfErr').textContent = '';
+    $('dlgBriefing').showModal(); await muatCatatan();
+  }
+  $('bfX').onclick = $('bfBatal').onclick = () => $('dlgBriefing').close();
+  $('bfTgl').onchange = () => { if ($('bfTgl').value) muatCatatan(); };
+  const simpanCatatan = () => api('simpanCatatanHarian', { kelas: kelasData.kelas, tanggal: $('bfTgl').value, pr: $('bfPr').value, pengingat: $('bfIng').value });
+  $('bfSimpan').onclick = async () => {
+    if (!$('bfTgl').value) { $('bfErr').textContent = 'Pilih tanggalnya dulu.'; return; }
+    try { await simpanCatatan(); toast('Catatan tersimpan.'); } catch (e) { $('bfErr').textContent = e.message; }
+  };
+  $('bfBuat').onclick = async () => {
+    const tgl = $('bfTgl').value, denganTugas = $('bfTugas').checked;
+    if (!tgl) { $('bfErr').textContent = 'Pilih tanggalnya dulu.'; return; }
+    $('bfBuat').disabled = true; $('bfErr').textContent = '';
+    try { await simpanCatatan(); const r = await api('briefingHari', { kelas: kelasData.kelas, tanggal: tgl }); $('dlgBriefing').close(); bagikan('Class briefing', pesanBriefing(r, denganTugas)); }
+    catch (e) { $('bfErr').textContent = e.message; }
+    $('bfBuat').disabled = false;
+  };
+
+  // editor jadwal pelajaran: satu hari sekali
+  let jw = null;
+  const jwData = hari => kelasData.jadwal.hari.find(x => x.hari === hari);
+  function jwTambahBaris(b) {
+    const d = document.createElement('div'); d.className = 'jwrow'; d.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px';
+    d.innerHTML = `<input type="time" class="jwm" aria-label="Jam mulai" style="width:110px;margin:0"><input type="time" class="jws" aria-label="Jam selesai" style="width:110px;margin:0">`
+      + '<input class="jwp" list="jwSaran" maxlength="40" placeholder="Nama mapel" aria-label="Nama mapel" style="flex:1;min-width:0;margin:0"><button class="ghost small jwx" type="button" aria-label="Hapus baris">✕</button>';
+    d.querySelector('.jwm').value = b ? b.mulai : ''; d.querySelector('.jws').value = b ? b.selesai : ''; d.querySelector('.jwp').value = b ? b.mapel : '';
+    $('jwBaris').appendChild(d);
+  }
+  const jwBaris = () => [...$('jwBaris').querySelectorAll('.jwrow')].map(r => ({ mulai: r.querySelector('.jwm').value, selesai: r.querySelector('.jws').value, mapel: r.querySelector('.jwp').value.trim() }))
+    .filter(b => b.mulai || b.selesai || b.mapel); // baris yang benar-benar kosong dilewati
+  const jwKeadaan = () => JSON.stringify({ s: $('jwSeragam').value.trim(), p: $('jwPenutup').value.trim(), b: jwBaris() });
+  function jwIsi(hari) {
+    jw = { hari }; const x = jwData(hari);
+    $('jwHari').innerHTML = [1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === hari ? ' selected' : ''}>${HARI_ID[n]}</option>`).join('');
+    $('jwSalin').innerHTML = [1, 2, 3, 4, 5, 6].filter(n => n !== hari).map(n => `<option value="${n}">${HARI_ID[n]}</option>`).join('');
+    $('jwSeragam').value = x.seragam; $('jwPenutup').value = kelasData.jadwal.penutup || '';
+    $('jwBaris').innerHTML = ''; x.baris.forEach(jwTambahBaris); if (!x.baris.length) jwTambahBaris();
+    $('jwSaran').innerHTML = [...new Set(kelasData.jadwal.hari.flatMap(d => d.baris.map(b => b.mapel)))].map(m => `<option value="${esc(m)}">`).join('');
+    $('jwErr').textContent = ''; jw.awal = jwKeadaan();
+  }
+  function bukaJadwal() { const h = new Date(hariIni() + 'T12:00:00+07:00').getUTCDay(); jwIsi(h >= 1 ? h : 1); $('dlgJadwal').showModal(); }
+  $('jwX').onclick = $('jwTutup').onclick = () => { if (jw && jwKeadaan() !== jw.awal && !confirm('Perubahan belum disimpan. Tutup?')) return; $('dlgJadwal').close(); };
+  $('jwHari').onchange = () => {
+    if (jwKeadaan() !== jw.awal && !confirm('Perubahan hari ini belum disimpan. Pindah hari?')) { $('jwHari').value = jw.hari; return; }
+    jwIsi(Number($('jwHari').value));
+  };
+  $('jwTambah').onclick = () => { if ($('jwBaris').children.length < 15) jwTambahBaris(); };
+  $('jwBaris').onclick = e => { const b = e.target.closest('.jwx'); if (b) b.closest('.jwrow').remove(); };
+  $('jwSalinBtn').onclick = () => { const x = jwData(Number($('jwSalin').value)); if (!x) return; $('jwBaris').innerHTML = ''; x.baris.forEach(jwTambahBaris); if (!x.baris.length) jwTambahBaris(); $('jwSeragam').value = x.seragam; };
+  $('jwSimpan').onclick = async () => {
+    $('jwSimpan').disabled = true; $('jwErr').textContent = '';
+    try {
+      await api('simpanJadwalHari', { kelas: kelasData.kelas, hari: jw.hari, baris: jwBaris(), seragam: $('jwSeragam').value, penutup: $('jwPenutup').value });
+      toast(`Jadwal ${HARI_ID[jw.hari]} tersimpan.`); await muatUlangKelas(); jwIsi(jw.hari);
+    } catch (e) { $('jwErr').textContent = e.message; }
+    $('jwSimpan').disabled = false;
+  };
+
   /* ---------------- Admin ---------------- */
   function tab(id) {
-    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo', 'pAbsen', 'pProfil', 'pLapor', 'pKelas'].forEach(p => $(p).hidden = p !== id);
+    ['pHome', 'pTugas', 'pRekap', 'pNilai', 'pSiswa', 'pInfo', 'pAbsen', 'pProfil', 'pLapor', 'pKelas', 'pLapKelas'].forEach(p => $(p).hidden = p !== id);
     setActive(id); msg('adminMsg'); window.scrollTo(0, 0); anim($(id));
   }
   function goAdmin(id) {
     tab(id);
-    ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pAbsen: loadAbsenOpsi, pSiswa: loadSiswa, pInfo: loadInfo, pLapor: loadLaporan, pKelas: () => loadKelas('pKelasBody', kelasData && kelasData.kelas) })[id]();
+    ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pAbsen: loadAbsenOpsi, pSiswa: loadSiswa, pInfo: loadInfo, pLapor: loadLaporan, pKelas: () => loadKelas('pKelasBody', kelasData && kelasData.kelas), pLapKelas: () => loadLapKelas('pLapKelasBody') })[id]();
   }
 
   async function loadTugasAdmin() {
