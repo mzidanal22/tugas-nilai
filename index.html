@@ -537,6 +537,9 @@
   <label for="plKondisi">Kondisi kelas setelah piket</label>
   <select id="plKondisi"><option value="">(belum dinilai)</option><option value="bersih">Bersih</option><option value="cukup">Cukup</option><option value="kotor">Kotor</option></select>
   <label for="plCatatan">Catatan (opsional)</label><input id="plCatatan" maxlength="300">
+  <label for="plFoto">Foto bukti kelas (maksimal 3)</label>
+  <div id="plFotoAda"></div>
+  <input id="plFoto" type="file" accept="image/*" multiple>
   <div class="cerr" id="plErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="plBatal" type="button">Batal</button><button id="plSimpan" type="button">Simpan</button></div>
 </dialog>
@@ -550,7 +553,7 @@
 </dialog>
 <dialog id="dlgJadwal" aria-labelledby="jwHead">
   <div class="dlg-head"><strong id="jwHead">Atur jadwal pelajaran</strong><button class="ghost small" id="jwX" type="button" aria-label="Tutup">✕</button></div>
-  <div class="bar"><label for="jwHari" style="margin:0">Hari</label><select id="jwHari" style="width:auto;margin:0"></select></div>
+  <div class="bar"><label for="jwHari" style="margin:0">Hari</label><select id="jwHari" style="width:auto;margin:0"></select><button class="ghost small" id="jwFoto" type="button">Baca dari foto jadwal</button></div>
   <label for="jwSeragam">Seragam hari ini</label><input id="jwSeragam" maxlength="60" placeholder="Contoh: Putih hitam / koko">
   <p class="muted" style="margin:12px 0 4px">Jam pelajaran (tulis BREAK untuk istirahat)</p>
   <div id="jwBaris"></div>
@@ -559,6 +562,19 @@
   <label for="jwPenutup">Kalimat penutup briefing (dipakai semua hari)</label><input id="jwPenutup" maxlength="200" placeholder="Contoh: keep going guyss ✨">
   <div class="cerr" id="jwErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="jwTutup" type="button">Tutup</button><button id="jwSimpan" type="button">Simpan hari ini</button></div>
+</dialog>
+<dialog id="dlgJadwalFoto" aria-labelledby="jfHead">
+  <div class="dlg-head"><strong id="jfHead">Baca jadwal dari foto</strong><button class="ghost small" id="jfX" type="button" aria-label="Tutup">✕</button></div>
+  <p class="muted" style="margin-top:0">Pilih foto jadwal dari sekolah (JPG atau PNG, tulisannya harus jelas). Hasil bacaan AI bisa keliru, jadi cek dan perbaiki dulu sebelum diterapkan.</p>
+  <input id="jfFile" type="file" accept="image/*">
+  <div class="bar"><button class="small" id="jfBaca" type="button">Baca foto</button><span class="muted" id="jfStatus" role="status"></span></div>
+  <div id="jfHasil" hidden>
+    <div class="muted" id="jfCatatan" style="margin-bottom:8px"></div>
+    <div id="jfHari" style="max-height:42vh;overflow:auto"></div>
+    <p class="muted">Satu baris satu jam pelajaran, contoh: <code>07:00-08:30 Koding</code>. Hari yang dicentang akan <strong>menggantikan</strong> jadwal lama hari itu.</p>
+  </div>
+  <div class="cerr" id="jfErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="jfTutup" type="button">Tutup</button><button id="jfTerapkan" type="button" hidden>Terapkan ke jadwal</button></div>
 </dialog>
 <dialog id="dlgBriefing" aria-labelledby="bfHead">
   <div class="dlg-head"><strong id="bfHead">Class briefing</strong><button class="ghost small" id="bfX" type="button" aria-label="Tutup">✕</button></div>
@@ -693,6 +709,8 @@
     ai_sibuk: 'Layanan AI sedang sibuk. Coba lagi sebentar lagi.',
     ai_gagal: 'Saran AI gagal dibuat. Coba lagi. Detailnya ada di menu Executions Apps Script.',
     link_tidak_terbuka: 'Linknya tersimpan, tapi guru belum bisa membukanya. Ubah izin berbagi jadi "Siapa saja yang memiliki link", lalu kumpulkan lagi.',
+    foto_terlalu_banyak: 'Maksimal 3 foto bukti per catatan piket.',
+    foto_tidak_ada: 'Foto itu sudah tidak ada.',
     jadwal_tidak_valid: 'Jadwal tidak valid. Pastikan tiap baris punya nama mapel (maksimal 15 baris per hari).',
     jam_tidak_valid: 'Jam tidak valid. Semua jam harus diisi, dan jam selesai harus setelah jam mulai.',
     jumlah_barang_tidak_valid: 'Jumlah barang harus angka bulat 0 sampai 9999.',
@@ -748,7 +766,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.04-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.05-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -782,7 +800,7 @@
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
   let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
-  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'suratFoto', 'kelasSaya', 'absenKelasHari', 'piketHari', 'kasKelola', 'kasIuranDetail', 'kasLaporan', 'kasNota', 'inventarisRiwayat', 'laporanKelas', 'briefingHari', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
+  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'suratFoto', 'kelasSaya', 'absenKelasHari', 'piketHari', 'kasKelola', 'kasIuranDetail', 'kasLaporan', 'kasNota', 'inventarisRiwayat', 'laporanKelas', 'briefingHari', 'piketFoto', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
@@ -1260,15 +1278,15 @@
   }
 
   // gambar dikecilkan di browser (maks 1280px, JPEG) supaya ringan untuk siswa dan hemat Drive
-  async function kecilkan(file) {
+  async function kecilkan(file, lebarMaks = 1280, tinggiMaks = 1600, batas = 1.9e6) {
     const url = URL.createObjectURL(file);
     try {
       const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('gambar_rusak')); i.src = url; });
-      const r = Math.min(1, 1280 / img.width, 1600 / img.height), c = document.createElement('canvas');
+      const r = Math.min(1, lebarMaks / img.width, tinggiMaks / img.height), c = document.createElement('canvas');
       c.width = Math.max(1, Math.round(img.width * r)); c.height = Math.max(1, Math.round(img.height * r));
       const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
       let out = '';
-      for (const q of [0.82, 0.7, 0.55]) { out = c.toDataURL('image/jpeg', q); if (out.length < 1.9e6) break; }
+      for (const q of [0.82, 0.7, 0.55]) { out = c.toDataURL('image/jpeg', q); if (out.length < batas) break; }
       return out;
     } finally { URL.revokeObjectURL(url); }
   }
@@ -1662,7 +1680,7 @@
     if (k.piket) {
       L.push('', '*Piket kelas*');
       if (!k.piket.length) L.push('Belum ada catatan piket.');
-      k.piket.forEach(p => { L.push(`${p.hari}, ${tglPendek(p.tanggal)}: ${p.ya} piket, ${p.tidak} tidak${p.kondisi ? ', kelas ' + p.kondisi : ''}`); if (p.namaTidak.length) L.push('Tidak piket: ' + p.namaTidak.join(', ')); });
+      k.piket.forEach(p => { L.push(`${p.hari}, ${tglPendek(p.tanggal)}: ${p.ya} piket, ${p.tidak} tidak${p.kondisi ? ', kelas ' + p.kondisi : ''}${p.foto ? ', ' + p.foto + ' foto bukti' : ''}`); if (p.namaTidak.length) L.push('Tidak piket: ' + p.namaTidak.join(', ')); });
     }
     if (k.kas) {
       L.push('', '*Kas kelas*', `Saldo: ${rp(k.kas.saldo)} (minggu ini masuk ${rp(k.kas.masuk)}, keluar ${rp(k.kas.keluar)})`);
@@ -1690,7 +1708,7 @@
     const hr = k.harian ? '<h3 style="margin:14px 0 4px">Absensi harian kelas</h3>' + (k.harian.length ? k.harian.map(a => `<div class="item"><div class="grow"><div class="t">${tglPendek(a.tanggal)}</div><div class="muted">hadir ${a.H}, sakit ${a.S}, izin ${a.I}, alpa ${a.A}</div>`
       + lpNama.filter(([, f]) => a[f].length).map(([lb, f]) => `<div class="${lb === 'Alpa' ? 'late' : 'muted'}">${lb}: ${esc(a[f].join(', '))}</div>`).join('')
       + (a.suratBelum.length ? `<div class="late">Surat sakit belum diupload: ${esc(a.suratBelum.join(', '))}</div>` : '') + '</div></div>').join('') : '<p class="muted">Belum ada absensi harian di rentang ini.</p>') : '';
-    const pk = k.piket ? '<h3 style="margin:14px 0 4px">Piket kelas</h3>' + (k.piket.length ? k.piket.map(p => `<div class="item"><div class="grow"><div class="t">${esc(p.hari)}, ${tglPendek(p.tanggal)}${p.kondisi ? ' · kelas ' + esc(p.kondisi) : ''}</div><div class="muted">${p.ya} piket, ${p.tidak} tidak</div>`
+    const pk = k.piket ? '<h3 style="margin:14px 0 4px">Piket kelas</h3>' + (k.piket.length ? k.piket.map(p => `<div class="item"><div class="grow"><div class="t">${esc(p.hari)}, ${tglPendek(p.tanggal)}${p.kondisi ? ' · kelas ' + esc(p.kondisi) : ''}</div><div class="muted">${p.ya} piket, ${p.tidak} tidak${p.foto ? ' · ' + p.foto + ' foto bukti' : ''}</div>`
       + (p.namaTidak.length ? `<div class="late">Tidak piket: ${esc(p.namaTidak.join(', '))}</div>` : '') + (p.catatan ? `<div class="muted">${esc(p.catatan)}</div>` : '') + '</div></div>').join('') : '<p class="muted">Belum ada catatan piket di rentang ini.</p>') : '';
     const ks = k.kas ? '<h3 style="margin:14px 0 4px">Kas kelas</h3>' + item('Saldo', `<strong>${rp(k.kas.saldo)}</strong>`, `Minggu ini: masuk ${rp(k.kas.masuk)}, keluar ${rp(k.kas.keluar)}`, '')
       + k.kas.pengeluaran.map(x => `<div class="muted">${tglPendek(x.tanggal)}: ${esc(x.ket)} (${rp(x.jumlah)})</div>`).join('') + k.kas.iuran.map(i => `<div class="muted">${esc(i.judul)}: ${i.lunas} dari ${i.total} siswa lunas</div>`).join('') : '';
@@ -1768,7 +1786,7 @@
     const sekarang = new Date(hariIni() + 'T12:00:00+07:00').getUTCDay();
     const baris = j.hari.map(x => item(esc(x.nama) + (x.hari === sekarang ? ' · hari ini' : ''), x.baris.length ? x.baris.map(b => `${jamTitik(b.mulai)} - ${jamTitik(b.selesai)} · ${esc(b.mapel)}`).join('<br>') : '<span class="muted">Belum ada jadwal</span>',
       x.seragam ? `<div class="muted">Seragam: ${esc(x.seragam)}</div>` : '', '')).join('');
-    const tombol = r.izin.briefing ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button class="small" type="button" data-bfcepat="1">Briefing hari ini</button><button class="ghost small" type="button" data-bfdialog="1">Catatan dan tanggal lain</button><button class="ghost small" type="button" data-jwatur="1">Atur jadwal</button></div>' : '';
+    const tombol = r.izin.briefing ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button class="small" type="button" data-bfcepat="1">Briefing hari ini</button><button class="ghost small" type="button" data-bfdialog="1">Catatan dan tanggal lain</button><button class="ghost small" type="button" data-jwatur="1">Atur jadwal</button><button class="ghost small" type="button" data-jwfoto="1">Baca jadwal dari foto</button></div>' : '';
     return `<div class="panel"><h2 style="margin:0">Jadwal pelajaran</h2>${tombol}${baris}</div>`;
   }
   function piketHtml(r) { // jadwal piket per hari, hari piket sendiri, dan catatan piket untuk yang berizin
@@ -1777,7 +1795,7 @@
       p.saya && p.saya.hari === j.hari ? '<div><span class="tag">Hari piketmu</span></div>' : '', '')).join('');
     const rekap = p.saya && p.saya.total ? `<div class="muted" style="margin-top:8px">Piketmu tercatat ${p.saya.total} kali, terlaksana ${p.saya.ya} kali.</div>` : '';
     const lapor = r.izin.piketLapor && p.laporan && p.laporan.length ? '<h3 style="margin:14px 0 4px">Catatan piket terakhir</h3>' + p.laporan.map(x => item(esc(tglIndo(x.tanggal)),
-      `${x.ya} piket, ${x.tidak} tidak${x.kondisi ? ' · kelas ' + esc(x.kondisi) : ''}`, '', `<button class="ghost small" type="button" data-plapor="${esc(x.tanggal)}">Buka</button>`)).join('') : '';
+      `${x.ya} piket, ${x.tidak} tidak${x.kondisi ? ' · kelas ' + esc(x.kondisi) : ''}${x.foto ? ' · ' + x.foto + ' foto' : ''}`, '', `<button class="ghost small" type="button" data-plapor="${esc(x.tanggal)}">Buka</button>`)).join('') : '';
     const tombol = (r.izin.piket ? '<button class="ghost small" type="button" data-pjadwal="1">Atur jadwal</button>' : '') + (r.izin.piketLapor ? `<button class="small" type="button" data-plapor="${hariIni()}">Catat piket</button>` : '');
     return `<div class="panel"><div class="row"><h2 style="margin:0">Jadwal piket</h2><div style="display:flex;gap:6px;flex-wrap:wrap">${tombol}</div></div>${jadwal}${rekap}${lapor}</div>`;
   }
@@ -1820,6 +1838,7 @@
     if (d.bfcepat) return briefingCepat();
     if (d.bfdialog) return bukaBriefing();
     if (d.jwatur) return bukaJadwal();
+    if (d.jwfoto) return bukaJadwalFoto();
     if (d.lapkelas) return bukaLapKelas();
     if (d.atur) return bukaAturKelas();
     if (d.btambah) return bukaBarang(null);
@@ -1957,12 +1976,12 @@
   async function bukaPiketLapor(tanggal) {
     let r;
     try { r = await api('piketHari', { kelas: kelasData.kelas, tanggal }); } catch (e) { toast(e.message, true); return; }
-    pl = { tanggal: r.tanggal, data: { ...r.data } };
+    pl = { tanggal: r.tanggal, data: { ...r.data }, foto: r.foto || 0 };
     $('plTgl').value = r.tanggal; $('plTgl').max = hariIni(); $('plHari').textContent = r.namaHari; $('plKondisi').value = r.kondisi || ''; $('plCatatan').value = r.catatan || ''; $('plErr').textContent = '';
     $('plDaftar').innerHTML = r.anggota.length ? r.anggota.map(a => `<div class="abrow" data-nis="${esc(a.nis)}"><span class="abnama">${esc(a.nama)}</span>`
       + '<span class="abtns"><button class="abtn" type="button" data-s="H" data-v="ya">Ya</button><button class="abtn" type="button" data-s="A" data-v="tidak">Tidak</button></span></div>').join('')
       : `<p class="muted" style="padding:12px">Tidak ada yang dijadwalkan piket di hari ${esc(r.namaHari)}.</p>`;
-    segarkanPl(); if (!$('dlgPiketLapor').open) $('dlgPiketLapor').showModal();
+    segarkanPl(); gambarFotoPl(); $('plFoto').value = ''; if (!$('dlgPiketLapor').open) $('dlgPiketLapor').showModal();
   }
   function segarkanPl() {
     $('plDaftar').querySelectorAll('.abrow').forEach(r => r.querySelectorAll('.abtn').forEach(b => { const on = pl.data[r.dataset.nis] === b.dataset.v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }));
@@ -1973,14 +1992,34 @@
     if (pl.data[nis] === b.dataset.v) delete pl.data[nis]; else pl.data[nis] = b.dataset.v;
     segarkanPl();
   };
+  function gambarFotoPl() { // foto bukti yang sudah tersimpan: lihat atau hapus
+    $('plFotoAda').innerHTML = Array.from({ length: pl.foto }, (_, n) => `<div class="row" style="margin-bottom:6px"><span>Foto ${n + 1}</span><span style="display:flex;gap:6px"><button class="ghost small" type="button" data-flihat="${n}">Lihat</button><button class="ghost small" type="button" data-fhapus="${n}">Hapus</button></span></div>`).join('');
+  }
+  $('plFotoAda').onclick = async e => {
+    const b = e.target.closest('button'); if (!b || !pl) return;
+    try {
+      if (b.dataset.flihat !== undefined) {
+        const r = await api('piketFoto', { kelas: kelasData.kelas, tanggal: pl.tanggal, nomor: Number(b.dataset.flihat) });
+        $('srHead').textContent = 'Foto bukti piket'; $('srInfo').textContent = tglIndo(r.tanggal); $('srImg').src = r.dataUrl; $('dlgSurat').showModal();
+      } else if (b.dataset.fhapus !== undefined) {
+        if (!confirm('Hapus foto ini?')) return;
+        const r = await api('piketFotoHapus', { kelas: kelasData.kelas, tanggal: pl.tanggal, nomor: Number(b.dataset.fhapus) });
+        pl.foto = r.foto; gambarFotoPl(); toast('Foto dihapus.');
+      }
+    } catch (err) { toast(err.message, true); }
+  };
+  $('plFoto').onchange = () => { $('plErr').textContent = $('plFoto').files.length + pl.foto > 3 ? ERR.foto_terlalu_banyak : ''; };
   $('plTgl').onchange = () => { if ($('plTgl').value) bukaPiketLapor($('plTgl').value); };
   $('plX').onclick = $('plBatal').onclick = () => $('dlgPiketLapor').close();
   $('plSimpan').onclick = async () => {
     $('plSimpan').disabled = true; $('plErr').textContent = '';
     try {
-      await api('simpanPiketLapor', { kelas: kelasData.kelas, tanggal: pl.tanggal, data: pl.data, kondisi: $('plKondisi').value, catatan: $('plCatatan').value });
+      const files = [...$('plFoto').files];
+      if (files.length + pl.foto > 3) { $('plErr').textContent = ERR.foto_terlalu_banyak; $('plSimpan').disabled = false; return; }
+      const foto = []; for (const f of files) foto.push({ name: f.name, data: (await kecilkan(f)).split(',')[1] });
+      await api('simpanPiketLapor', { kelas: kelasData.kelas, tanggal: pl.tanggal, data: pl.data, kondisi: $('plKondisi').value, catatan: $('plCatatan').value, foto });
       $('dlgPiketLapor').close(); toast('Catatan piket tersimpan.'); muatUlangKelas();
-    } catch (e) { $('plErr').textContent = e.message; }
+    } catch (e) { $('plErr').textContent = e.message === 'gambar_rusak' ? 'Foto tidak bisa dibaca. Coba foto lain (JPG atau PNG).' : e.message; }
     $('plSimpan').disabled = false;
   };
 
@@ -2179,7 +2218,7 @@
     const hadir = `<div class="panel"><h2>Kehadiran kelas</h2>${grid(angka(pc(a.persen), 'rata-rata hadir', true) + angka(a.S, 'sakit') + angka(a.I, 'izin') + angka(a.A, 'alpa'))}`
       + (a.hari.length ? a.hari.map(x => { const n = pctDari(x.H, x.total); return `<div class="item"><div class="grow"><div class="muted">${esc(tglPendek(x.tanggal))}</div>${bar(n)}</div><strong>${n}%</strong></div>`; }).join('') : '<p class="muted">Belum ada absensi harian di periode ini.</p>')
       + (a.saya ? `<div class="muted" style="margin-top:8px"><strong>Kehadiranmu:</strong> hadir ${a.saya.H}, sakit ${a.saya.S}, izin ${a.saya.I}, alpa ${a.saya.A}</div>` : '') + '</div>';
-    const piket = `<div class="panel"><h2>Piket</h2>${p.catatan ? grid(angka(pc(p.persen), 'piket terlaksana', true) + angka(p.kondisi.bersih, 'kelas bersih') + angka(p.kondisi.cukup, 'cukup') + angka(p.kondisi.kotor, 'kotor')) : '<p class="muted">Belum ada catatan piket di periode ini.</p>'}`
+    const piket = `<div class="panel"><h2>Piket</h2>${p.catatan ? grid(angka(pc(p.persen), 'piket terlaksana', true) + angka(p.kondisi.bersih, 'kelas bersih') + angka(p.kondisi.cukup, 'cukup') + angka(p.kondisi.kotor, 'kotor')) + (p.foto ? `<div class="muted">${p.foto} foto bukti kelas terlampir</div>` : '') : '<p class="muted">Belum ada catatan piket di periode ini.</p>'}`
       + (p.saya ? `<div class="muted"><strong>Piketmu:</strong> ${p.saya.hari ? 'hari ' + esc(p.saya.nama) : 'belum terjadwal'}${p.saya.tercatat ? `, tercatat ${p.saya.tercatat} kali, terlaksana ${p.saya.ya}` : ''}</div>` : '') + '</div>';
     const kas = `<div class="panel"><h2>Kas kelas</h2>${grid(angka(rp(k.saldoAkhir), 'saldo akhir', true) + angka(rp(k.masuk), 'masuk') + angka(rp(k.keluar), 'keluar'))}`
       + (k.pengeluaran.length ? '<h3 style="margin:10px 0 4px">Pengeluaran</h3>' + k.pengeluaran.map(x => item(esc(tglPendek(x.tanggal)), esc(x.ket), '', `<strong>${rp(x.jumlah)}</strong>`)).join('') : '')
@@ -2320,6 +2359,55 @@
       toast(`Jadwal ${HARI_ID[jw.hari]} tersimpan.`); await muatUlangKelas(); jwIsi(jw.hari);
     } catch (e) { $('jwErr').textContent = e.message; }
     $('jwSimpan').disabled = false;
+  };
+
+  // baca jadwal dari foto (hasilnya usulan: diperiksa dulu, baru diterapkan)
+  function jfParse(teks) {
+    const baris = [], salah = [];
+    String(teks || '').split('\n').map(x => x.trim()).filter(Boolean).forEach(l => {
+      const m = l.match(/^(\d{1,2}[:.]\d{2})\s*[-–—]\s*(\d{1,2}[:.]\d{2})\s+(.+)$/);
+      if (m) baris.push({ mulai: m[1].replace('.', ':'), selesai: m[2].replace('.', ':'), mapel: m[3].trim() }); else salah.push(l);
+    });
+    return { baris, salah };
+  }
+  function bukaJadwalFoto() {
+    $('jfFile').value = ''; $('jfStatus').textContent = ''; $('jfErr').textContent = ''; $('jfHasil').hidden = true; $('jfTerapkan').hidden = true; $('jfBaca').disabled = false;
+    $('dlgJadwalFoto').showModal();
+  }
+  $('jwFoto').onclick = bukaJadwalFoto;
+  $('jfX').onclick = $('jfTutup').onclick = () => $('dlgJadwalFoto').close();
+  $('jfBaca').onclick = async () => {
+    const f = $('jfFile').files[0]; $('jfErr').textContent = '';
+    if (!f) { $('jfErr').textContent = 'Pilih foto jadwalnya dulu.'; return; }
+    $('jfBaca').disabled = true; $('jfHasil').hidden = true; $('jfTerapkan').hidden = true; $('jfStatus').textContent = 'Membaca foto… bisa sampai setengah menit.';
+    try {
+      const foto = { name: f.name, data: (await kecilkan(f, 2200, 2200, 3.8e6)).split(',')[1] };
+      const r = await api('bacaJadwalFoto', { kelas: kelasData.kelas, foto });
+      const ada = r.hari.reduce((t, x) => t + x.baris.length, 0);
+      $('jfCatatan').textContent = (ada ? `Terbaca ${ada} jam pelajaran.` : 'Tidak ada jadwal yang berhasil dibaca.') + (r.dibuang ? ` ${r.dibuang} baris dibuang karena jamnya tidak valid.` : '') + (r.catatan ? ' Catatan AI: ' + r.catatan : '');
+      $('jfHari').innerHTML = r.hari.map(x => `<div class="jfd" data-h="${x.hari}" style="margin-bottom:10px"><label style="display:flex;gap:8px;align-items:center;font-weight:600;margin:0 0 4px"><input type="checkbox" class="jfc" style="width:auto;margin:0"${x.baris.length ? ' checked' : ''}> ${HARI_ID[x.hari]}</label>`
+        + `<textarea class="jft" rows="${Math.max(3, x.baris.length + 1)}" aria-label="Jadwal ${HARI_ID[x.hari]}" style="min-height:4rem">${esc(x.baris.map(b => `${b.mulai}-${b.selesai} ${b.mapel}`).join('\n'))}</textarea></div>`).join('');
+      $('jfHasil').hidden = false; $('jfTerapkan').hidden = false; $('jfStatus').textContent = '';
+    } catch (e) { $('jfStatus').textContent = ''; $('jfErr').textContent = e.message === 'gambar_rusak' ? 'Foto tidak bisa dibaca. Coba foto lain (JPG atau PNG).' : e.message; }
+    $('jfBaca').disabled = false;
+  };
+  $('jfTerapkan').onclick = async () => {
+    const hari = [], kosong = []; $('jfErr').textContent = '';
+    for (const d of $('jfHari').querySelectorAll('.jfd')) {
+      if (!d.querySelector('.jfc').checked) continue;
+      const h = Number(d.dataset.h), p = jfParse(d.querySelector('.jft').value);
+      if (p.salah.length) { $('jfErr').textContent = `${HARI_ID[h]}: baris tidak terbaca "${p.salah[0]}". Pakai format 07:00-08:30 Nama mapel.`; return; }
+      if (!p.baris.length) kosong.push(HARI_ID[h]);
+      hari.push({ hari: h, baris: p.baris });
+    }
+    if (!hari.length) { $('jfErr').textContent = 'Centang minimal satu hari yang mau diterapkan.'; return; }
+    if (kosong.length && !confirm(`${kosong.join(', ')} dicentang tapi kosong: jadwal lama hari itu akan DIKOSONGKAN. Lanjut?`)) return;
+    $('jfTerapkan').disabled = true;
+    try {
+      await api('simpanJadwalMinggu', { kelas: kelasData.kelas, hari });
+      $('dlgJadwalFoto').close(); toast(`Jadwal ${hari.length} hari diterapkan.`); await muatUlangKelas(); if (jw && $('dlgJadwal').open) jwIsi(jw.hari);
+    } catch (e) { $('jfErr').textContent = e.message; }
+    $('jfTerapkan').disabled = false;
   };
 
   /* ---------------- Admin ---------------- */
