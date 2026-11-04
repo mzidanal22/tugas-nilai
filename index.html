@@ -7,8 +7,8 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#0D231A">
-<meta name="apple-mobile-web-app-title" content="Tugas &amp; Nilai">
-<title>Tugas & Nilai</title>
+<meta name="apple-mobile-web-app-title" content="Zidan Labs">
+<title>Zidan Labs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Caveat:wght@700&display=swap" rel="stylesheet">
@@ -280,6 +280,7 @@
   .meter { border: 2px solid var(--edge); height: 12px; }
   .meter > i { background: var(--lime); }
   .avatar { background: var(--lime); color: var(--lime-ink); border: 2px solid var(--shd); }
+  button.avatar { padding: 0; box-shadow: none; cursor: pointer; font-size: 1rem; }
   dialog { border: 2px solid var(--edge); border-radius: 20px; box-shadow: 6px 6px 0 var(--shd); }
   dialog::backdrop { background: rgba(4, 14, 8, .6); }
   .toast { border: 2px solid var(--shd); border-radius: 14px; box-shadow: 3px 3px 0 var(--shd); }
@@ -305,9 +306,9 @@
 <body>
 <div id="topbar" aria-hidden="true"><i></i></div>
 <header>
-  <span class="brand">Tugas &amp; Nilai</span>
+  <span class="brand">Zidan Labs</span>
   <div class="who"><button class="ghost small" id="btnPasang" type="button" hidden>Pasang</button><button class="ghost small" id="btnTema" type="button" aria-label="Ganti tema terang atau gelap"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v16a8 8 0 0 0 0-16z" fill="currentColor"/></svg></button>
-  <div id="who" class="who" hidden><button class="ghost small bell" id="btnBell" hidden aria-label="Pengumuman"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/></svg><span class="dot" id="bellN" hidden></span></button><span class="avatar" id="avatar" aria-hidden="true"></span><span id="whoName" class="muted"></span> <button class="ghost small" id="btnOut" aria-label="Keluar"><span class="txt">Keluar</span><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button></div></div>
+  <div id="who" class="who" hidden><button class="ghost small bell" id="btnBell" hidden aria-label="Pengumuman"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/></svg><span class="dot" id="bellN" hidden></span></button><button type="button" class="avatar" id="avatar" aria-label="Info akun"></button><span id="whoName" class="muted"></span> <button class="ghost small" id="btnOut" aria-label="Keluar"><span class="txt">Keluar</span><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button></div></div>
 </header>
 <nav class="navbar" id="navbar" hidden aria-label="Menu utama"><div class="nav" id="nav"></div></nav>
 
@@ -637,6 +638,12 @@
   <div class="cerr" id="atErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="atBatal" type="button">Batal</button><button id="atSimpan" type="button">Simpan</button></div>
 </dialog>
+<dialog id="dlgAkunInfo" aria-labelledby="iaJudul">
+  <strong id="iaJudul" style="display:block;font-size:1.1rem;margin-bottom:6px">Info akun</strong>
+  <div id="iaIsi"></div>
+  <p class="muted" style="margin:10px 0 0">Kalau ada yang tidak sesuai, tekan "Muat ulang data". Itu menghapus data tersimpan di HP ini lalu memuat dari awal.</p>
+  <div class="actions"><button class="ghost" id="iaMuat" type="button">Muat ulang data</button><button id="iaTutup" type="button">Tutup</button></div>
+</dialog>
 <dialog id="dlgTanya" aria-labelledby="tqJudul">
   <strong id="tqJudul" style="display:block;font-size:1.1rem;margin-bottom:6px">Konfirmasi</strong>
   <p id="tqPesan" style="margin:0 0 10px;white-space:pre-wrap"></p>
@@ -815,7 +822,11 @@
     jumlah_melebihi: 'Pembayaran melebihi sisa tagihan siswa itu. Cek angkanya.',
     kas_tidak_ada: 'Transaksi itu tidak ditemukan.',
     kas_sudah_batal: 'Transaksi itu sudah dibatalkan.',
-    alasan_kosong: 'Tulis alasan pembatalannya (minimal 3 huruf).',
+    alasan_kosong: 'Tulis alasannya dulu (minimal 3 huruf).',
+    validasi_tidak_valid: 'Permintaan validasi tidak dikenali. Muat ulang halaman.',
+    laporan_tidak_ada: 'Laporan itu sudah tidak ada di daftar validasi. Muat ulang halaman.',
+    validasi_diri_sendiri: 'Laporan buatanmu sendiri harus divalidasi ketua, wakil, atau guru lain.',
+    nota_kosong: 'Pilih foto nota dulu.',
     keterangan_kosong: 'Keterangan wajib diisi (minimal 3 huruf).',
     iuran_tidak_ada: 'Iuran itu tidak ditemukan.',
     judul_kosong: 'Judul iuran wajib diisi.',
@@ -859,7 +870,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.06-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.07-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -1853,9 +1864,9 @@
     const tombol = k.izin ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0"><button class="small" type="button" data-kcatat="1">Catat transaksi</button><button class="ghost small" type="button" data-kiuran="1">Iuran siswa</button><button class="ghost small" type="button" data-kriwayat="1">Riwayat dan cek saldo</button></div>' : '';
     const saya = k.saya && k.saya.length ? '<h3 style="margin:14px 0 4px">Iuranmu</h3>' + k.saya.map(i => item(esc(i.judul), `${rp(i.nominal)} per siswa`, '',
       `<span class="tag ${i.status === 'lunas' ? 'ok' : i.status === 'kurang' ? 'warn' : 'bad'}">${i.status === 'lunas' ? 'Lunas' : i.status === 'kurang' ? 'Kurang ' + rp(i.nominal - i.dibayar) : 'Belum bayar'}</span>`)).join('') : '';
-    const keluar = '<h3 style="margin:14px 0 4px">Pengeluaran terakhir</h3>' + (k.pengeluaran.length ? k.pengeluaran.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), '',
+    const keluar = '<h3 style="margin:14px 0 4px">Pengeluaran terakhir</h3>' + (k.pengeluaran.length ? k.pengeluaran.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), `<div>${vTag('kas', x.id)}</div>${vAlasan('kas', x.id)}`,
       `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><strong>${rp(x.jumlah)}</strong>${x.adaNota ? `<button class="ghost small" type="button" data-knota="${esc(x.id)}">Nota</button>` : ''}</div>`)).join('') : '<p class="muted">Belum ada pengeluaran.</p>');
-    const lain = k.lain.length ? '<h3 style="margin:14px 0 4px">Pemasukan lain</h3>' + k.lain.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), '', `<strong>${rp(x.jumlah)}</strong>`)).join('') : '';
+    const lain = k.lain.length ? '<h3 style="margin:14px 0 4px">Pemasukan lain</h3>' + k.lain.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), `<div>${vTag('kas', x.id)}</div>${vAlasan('kas', x.id)}`, `<strong>${rp(x.jumlah)}</strong>`)).join('') : '';
     const bulanan = `<h3 style="margin:14px 0 4px">Laporan bulanan</h3><div class="bar"><input id="kasBln" type="month" value="${esc(k.bulan)}" style="width:auto;margin:0" aria-label="Bulan"><button class="ghost small" type="button" data-kbulan="1">Lihat</button></div><div id="kasBulan"></div>`;
     return `<div class="panel"><h2>Kas kelas</h2><div style="font-size:1.8rem;font-weight:700">${rp(k.saldo)}</div><div class="muted">Saldo kas saat ini</div>`
       + `<div class="muted" style="margin-top:6px">Bulan ini: masuk ${rp(k.masukBulan)}, keluar ${rp(k.keluarBulan)}</div>${cek}${tombol}${saya}${keluar}${lain}${bulanan}</div>`;
@@ -1890,15 +1901,64 @@
       p.saya && p.saya.hari === j.hari ? '<div><span class="tag me">Hari piketmu</span></div>' : '', '')).join('');
     const rekap = p.saya && p.saya.total ? `<div class="muted" style="margin-top:8px">Piketmu tercatat ${p.saya.total} kali, terlaksana ${p.saya.ya} kali.</div>` : '';
     const lapor = r.izin.piketLapor && p.laporan && p.laporan.length ? '<h3 style="margin:14px 0 4px">Catatan piket terakhir</h3>' + p.laporan.map(x => item(esc(tglIndo(x.tanggal)),
-      `${x.ya} piket, ${x.tidak} tidak${x.kondisi ? ' · kelas ' + esc(x.kondisi) : ''}${x.foto ? ' · ' + x.foto + ' foto' : ''}`, '', `<button class="ghost small" type="button" data-plapor="${esc(x.tanggal)}">Buka</button>`)).join('') : '';
+      `${x.ya} piket, ${x.tidak} tidak${x.kondisi ? ' · kelas ' + esc(x.kondisi) : ''}${x.foto ? ' · ' + x.foto + ' foto' : ''}`, `<div>${vTag('piket', x.id)}</div>${vAlasan('piket', x.id)}`, `<button class="ghost small" type="button" data-plapor="${esc(x.tanggal)}">Buka</button>`)).join('') : '';
     const tombol = (r.izin.piket ? '<button class="ghost small" type="button" data-pjadwal="1">Atur jadwal</button>' : '') + (r.izin.piketLapor ? `<button class="small" type="button" data-plapor="${hariIni()}">Catat piket</button>` : '');
     return `<div class="panel"><div class="row"><h2 style="margin:0">Jadwal piket</h2><div style="display:flex;gap:6px;flex-wrap:wrap">${tombol}</div></div>${jadwal}${rekap}${lapor}</div>`;
   }
   function harianHtml(r) { // daftar hari absensi untuk yang boleh mengisi (sekretaris, ketua, wakil, guru)
     if (!r.izin.absensi) return '';
     const list = r.harian && r.harian.length ? r.harian.map(a => item(esc(tglIndo(a.tanggal)), `Hadir ${a.ringkas.H}, sakit ${a.ringkas.S}, izin ${a.ringkas.I}, alpa ${a.ringkas.A}${a.ringkas.belum ? ', belum ' + a.ringkas.belum : ''}`,
-      a.suratBelum ? `<div class="late">${a.suratBelum} surat sakit belum diupload</div>` : '', `<button class="ghost small" type="button" data-abuka="${esc(a.tanggal)}">Buka</button>`)).join('') : '<p class="muted">Belum ada absensi harian.</p>';
+      (a.suratBelum ? `<div class="late">${a.suratBelum} surat sakit belum diupload</div>` : '') + `<div>${vTag('absen', a.id)}</div>${vAlasan('absen', a.id)}`, `<button class="ghost small" type="button" data-abuka="${esc(a.tanggal)}">Buka</button>`)).join('') : '<p class="muted">Belum ada absensi harian.</p>';
     return `<div class="panel"><div class="row"><h2 style="margin:0">Absen harian</h2><button class="small" type="button" data-abuka="${hariIni()}">Isi hari ini</button></div>${list}</div>`;
+  }
+  // ----- Validasi laporan: ketua, wakil, dan guru menerima atau menolak laporan pengurus -----
+  const vStatus = (j, id) => (kelasData && kelasData.validasi && kelasData.validasi.status[j + '|' + id]) || null;
+  const vTag = (j, id) => { const v = vStatus(j, id); return !v ? '' : v.s === 'diterima' ? '<span class="tag ok">Diterima</span>' : v.s === 'ditolak' ? '<span class="tag bad">Ditolak</span>' : `<span class="tag warn">${v.lagi ? 'Diubah, menunggu validasi' : 'Menunggu validasi'}</span>`; };
+  const vAlasan = (j, id) => { const v = vStatus(j, id); return v && v.s === 'ditolak' ? `<div class="late">Ditolak${v.o ? ' oleh ' + esc(v.o) : ''}: ${esc(v.a)}</div>` : ''; };
+  const vTanggal7 = () => new Date(Date.parse(hariIni() + 'T12:00:00+07:00') - 7 * 864e5).toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+  function vAntrian(r) { // yang ditolak selalu tampil; yang menunggu hanya 7 hari terakhir supaya tidak menumpuk
+    const v = r.validasi; if (!v) return { tolak: [], tunggu: [] };
+    const batas = vTanggal7();
+    return { tolak: v.antrian.filter(x => x.s === 'ditolak'), tunggu: v.antrian.filter(x => x.s === 'menunggu' && x.tanggal >= batas) };
+  }
+  function vBaris(x, r) {
+    const kunci = esc(x.jenis + '|' + x.id), tgl = esc(tglIndo(x.tanggal));
+    const lihat = x.jenis === 'kas' ? (x.foto ? `<button class="ghost small" type="button" data-knota="${esc(x.id)}">Lihat nota</button>` : '')
+      : x.jenis === 'piket' ? `<button class="ghost small" type="button" data-plapor="${esc(x.tanggal)}">Lihat${x.foto ? ' foto' : ''}</button>`
+      : x.jenis === 'absen' ? `<button class="ghost small" type="button" data-abuka="${esc(x.tanggal)}">Lihat</button>` : '';
+    const nilai = x.bisa ? `<button class="small" type="button" data-vterima="${kunci}">Terima</button><button class="ghost small danger" type="button" data-vtolak="${kunci}">Tolak</button>` : '';
+    const betul = x.s === 'ditolak' && x.perbaiki ? (x.jenis === 'kas' ? (r.kas && r.kas.izin ? `<button class="small" type="button" data-kganti="${esc(x.id)}">Ganti foto nota</button>` : '')
+      : x.jenis === 'piket' ? `<button class="small" type="button" data-plapor="${esc(x.tanggal)}">Perbaiki</button>`
+      : x.jenis === 'absen' ? `<button class="small" type="button" data-abuka="${esc(x.tanggal)}">Perbaiki</button>`
+      : `<button class="small" type="button" data-kriwayat="1">Cek ulang saldo</button>`) : '';
+    const info = `${x.pembuat ? 'Dibuat ' + esc(x.pembuat) : ''}${x.jenis === 'kas' && !x.foto ? (x.pembuat ? ' · ' : '') + 'tanpa foto nota' : ''}`;
+    return item(tgl, esc(x.judul), (info ? `<div class="muted">${info}</div>` : '') + (x.s === 'ditolak' ? `<div class="late">Ditolak: ${esc(x.a)}</div>` : x.lagi ? '<div class="muted">Sudah diubah setelah divalidasi.</div>' : '')
+      + `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${nilai}${betul}${lihat}</div>`,
+''); // tombol di bawah isi supaya judul tidak terjepit di layar sempit
+  }
+  function validasiHtml(r) {
+    const { tolak, tunggu } = vAntrian(r); if (!tolak.length && !tunggu.length) return '';
+    const daftar = a => a.slice(0, 5).map(x => vBaris(x, r)).join('') + (a.length > 5 ? `<details style="margin-top:6px"><summary class="muted">Tampilkan ${a.length - 5} lagi</summary>${a.slice(5).map(x => vBaris(x, r)).join('')}</details>` : '');
+    return '<div id="kValidasi">' + (tolak.length ? `<h2 class="sec">Laporan ditolak (${tolak.length})</h2><div class="panel">${daftar(tolak)}</div>` : '')
+      + (tunggu.length ? `<h2 class="sec">Menunggu validasi (${tunggu.length})</h2><div class="panel">${daftar(tunggu)}</div>` : '') + '</div>';
+  }
+  async function segarKelas() { // muat ulang diam-diam (tanpa kerangka loading) supaya posisi gulir tidak lompat
+    try { const r = await api('kelasSaya', kelasData && kelasData.kelas ? { kelas: kelasData.kelas } : {}); kelasData = r; $(kelasEl).innerHTML = kelasHalaman(r); } catch (e) { toast(e.message, true); }
+  }
+  async function vSet(kunci, status) {
+    const p = kunci.indexOf('|'), jenis = kunci.slice(0, p), id = kunci.slice(p + 1); let alasan = '';
+    if (status === 'ditolak') { alasan = await mintaTeks('Tolak laporan', 'Kenapa ditolak? (wajib, supaya pembuatnya tahu apa yang harus diperbaiki)', { wajib: true, ya: 'Tolak laporan', bahaya: true }); if (!alasan) return; }
+    try { await api('validasiSet', { kelas: kelasData.kelas, jenis, id, status, alasan }); toast(status === 'diterima' ? 'Laporan diterima.' : 'Laporan ditolak. Pembuatnya akan melihat alasannya.'); await segarKelas(); }
+    catch (e) { toast(e.message, true); }
+  }
+  function gantiNota(id) { // bendahara memilih foto nota baru untuk transaksi yang ditolak
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = async () => {
+      const f = inp.files[0]; if (!f) return;
+      try { const data = (await kecilkan(f)).split(',')[1]; await api('kasGantiNota', { kelas: kelasData.kelas, id, nota: { name: f.name, data } }); toast('Foto nota diganti. Menunggu validasi ulang.'); await segarKelas(); }
+      catch (e) { toast(e.message === 'gambar_rusak' ? 'Gambar tidak bisa dibaca. Coba file lain (JPG atau PNG).' : e.message, true); }
+    };
+    inp.click();
   }
   // ----- Kelasku bertab: "Hari ini" lebih dulu, bagian lain dibuka sesuai kebutuhan -----
   const KTABS = [['hari', 'Hari ini'], ['absensi', 'Absen harian'], ['jadwal', 'Jadwal'], ['kas', 'Kas'], ['barang', 'Barang'], ['info', 'Info']];
@@ -1914,6 +1974,9 @@
     if (p && p.saya && dow >= 1 && p.saya.hari === dow) a.push({ t: 'Hari ini giliran piketmu', tab: 'jadwal' });
     if (r.izin.absensi && dow >= 1 && !(r.harian || []).some(x => x.tanggal === hari)) a.push({ t: 'Absen harian hari ini belum diisi', b: 'Isi sekarang', d: 'abuka', v: hari, tab: 'absensi', bahaya: true });
     if (r.izin.piketLapor && dow >= 1 && p && (p.jadwal.find(x => x.hari === dow) || { orang: [] }).orang.length && !(p.laporan || []).some(x => x.tanggal === hari)) a.push({ t: 'Catatan piket hari ini belum ada', b: 'Catat piket', d: 'plapor', v: hari, tab: 'jadwal' });
+    const vt = vAntrian(r);
+    if (vt.tolak.length) a.push({ t: vt.tolak.length === 1 ? 'Satu laporan ditolak, perbaiki dulu' : `${vt.tolak.length} laporan ditolak, perbaiki dulu`, b: 'Lihat', d: 'vgulir', v: '1', tab: '-', bahaya: true });
+    if (r.validasi && r.validasi.izin && vt.tunggu.some(x => x.bisa)) a.push({ t: `${vt.tunggu.filter(x => x.bisa).length} laporan menunggu validasimu`, b: 'Periksa', d: 'vgulir', v: '1', tab: '-' });
     return a;
   }
   const kelasLencana = r => perluItems(r).filter(x => x.b).reduce((m, x) => { m[x.tab] = (m[x.tab] || 0) + 1; return m; }, {});
@@ -1971,7 +2034,7 @@
       case 'kas': return kasHtml(r);
       case 'barang': return invHtml(r);
       case 'info': return `<div class="panel"><div class="row"><h2 style="margin:0">Info kelas</h2>${r.izin.info ? '<button class="small" type="button" data-kbaru="1">Tulis info</button>' : ''}</div>${info}</div><div class="panel"><h2>Pengurus kelas</h2>${pengurus}</div>`;
-      default: return perluHtml(r) + setupHtml(r) + hariIniHtml(r) + aksiCepatHtml(r) + infoSematHtml(r);
+      default: return perluHtml(r) + validasiHtml(r) + setupHtml(r) + hariIniHtml(r) + aksiCepatHtml(r) + infoSematHtml(r);
     }
   }
   function kelasHtml(r) {
@@ -2017,6 +2080,10 @@
     if (d.kiuran) return bukaIuran();
     if (d.kriwayat) return bukaKasRiwayat();
     if (d.knota) return lihatNota(d.knota);
+    if (d.vterima) return vSet(d.vterima, 'diterima');
+    if (d.vtolak) return vSet(d.vtolak, 'ditolak');
+    if (d.kganti) return gantiNota(d.kganti);
+    if (d.vgulir) { const e = $('kValidasi'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
     if (d.kbulan) return lihatKasBulan();
     if (d.kbagi && kasBulanData) return bagikan('Laporan kas ' + kasBulanData.bulan, pesanKas(kasBulanData));
     if (d.pjadwal) return bukaPiketJadwal();
@@ -2309,7 +2376,7 @@
     $('rwSaldo').innerHTML = `Saldo di aplikasi: <strong>${rp(kk.saldo)}</strong>` + (c ? ` · cek terakhir ${esc(tglIndo(c.tanggal))}: ${c.selisih === 0 ? 'cocok' : 'selisih ' + rp(c.selisih)}` : '');
     $('rwDaftar').innerHTML = kk.riwayat.length ? kk.riwayat.map(x => {
       const label = x.iuran ? `${esc(x.iuran)}: ${esc(x.siswa)}` : esc(x.ket), isi = `${esc(tglIndo(x.tanggal))} · ${x.jenis === 'masuk' ? '+' : '−'}${rp(x.jumlah)} · ${label}`;
-      return `<div class="abrow" data-id="${esc(x.id)}"><span class="abnama" style="flex:1;min-width:0">${x.batal ? `<s>${isi}</s>` : isi}<div class="muted">${x.batal ? 'Dibatalkan: ' + esc(x.alasan) : 'Dicatat ' + (x.oleh ? esc(x.oleh) : 'guru')}</div></span>`
+      return `<div class="abrow" data-id="${esc(x.id)}"><span class="abnama" style="flex:1;min-width:0">${x.batal ? `<s>${isi}</s>` : isi}<div class="muted">${x.batal ? 'Dibatalkan: ' + esc(x.alasan) : 'Dicatat ' + (x.oleh ? esc(x.oleh) : 'guru')}</div>${x.batal || x.iuran ? '' : vTag('kas', x.id) + vAlasan('kas', x.id)}</span>`
         + `<span style="display:flex;gap:6px">${x.adaNota ? `<button class="ghost small" type="button" data-nota="${esc(x.id)}">Nota</button>` : ''}${x.batal ? '' : `<button class="ghost small danger" type="button" data-batal="${esc(x.id)}">Batalkan</button>`}</span></div>`;
     }).join('') : '<p class="muted" style="padding:12px">Belum ada transaksi.</p>';
   }
@@ -2608,11 +2675,31 @@
     let r; try { r = await api('kelasSaya', {}); } catch (e) { return; } // modul kelas belum aktif atau gagal dimuat: kartu tidak ditampilkan
     const el = $('aKelasRingkas'); if (!el) return;
     const hari = hariIni(), dow = dowIni(), ada = (r.harian || []).find(x => x.tanggal === hari), surat = (r.harian || []).reduce((t, x) => t + (x.suratBelum || 0), 0), rusak = r.inventaris.rusak + r.inventaris.hilang;
+    const vt = vAntrian(r), nv = vt.tolak.length + vt.tunggu.length;
     const kartu = (n, l, hot) => `<button class="stat${hot ? ' hot' : ''}" type="button" data-go="pKelas"><div class="n">${n}</div><div class="l">${l}</div></button>`;
     el.innerHTML = `<div class="panel"><div class="row"><h2 style="margin:0">Kelas wali · ${esc(r.kelas)}</h2><button class="ghost small" type="button" data-go="pKelas">Buka</button></div><div class="stats s2" style="margin-top:10px">`
       + kartu(dow === 0 ? '–' : ada ? 'Sudah' : 'Belum', 'absen harian hari ini', dow >= 1 && !ada) + kartu(surat, 'surat sakit belum', surat > 0)
-      + kartu(rp(r.kas.saldo), 'saldo kas') + kartu(rusak, 'barang rusak atau hilang', rusak > 0) + '</div></div>';
+      + kartu(rp(r.kas.saldo), 'saldo kas') + kartu(rusak, 'barang rusak atau hilang', rusak > 0) + '</div>'
+      + (nv ? `<div style="margin-top:10px">${todoBaris({ t: `${nv} laporan menunggu validasi atau ditolak`, bahaya: vt.tolak.length > 0 }, '<button class="small" type="button" data-go="pKelas">Periksa</button>')}</div>` : '') + '</div>';
   }
+
+  /* ---------------- Info akun: bantu memeriksa HP yang bermasalah tanpa console ---------------- */
+  $('avatar').onclick = async () => {
+    $('iaIsi').innerHTML = '<p class="muted">Memuat…</p>'; $('dlgAkunInfo').showModal();
+    let r = null; try { r = await api('me'); } catch (e) { $('iaIsi').innerHTML = `<p class="late">${esc(e.message || 'Gagal memuat dari server.')}</p>`; return; }
+    const m = r.me || {}, baris = (k, v) => `<div class="kv"><span class="k">${k}</span><span>${v}</span></div>`;
+    const ya = '<span class="tag ok">Ya</span>', tidak = '<span class="tag bad">Tidak</span>';
+    $('iaIsi').innerHTML = baris('Nama', esc(m.nama || '-')) + baris('Peran', esc(m.role || '-')) + (m.nis ? baris('NIS', esc(m.nis)) : '')
+      + baris('Kelas', m.kelas ? `"${esc(m.kelas)}"` : '-') + baris('Jabatan', (m.jabatan || []).length ? esc(m.jabatan.join(', ')) : '-')
+      + baris('Kelasku aktif', m.modulKelas ? ya : tidak) + baris('Kelas aktif', r.kelasModul ? esc(r.kelasModul.map(k => `"${k}"`).join(', ')) : '<span class="late">server belum diperbarui</span>')
+      + baris('Versi halaman', esc(VERSI_WEB)) + baris('Versi server', r.versi ? esc(r.versi) + (r.versi === VERSI_WEB ? '' : ' <span class="tag warn">beda</span>') : '<span class="late">lama (deploy ulang)</span>');
+  };
+  $('iaTutup').onclick = () => $('dlgAkunInfo').close();
+  $('iaMuat').onclick = async () => {
+    try { Object.keys(localStorage).filter(k => k.indexOf('cache_') === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+    try { if ('serviceWorker' in navigator) (await navigator.serviceWorker.getRegistrations()).forEach(x => x.unregister()); if (window.caches) (await caches.keys()).forEach(k => caches.delete(k)); } catch (e) {}
+    location.reload();
+  };
 
   /* ---------------- Admin ---------------- */
   function tab(id) {
