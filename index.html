@@ -396,7 +396,7 @@
     <div id="sHadir" hidden><h1>Kehadiran</h1><div id="sHadirBody"></div></div>
     <div id="sKelas" hidden><h1>Kelasku</h1><div id="sKelasBody"></div></div>
     <div id="sLapKelas" hidden><div id="sLapKelasBody"></div></div>
-    <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Rata-rata hanya dari tugas yang nilainya sudah dirilis, tanpa bobot. Nilai rapor dihitung guru dengan komponen lain.</p><div id="sNilaiBody"></div></div>
+    <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Nilai akhir = rata-rata dari komponen yang sudah ada: rata-rata tugas, rata-rata sumatif, STS, dan SAS. STS dan SAS baru dihitung setelah ada nilainya. Hanya dari nilai yang sudah dirilis guru.</p><div id="sNilaiBody"></div></div>
     <div id="kBlock" hidden>
       <h1 style="margin-bottom:8px">Rekap kelas</h1>
       <div class="bar"><label for="kTugas" style="margin:0">Tugas</label><select id="kTugas"></select><button class="ghost small" id="kSalin">Salin daftar yang belum kumpul</button></div>
@@ -483,6 +483,7 @@
         <label for="tMapel">Mapel</label><select id="tMapel" style="width:100%;margin-bottom:14px"></select>
         <label for="tJudul">Judul</label><input id="tJudul" maxlength="150">
         <label for="tDesk">Deskripsi (opsional)</label><textarea id="tDesk"></textarea>
+        <label for="tJenis">Jenis penilaian</label><select id="tJenis" style="width:100%;margin-bottom:14px"><option value="penugasan">Tugas</option><option value="sumatif">Sumatif</option><option value="sts">STS (Sumatif Tengah Semester)</option><option value="sas">SAS / UAS (Sumatif Akhir Semester)</option></select>
         <label for="tBentuk">Bentuk pengumpulan</label><select id="tBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
         <label for="tDl">Deadline (WIB)</label><input id="tDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="tKelas" style="margin-bottom:14px"></div>
@@ -503,6 +504,7 @@
       <div class="panel card" id="fEdit" hidden>
         <label for="eJudul">Judul</label><input id="eJudul" maxlength="150">
         <label for="eDesk">Deskripsi</label><textarea id="eDesk"></textarea>
+        <label for="eJenis">Jenis penilaian</label><select id="eJenis" style="width:100%;margin-bottom:14px"><option value="penugasan">Tugas</option><option value="sumatif">Sumatif</option><option value="sts">STS (Sumatif Tengah Semester)</option><option value="sas">SAS / UAS (Sumatif Akhir Semester)</option></select>
         <label for="eBentuk">Bentuk pengumpulan</label><select id="eBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
         <label for="eDl">Deadline (WIB)</label><input id="eDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="eKelas" style="margin-bottom:14px"></div>
@@ -523,7 +525,7 @@
       </div>
 
       <div id="nvSemua">
-        <p class="muted">Angka = nilai · … = sudah kumpul, belum dinilai · – = belum kumpul. Rata-rata hanya dari tugas yang sudah dinilai.</p>
+        <p class="muted">Angka = nilai · … = sudah kumpul, belum dinilai · – = belum kumpul. Nilai akhir = rata-rata komponen yang ada (tugas, sumatif, STS, SAS); STS dan SAS dihitung kalau sudah ada nilainya.</p>
         <div class="bar"><button class="ghost small" id="btnCsv">Unduh CSV</button></div>
         <div class="tablewrap"><table class="matrix"><thead id="nHead"></thead><tbody id="nBody"></tbody></table></div>
       </div>
@@ -870,7 +872,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.04-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.08-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -987,7 +989,7 @@
   $('fNama').onkeydown = e => { if (e.key === 'Enter') $('fNis').focus(); };
   $('fNis').onkeydown = e => { if (e.key === 'Enter') $('btnClaim').click(); };
   $('cOut').onclick = e => { e.preventDefault(); logout(); };
-  $('btnOut').onclick = () => { if (me && me.email) { try { localStorage.removeItem(kunciCache(me.email)); } catch (e) {} } logout(); };
+  $('btnOut').onclick = async () => { if (!(await konfirmasi('Keluar dari akun ini? Kamu perlu masuk lagi dengan Google untuk membuka aplikasi.', { ya: 'Keluar', tidak: 'Batal' }))) return; if (me && me.email) { try { localStorage.removeItem(kunciCache(me.email)); } catch (e) {} } logout(); };
 
   /* ---------------- Siswa & ketua ---------------- */
   let tugasSiswa = [], kRows = [], dlgNis = null;
@@ -1036,7 +1038,7 @@
         <div class="muted">${fmt(k.waktu)}</div>${ringkas(k)}<div class="muted" style="margin-top:6px">${k.kunci ? 'Sudah diperiksa guru. Nilai akan muncul setelah dirilis.' : k.revisi ? 'Revisi terkirim. Menunggu guru menilai ulang.' : 'Nilai akan muncul di sini setelah guru menilai.'}</div></div>${k.kunci ? '' : `<button class="ghost small" data-act="ubah">Ubah pengumpulan</button><div class="form" hidden style="margin-top:14px">${formHtml(t)}</div>`}`;
     else { const buka = rev || tugasSiswa.filter(x => statusOf(x) === 'belum').length === 1; // form dilipat kalau tugas belum dikumpulkan banyak
       body = (rev ? `<div class="banner warn"><strong>Perlu revisi</strong><div>${esc(k.revisi.catatan)}</div></div>` : '') + (buka ? `<div class="form">${formHtml(t)}</div>` : `<button type="button" data-act="buka">Kumpulkan tugas</button><div class="form" hidden style="margin-top:12px">${formHtml(t)}</div>`); }
-    return `<div class="panel card" data-id="${esc(t.id)}"><div class="row"><span class="muted">${esc(t.mapel)}</span><span><span class="tag">${tag}</span>${baru.tugas.has(t.id) || (rev && baru.tugas.has('rev:' + t.id + ':' + k.revisi.pada)) ? ' <span class="tag baru">Baru</span>' : ''}</span></div>
+    return `<div class="panel card" data-id="${esc(t.id)}"><div class="row"><span class="muted">${esc(t.mapel)}${jenisTag(t.jenis)}</span><span><span class="tag">${tag}</span>${baru.tugas.has(t.id) || (rev && baru.tugas.has('rev:' + t.id + ':' + k.revisi.pada)) ? ' <span class="tag baru">Baru</span>' : ''}</span></div>
       <h3>${esc(t.judul)}</h3>${t.deskripsi ? `<p>${esc(t.deskripsi)}</p>` : ''}${dl}${kalH}${body}</div>`;
   }
 
@@ -1215,6 +1217,18 @@
 
   const greet = () => { const j = Number(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false })) % 24; return j < 11 ? 'Selamat pagi' : j < 15 ? 'Selamat siang' : j < 18 ? 'Selamat sore' : 'Selamat malam'; };
   const avg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length * 10) / 10 : null;
+  // Jenis penilaian dan nilai akhir (sama dengan hitungAkhir_ di server): rata-rata dari komponen yang ada = tugas, sumatif, STS, SAS.
+  const JENIS_NAMA = { penugasan: 'Tugas', sumatif: 'Sumatif', sts: 'STS', sas: 'SAS' };
+  const jenisTag = j => j && j !== 'penugasan' && JENIS_NAMA[j] ? ` <span class="tag me">${JENIS_NAMA[j]}</span>` : '';
+  function hitungAkhir(items) { // items = [{ jenis, nilai }]
+    const per = { penugasan: [], sumatif: [], sts: [], sas: [] };
+    items.forEach(i => { const j = i.jenis || 'penugasan'; if (typeof i.nilai === 'number' && per[j]) per[j].push(i.nilai); });
+    const m = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null, r = { tugas: m(per.penugasan), sumatif: m(per.sumatif), sts: m(per.sts), sas: m(per.sas) };
+    const ada = Object.values(r).filter(x => x !== null), r1 = x => x === null ? null : Math.round(x * 10) / 10;
+    return { komp: { tugas: r1(r.tugas), sumatif: r1(r.sumatif), sts: r1(r.sts), sas: r1(r.sas) }, akhir: r1(m(ada)) };
+  }
+  const KOMP_NAMA = [['tugas', 'Tugas'], ['sumatif', 'Sumatif'], ['sts', 'STS'], ['sas', 'SAS']];
+  const kompChips = k => KOMP_NAMA.filter(([c]) => k[c] !== null).map(([c, n]) => `<span class="chip">${n} <b>${k[c]}</b></span>`).join('');
   const item = (atas, judul, bawah, kanan) => `<div class="item"><div class="grow"><div class="muted">${atas}</div><div class="t">${judul}</div>${bawah || ''}</div>${kanan || ''}</div>`;
 
   function goSiswa(id, sorot) {
@@ -1238,7 +1252,7 @@
     const by = { belum: [], menunggu: [], terkumpul: [], dinilai: [] };
     tugasSiswa.forEach(t => by[statusOf(t)].push(t));
     const nilaiT = tugasSiswa.filter(t => t.kumpul && t.kumpul.kunci && typeof t.kumpul.nilai === 'number');
-    const rata = avg(nilaiT.map(t => t.kumpul.nilai));
+    const rata = avg(Object.values(akhirPerMapel()).map(x => x.akhir).filter(x => x !== null)); // rata-rata nilai akhir semua mapel
     const stat = (n, l, go, hot) => `<button class="stat${hot ? ' hot' : ''}" data-go="${go}"><div class="n">${n}</div><div class="l">${l}</div></button>`;
     const segera = [...by.belum].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     const rows = segera.slice(0, 3).map(t => {
@@ -1255,19 +1269,24 @@
     const prog = Object.keys(mp).sort().map(n => { const m = mp[n], p = m.total ? Math.round(m.kumpul / m.total * 100) : 0, r = avg(m.nil);
       return `<div class="item"><div class="grow"><div class="t">${esc(n)}</div><div class="muted">${m.total ? `${m.kumpul} dari ${m.total} tugas dikumpulkan` : 'Dinilai langsung oleh guru'}${r !== null ? ` · rata-rata nilai tugas ${r}` : ''}</div>${m.total ? `<div class="meter"><i style="width:${p}%"></i></div>` : ''}</div></div>`; }).join('');
     $('sDash').innerHTML = (suratBelum > 0 ? `<div class="panel"><div class="row"><div><strong>Upload surat sakit</strong><div class="late">${suratBelum} hari tercatat sakit, tapi suratnya belum diupload.</div></div><button class="small" data-go="sKelas">Upload</button></div></div>` : '')
-      + `<div class="stats s3">${stat(by.belum.length, 'perlu dikumpulkan', 'sTugas', by.belum.length > 0)}${stat(by.terkumpul.length + by.menunggu.length, 'menunggu nilai', 'sTugas')}${stat(rata === null ? '–' : rata, 'rata-rata nilai tugas', 'sNilai')}</div>`
+      + `<div class="stats s3">${stat(by.belum.length, 'perlu dikumpulkan', 'sTugas', by.belum.length > 0)}${stat(by.terkumpul.length + by.menunggu.length, 'menunggu nilai', 'sTugas')}${stat(rata === null ? '–' : rata, 'rata-rata nilai akhir', 'sNilai')}</div>`
       + (me.role === 'ketua' ? '<div class="panel"><div class="row"><div><strong>Rekap kelas</strong><div class="muted">Lihat siapa yang belum kumpul dan bantu teman yang kendala.</div></div><button class="small" data-go="kBlock">Buka</button></div></div>' : '')
       + `<div class="grid2"><div class="panel"><h2>Segera dikumpulkan</h2>${rows || '<p class="muted">Semua tugas sudah beres. Mantap!</p>'}${segera.length > 3 ? `<button class="ghost small" data-go="sTugas">Lihat semua (${segera.length})</button>` : ''}</div>`
       + `<div class="panel"><h2>Nilai terbaru</h2>${baru || '<p class="muted">Belum ada nilai.</p>'}</div></div>`
       + `<div class="panel"><h2>Progres per mapel</h2>${prog}</div>`;
   }
 
-  function drawNilaiSiswa() {
+  function akhirPerMapel() { // nilai akhir per mapel dari nilai yang sudah dirilis
     const g = {};
+    tugasSiswa.filter(t => t.kumpul && t.kumpul.kunci && typeof t.kumpul.nilai === 'number').forEach(t => (g[t.mapel] = g[t.mapel] || []).push({ jenis: t.jenis, nilai: t.kumpul.nilai }));
+    const o = {}; Object.keys(g).forEach(m => { o[m] = hitungAkhir(g[m]); }); return o;
+  }
+  function drawNilaiSiswa() {
+    const g = {}, ak = akhirPerMapel();
     tugasSiswa.filter(t => t.kumpul && t.kumpul.kunci && typeof t.kumpul.nilai === 'number').sort(desc).forEach(t => (g[t.mapel] = g[t.mapel] || []).push(t));
     const nama = Object.keys(g).sort();
-    $('sNilaiBody').innerHTML = nama.length ? nama.map(m => `<div class="panel"><div class="row"><h2>${esc(m)}</h2><span class="muted">rata-rata <strong>${avg(g[m].map(t => t.kumpul.nilai))}</strong></span></div>`
-      + g[m].map(t => item(baru.nilai.has(t.id) ? '<span class="tag baru">Baru</span>' : '', esc(t.judul), t.kumpul.catatanGuru ? `<div class="muted">${esc(t.kumpul.catatanGuru)}</div>` : '', `<div class="nilai-pill">${esc(t.kumpul.nilai)}</div>`)).join('') + '</div>').join('')
+    $('sNilaiBody').innerHTML = nama.length ? nama.map(m => `<div class="panel"><div class="row"><h2>${esc(m)}</h2><span class="muted">nilai akhir <strong>${ak[m].akhir ?? '–'}</strong></span></div><div class="sum" style="margin:0 0 6px">${kompChips(ak[m].komp)}</div>`
+      + g[m].map(t => item((baru.nilai.has(t.id) ? '<span class="tag baru">Baru</span>' : '') + jenisTag(t.jenis), esc(t.judul), t.kumpul.catatanGuru ? `<div class="muted">${esc(t.kumpul.catatanGuru)}</div>` : '', `<div class="nilai-pill">${esc(t.kumpul.nilai)}</div>`)).join('') + '</div>').join('')
       : '<div class="panel"><strong>Belum ada nilai.</strong><br><span class="muted">Nilai akan muncul di sini setelah guru menilai.</span></div>';
   }
 
@@ -1299,7 +1318,7 @@
       + `<div class="stats">${stat(`${r.siswaTerhubung}/${r.siswaTotal}`, `${pct}% akun siswa terhubung`, 'pSiswa')}</div>`; return; }
     const perluH = perlu.slice(0, 5).map(t => item(`${esc(t.mapel)} · ${esc(t.kelas.join(', '))}`, esc(t.judul), '', `<button class="small" data-open="${esc(t.id)}">Nilai (${t.belumDinilai})</button>`)).join('');
     const aktifH = aktif.slice(0, 4).map(t => { const p = t.total ? Math.round(t.kumpul / t.total * 100) : 0;
-      return `<div class="item"><div class="grow"><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}</div><div class="t">${esc(t.judul)}</div><div class="muted">${rel(t.deadline)} · ${t.kumpul} dari ${t.total} sudah kumpul</div><div class="meter"><i style="width:${p}%"></i></div></div><button class="ghost small" data-open="${esc(t.id)}">Buka</button></div>`; }).join('');
+      return `<div class="item"><div class="grow"><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}${jenisTag(t.jenis)}</div><div class="t">${esc(t.judul)}</div><div class="muted">${rel(t.deadline)} · ${t.kumpul} dari ${t.total} sudah kumpul</div><div class="meter"><i style="width:${p}%"></i></div></div><button class="ghost small" data-open="${esc(t.id)}">Buka</button></div>`; }).join('');
     const kelasH = r.perKelas.map(k => { const p = k.total ? Math.round(k.terhubung / k.total * 100) : 0;
       return `<div class="item"><div class="grow"><div class="row"><span class="t">${esc(k.kelas)}</span><span class="muted">${k.terhubung}/${k.total}</span></div><div class="meter"><i style="width:${p}%"></i></div></div></div>`; }).join('');
     $('aDash').innerHTML = aksi
@@ -2062,7 +2081,7 @@
     $('ikErr').textContent = ''; $('dlgInfoKelas').showModal(); $('ikJudul').focus();
   }
   async function kelasKlik(e) {
-    const d = e.target.dataset;
+    const d = (e.target.closest('button') || e.target).dataset; // klik pada teks di dalam tombol (mis. ubin aksi cepat) tetap terbaca
     if (d.retry === 'kelas') return loadKelas(kelasEl, kelasData && kelasData.kelas);
     if (d.kbaru) return bukaInfoKelas(null);
     if (d.abuka) return bukaAbsKelas(d.abuka);
@@ -2718,7 +2737,7 @@
       $('tMapel').innerHTML = r.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
       drawKelasBox();
       $('tList').innerHTML = r.tugas.length ? r.tugas.map(t => `<div class="panel card"><div class="row">
-        <div><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}</div><h3>${esc(t.judul)}</h3>
+        <div><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}${jenisTag(t.jenis)}</div><h3>${esc(t.judul)}</h3>
         <div class="muted">Deadline ${fmt(t.deadline)} · ${t.kumpul} dari ${t.total} sudah kumpul</div>${!t.rilis && t.kumpul - t.belumDinilai > 0 ? '<div class="due-soon">Nilai belum dirilis ke siswa</div>' : ''}</div>
         <button class="ghost small" data-id="${esc(t.id)}">Buka</button></div></div>`).join('')
         : '<p class="muted">Belum ada tugas. Klik "Tugas baru" untuk membuat yang pertama.</p>';
@@ -2734,7 +2753,7 @@
   $('btnSimpanTugas').onclick = async () => {
     const b = $('btnSimpanTugas'); b.disabled = true; msg('adminMsg');
     try {
-      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, bentuk: $('tBentuk').value, deadline: $('tDl').value,
+      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, bentuk: $('tBentuk').value, jenis: $('tJenis').value, deadline: $('tDl').value,
         kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) });
       const snapT = { mapel: $('tMapel').value, judul: $('tJudul').value.trim(), deskripsi: $('tDesk').value.trim(), bentuk: $('tBentuk').value,
         deadline: new Date($('tDl').value + ':00+07:00').toISOString(), kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) };
@@ -2814,7 +2833,7 @@
   const wibLocal = iso => new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16).replace(' ', 'T');
   $('btnEdit').onclick = () => {
     const t = curTugas, m = opsi.mapel.find(x => x.nama === t.mapel);
-    $('eJudul').value = t.judul; $('eDesk').value = t.deskripsi || ''; $('eBentuk').value = t.bentuk || 'link'; $('eDl').value = wibLocal(t.deadline);
+    $('eJudul').value = t.judul; $('eDesk').value = t.deskripsi || ''; $('eBentuk').value = t.bentuk || 'link'; $('eJenis').value = t.jenis || 'penugasan'; $('eDl').value = wibLocal(t.deadline);
     $('eKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat)
       .map(k => `<label class="chk"><input type="checkbox" value="${esc(k.nama)}" ${t.kelas.includes(k.nama) ? 'checked' : ''}> ${esc(k.nama)}</label>`).join('');
     $('fEdit').hidden = !$('fEdit').hidden;
@@ -2822,7 +2841,7 @@
   $('btnSimpanEdit').onclick = async () => {
     const b = $('btnSimpanEdit'); b.disabled = true; msg('adminMsg');
     try {
-      await api('editTugas', { id: rekapId, judul: $('eJudul').value, deskripsi: $('eDesk').value, bentuk: $('eBentuk').value, deadline: $('eDl').value,
+      await api('editTugas', { id: rekapId, judul: $('eJudul').value, deskripsi: $('eDesk').value, bentuk: $('eBentuk').value, jenis: $('eJenis').value, deadline: $('eDl').value,
         kelas: [...document.querySelectorAll('#eKelas input:checked')].map(i => i.value) });
       await openRekap(rekapId); toast('Perubahan disimpan.');
     } catch (e) { msg('adminMsg', e.message); }
@@ -2852,8 +2871,9 @@
     $('nHead').innerHTML = '<tr><th>Nama</th><th></th></tr>'; $('nBody').innerHTML = skBaris(6, 2);
     try { nData = await api('rekapNilai', { mapel: $('nMapel').value, kelas: $('nKelas').value }); } catch (e) { $('nBody').innerHTML = ''; return msg('adminMsg', e.message); }
     const cell = c => c === null ? '<span class="muted">–</span>' : c === 'k' ? '<span class="muted">…</span>' : esc(c);
-    $('nHead').innerHTML = '<tr><th>Nama</th>' + nData.tugas.map(t => `<th title="${esc(t.judul)}">${esc(t.judul)}</th>`).join('') + '<th>Rata-rata</th></tr>';
-    $('nBody').innerHTML = nData.rows.map(s => `<tr><td>${esc(s.nama)}</td>${s.cells.map(c => `<td>${cell(c)}</td>`).join('')}<td><strong>${s.rata ?? ''}</strong></td></tr>`).join('')
+    const ks = v => v === null || v === undefined ? '<span class="muted">–</span>' : esc(v);
+    $('nHead').innerHTML = '<tr><th>Nama</th>' + nData.tugas.map(t => `<th title="${esc(t.judul)}">${esc(t.judul)}${jenisTag(t.jenis)}</th>`).join('') + '<th>Tugas</th><th>Sumatif</th><th>STS</th><th>SAS</th><th>Nilai akhir</th></tr>';
+    $('nBody').innerHTML = nData.rows.map(s => `<tr><td>${esc(s.nama)}</td>${s.cells.map(c => `<td>${cell(c)}</td>`).join('')}<td>${ks(s.komp.tugas)}</td><td>${ks(s.komp.sumatif)}</td><td>${ks(s.komp.sts)}</td><td>${ks(s.komp.sas)}</td><td><strong>${s.akhir ?? ''}</strong></td></tr>`).join('')
       || '<tr><td>Belum ada siswa.</td></tr>';
   }
   // satu pilihan mapel dan kelas dipakai oleh kedua tampilan; hanya tampilan yang aktif yang dimuat
@@ -2870,8 +2890,8 @@
     if (!nData) return;
     const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
     const val = c => c === null ? '' : c === 'k' ? 'belum dinilai' : c;
-    const lines = [['NIS', 'Nama', ...nData.tugas.map(t => t.judul), 'Rata-rata'],
-      ...nData.rows.map(s => [s.nis, s.nama, ...s.cells.map(val), s.rata])].map(r => r.map(q).join(','));
+    const lines = [['NIS', 'Nama', ...nData.tugas.map(t => t.judul), 'Tugas', 'Sumatif', 'STS', 'SAS', 'Nilai akhir'],
+      ...nData.rows.map(s => [s.nis, s.nama, ...s.cells.map(val), s.komp.tugas, s.komp.sumatif, s.komp.sts, s.komp.sas, s.akhir])].map(r => r.map(q).join(','));
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
     a.download = `nilai_${$('nMapel').value}_${$('nKelas').value}.csv`.replace(/[^\w.-]+/g, '_');
@@ -3059,7 +3079,7 @@
       <div class="panel card"><h2>Perlu perhatian</h2>${flags.length ? flags.map(f => `<div class="item"><div class="grow">${esc(f)}</div></div>`).join('') : '<p class="muted" style="margin:0">Tidak ada hal yang menonjol.</p>'}</div>`
       + (r.mapel.map(m => { const a = ab(m.mapel), pct = a && a.total ? Math.round(a.H / a.total * 100) : null;
         return `<div class="panel card"><div class="row"><h2 style="margin:0">${esc(m.mapel)}</h2><span class="nilai-pill">${m.rata ?? '–'}</span></div>
-          <div class="muted">rata-rata nilai tugas yang sudah dinilai</div>
+          <div class="muted">nilai akhir (rata-rata komponen yang ada)</div>${m.komp ? `<div class="sum" style="margin-top:6px">${kompChips(m.komp)}</div>` : ''}
           <div class="sum" style="margin-top:10px"><span class="chip"><b>${m.dikumpulkan}/${m.total}</b> dikumpulkan</span><span class="chip"><b>${m.terlambat}</b> terlambat</span><span class="chip"><b>${m.terlewat}</b> terlewat</span>
           ${a ? `<span class="chip"><b>${pct ?? '–'}${pct === null ? '' : '%'}</b> hadir</span><span class="chip"><b>${a.S}</b> sakit</span><span class="chip"><b>${a.I}</b> izin</span><span class="chip"><b>${a.A}</b> alpa</span>` : ''}</div>
           <details style="margin-top:6px"><summary>Lihat semua tugas</summary>${m.tugas.map(t => item(esc(fmt(t.deadline)), esc(t.judul), `<div class="${!t.kumpul && t.lewat && t.bentuk !== 'nilai' ? 'late' : 'muted'}">${stT(t)}</div>`, t.nilai !== null ? `<div class="nilai-pill">${esc(t.nilai)}</div>` : '')).join('')}</details></div>`; }).join('')
