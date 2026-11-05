@@ -1,14 +1,14 @@
 {
-  "name": "Tugas & Nilai",
-  "short_name": "Tugas",
-  "description": "Kumpulkan tugas, lihat nilai, kehadiran, dan pengumuman kelas.",
+  "name": "Zidan Labs",
+  "short_name": "Zidan Labs",
+  "description": "Tugas, nilai, dan kelas dalam satu aplikasi.",
   "lang": "id",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F2F4F8",
-  "theme_color": "#5B3DF5",
+  "background_color": "#0D231A",
+  "theme_color": "#0D231A",
   "icons": [
     {
       "src": "icon-192.png",
@@ -23,7 +23,7 @@
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
