@@ -832,7 +832,7 @@
   const CFG = window.APP_CONFIG || {};
   const CLIENT_ID = CFG.CLIENT_ID || '', API_URL = CFG.API_URL || '';
   // Tombol "Chat wali kelas" di layar login muncul hanya kalau config.js memuat WA_BANTUAN (nomor dengan kode negara, mis. '62812xxxxxxx').
-  (() => { let no = String(CFG.WA_BANTUAN || '085770330546').replace(/\D/g, ''); if (no[0] === '0') no = '62' + no.slice(1); const a = document.getElementById('waBantuan'); if (!a || no.length < 9 || no.length > 15) return;
+  (() => { let no = String(CFG.WA_BANTUAN || '').replace(/\D/g, ''); if (no[0] === '0') no = '62' + no.slice(1); const a = document.getElementById('waBantuan'); if (!a || no.length < 9 || no.length > 15) return;
     a.href = 'https://wa.me/' + no + '?text=' + encodeURIComponent('Kak Zidan, saya gak bisa masuk ke Web nya :( Nama saya: '); a.hidden = false; })();
 
   const ERR = {
