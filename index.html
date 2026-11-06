@@ -323,6 +323,11 @@
   a.tombol { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 18px; border: 2px solid var(--shd); border-radius: 99px; background: var(--accent); color: var(--accent-ink); font-weight: 700; text-decoration: none; box-shadow: 3px 3px 0 var(--shd); }
   a.tombol[hidden] { display: none; }
   @media (min-width: 720px) { .fitur-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  label.cek { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 14px; font-weight: 600; cursor: pointer; }
+  label.cek[hidden] { display: none; }
+  label.cek input { width: 22px; height: 22px; flex: none; margin: 2px 0 0; accent-color: var(--accent); }
+  label.cek .muted { display: block; font-weight: 400; font-size: .85rem; }
+  sup.ai { margin-left: 3px; padding: 0 4px; border-radius: 6px; background: var(--lime); color: var(--lime-ink); font-size: .62rem; font-weight: 800; }
 </style>
 </head>
 <body>
@@ -529,6 +534,7 @@
         <label for="tDesk">Deskripsi (opsional)</label><textarea id="tDesk"></textarea>
         <label for="tJenis">Jenis penilaian</label><select id="tJenis" style="width:100%;margin-bottom:14px"><option value="penugasan">Tugas</option><option value="sumatif">Sumatif</option><option value="sts">STS (Sumatif Tengah Semester)</option><option value="sas">SAS / UAS (Sumatif Akhir Semester)</option></select>
         <label for="tBentuk">Bentuk pengumpulan</label><select id="tBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
+        <label class="cek" id="tAiWrap" hidden><input type="checkbox" id="tAi"> Nilai otomatis oleh AI <span class="muted">AI mengisi nilai dari file siswa. Komentar tetap kamu tulis, dan nilai baru terlihat siswa setelah kamu merilis.</span></label>
         <label for="tDl">Deadline (WIB)</label><input id="tDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="tKelas" style="margin-bottom:14px"></div>
         <button id="btnSimpanTugas">Simpan tugas</button>
@@ -550,6 +556,7 @@
         <label for="eDesk">Deskripsi</label><textarea id="eDesk"></textarea>
         <label for="eJenis">Jenis penilaian</label><select id="eJenis" style="width:100%;margin-bottom:14px"><option value="penugasan">Tugas</option><option value="sumatif">Sumatif</option><option value="sts">STS (Sumatif Tengah Semester)</option><option value="sas">SAS / UAS (Sumatif Akhir Semester)</option></select>
         <label for="eBentuk">Bentuk pengumpulan</label><select id="eBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
+        <label class="cek" id="eAiWrap" hidden><input type="checkbox" id="eAi"> Nilai otomatis oleh AI <span class="muted">AI mengisi nilai dari file siswa. Komentar tetap kamu tulis, dan nilai baru terlihat siswa setelah kamu merilis.</span></label>
         <label for="eDl">Deadline (WIB)</label><input id="eDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="eKelas" style="margin-bottom:14px"></div>
         <p class="muted">Status terlambat dihitung ulang otomatis dari waktu kumpul pertama siswa.</p>
@@ -833,7 +840,7 @@
   const CLIENT_ID = CFG.CLIENT_ID || '', API_URL = CFG.API_URL || '';
   // Tombol "Chat wali kelas" di layar login muncul hanya kalau config.js memuat WA_BANTUAN (nomor dengan kode negara, mis. '62812xxxxxxx').
   (() => { let no = String(CFG.WA_BANTUAN || '').replace(/\D/g, ''); if (no[0] === '0') no = '62' + no.slice(1); const a = document.getElementById('waBantuan'); if (!a || no.length < 9 || no.length > 15) return;
-    a.href = 'https://wa.me/' + no + '?text=' + encodeURIComponent('Kak Zidan, saya gak bisa masuk ke Web nya :( Nama saya: '); a.hidden = false; })();
+    a.href = 'https://wa.me/' + no + '?text=' + encodeURIComponent('Halo, saya tidak bisa masuk ke Zidan Labs. Nama saya: '); a.hidden = false; })();
 
   const ERR = {
     data_tidak_cocok: 'Nama atau NIS/kode tidak cocok dengan daftar, atau sudah dipakai akun lain. Cek lagi, atau hubungi guru.',
@@ -919,7 +926,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.11-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.12-a'; // harus sama dengan VERSI di Code.gs
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
@@ -1264,6 +1271,9 @@
 
   const greet = () => { const j = Number(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false })) % 24; return j < 11 ? 'Selamat pagi' : j < 15 ? 'Selamat siang' : j < 18 ? 'Selamat sore' : 'Selamat malam'; };
   const avg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length * 10) / 10 : null;
+  // Centang "nilai otomatis AI" hanya muncul untuk tugas yang mengumpulkan file (AI menilai file-nya).
+  function syncAiForm() { [['t', 'tBentuk'], ['e', 'eBentuk']].forEach(([p, b]) => { const ok = ['file', 'link+file'].indexOf($(b).value) >= 0; $(p + 'AiWrap').hidden = !ok; if (!ok) $(p + 'Ai').checked = false; }); }
+  $('tBentuk').addEventListener('change', syncAiForm); $('eBentuk').addEventListener('change', syncAiForm);
   // Jenis penilaian dan nilai akhir (sama dengan hitungAkhir_ di server): rata-rata dari komponen yang ada = tugas, sumatif, STS, SAS.
   const JENIS_NAMA = { penugasan: 'Tugas', sumatif: 'Sumatif', sts: 'STS', sas: 'SAS' };
   const jenisTag = j => j && j !== 'penugasan' && JENIS_NAMA[j] ? ` <span class="tag me">${JENIS_NAMA[j]}</span>` : '';
@@ -1523,8 +1533,9 @@
   $('shareClose').onclick = () => $('dlgShare').close();
   const pesanNilai = t => `*Nilai tugas sudah keluar: ${t.judul}*\n${t.mapel} · ${t.kelas.join(', ')}\n\nBuka aplikasi untuk melihat nilai dan catatan dari guru: ${appUrl()}`;
   $('btnRilis').onclick = async () => {
-    const rilis = !curTugas.rilis, belum = curRows.filter(s => s.kumpul && !s.kunci).length;
-    if (rilis && belum && !(await konfirmasi(`Masih ada ${belum} pengumpulan yang belum dinilai. Tetap rilis nilai yang sudah ada?`, { ya: 'Tetap rilis' }))) return;
+    const rilis = !curTugas.rilis, ai = curRows.filter(s => s.aiBelum).length, belum = curRows.filter(s => s.kumpul && !s.kunci && !s.aiBelum).length;
+    const pesan = [ai ? `${ai} nilai masih dari AI dan belum kamu periksa. Nilai itu ikut dirilis apa adanya.` : '', belum ? `Masih ada ${belum} pengumpulan yang belum dinilai.` : ''].filter(Boolean).join('\n');
+    if (rilis && pesan && !(await konfirmasi(pesan + '\n\nTetap rilis nilai yang sudah ada?', { ya: 'Tetap rilis' }))) return;
     try {
       await api('rilisNilai', { id: rekapId, rilis }); await openRekap(rekapId);
       toast(rilis ? 'Nilai dirilis ke siswa.' : 'Nilai disembunyikan dari siswa.');
@@ -1706,6 +1717,7 @@
     $('nlNama').textContent = s.nama + ' (' + s.kelas + ')';
     $('nlIsi').innerHTML = [u ? `<div>Link: <a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u.length > 52 ? u.slice(0, 52) + '…' : u)}</a></div>` : '',
       s.fileId ? `<div>File: <a href="https://drive.google.com/file/d/${esc(s.fileId)}/view" target="_blank" rel="noopener noreferrer">${esc(s.fileNama || 'File')}</a></div>` : '',
+      s.aiBelum ? `<div class="banner"><strong>Nilai awal dari AI: ${esc(s.nilai)}</strong><div>Periksa karyanya, ubah kalau perlu, lalu tekan Simpan. Menyimpan menandai nilai ini sudah kamu periksa.</div></div>` : '',
       s.catatan ? `<div class="muted">Catatan siswa: ${esc(s.catatan)}</div>` : '',
       `<div class="muted">Kumpul ${fmt(s.waktu)}${s.terlambat ? ', terlambat' : ''}${s.diubahSetelah ? ', diubah setelah deadline' : ''}</div>`,
       flagHtml(s)].join('');
@@ -2800,11 +2812,11 @@
   $('btnSimpanTugas').onclick = async () => {
     const b = $('btnSimpanTugas'); b.disabled = true; msg('adminMsg');
     try {
-      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, bentuk: $('tBentuk').value, jenis: $('tJenis').value, deadline: $('tDl').value,
+      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, bentuk: $('tBentuk').value, jenis: $('tJenis').value, aiNilai: $('tAi').checked && !$('tAiWrap').hidden, deadline: $('tDl').value,
         kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) });
       const snapT = { mapel: $('tMapel').value, judul: $('tJudul').value.trim(), deskripsi: $('tDesk').value.trim(), bentuk: $('tBentuk').value,
         deadline: new Date($('tDl').value + ':00+07:00').toISOString(), kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) };
-      $('tJudul').value = ''; $('tDesk').value = ''; $('tDl').value = ''; $('fBaru').hidden = true;
+      $('tJudul').value = ''; $('tDesk').value = ''; $('tDl').value = ''; $('tAi').checked = false; syncAiForm(); $('fBaru').hidden = true;
       await loadTugasAdmin(); toast('Tugas dibuat.');
       if (snapT.bentuk !== 'nilai') bagikan('Tugas dibuat. Bagikan ke kelas?', pesanTugas(snapT)); // tugas yang dinilai langsung tidak perlu diumumkan ke siswa
     } catch (e) { msg('adminMsg', e.message); }
@@ -2842,7 +2854,7 @@
         const u = safeUrl(s.link);
         return `<tr data-nis="${esc(s.nis)}" data-st="${stRow(s)}"><td>${esc(s.nama)}<div class="muted">${esc(s.kelas)}</div></td><td>${st}${s.waktu ? `<div class="muted">kumpul ${fmt(s.waktu)}</div>` : ''}${s.diubahSetelah ? '<div class="late">diubah setelah deadline</div>' : ''}${flagHtml(s)}${s.dinilai ? `<div class="muted">dinilai ${fmtTgl(s.dinilai)}</div>` : ''}</td>
           <td>${s.kumpul ? [u ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">Link</a>` : '', s.fileId ? `<a href="https://drive.google.com/file/d/${esc(s.fileId)}/view" target="_blank" rel="noopener noreferrer">${esc(s.fileNama || 'File')}</a>` : ''].filter(Boolean).join('<br>') || '-' : ''}${s.kumpul && s.catatan ? `<div class="muted">${esc(s.catatan)}</div>` : ''}</td>
-          <td>${s.kumpul ? `<input data-f="nilai" type="number" min="0" max="100" value="${s.nilai ?? ''}">` : ''}</td>
+          <td>${s.kumpul ? `<input data-f="nilai" type="number" min="0" max="100" value="${s.nilai ?? ''}">${s.aiBelum ? ' <span class="tag me" title="Nilai awal dari AI, belum kamu periksa">AI</span>' : ''}` : ''}</td>
           <td>${s.kumpul ? `<input data-f="cat" maxlength="500" value="${esc(s.catatanGuru)}">` : ''}</td>
           <td>${s.kumpul ? `<button class="small" data-act="nilai">Simpan</button> <button class="ghost small" data-act="revisi">Revisi</button>` : ''}${s.kunci ? ` <button class="ghost small" data-act="buka">Buka kunci</button>` : ''}${s.kumpul && s.fileId ? ` <button class="ghost small" data-act="ai" title="Buat draf catatan dengan AI">AI</button>` : ''}</td></tr>`;
       }).join('');
@@ -2880,7 +2892,7 @@
   const wibLocal = iso => new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16).replace(' ', 'T');
   $('btnEdit').onclick = () => {
     const t = curTugas, m = opsi.mapel.find(x => x.nama === t.mapel);
-    $('eJudul').value = t.judul; $('eDesk').value = t.deskripsi || ''; $('eBentuk').value = t.bentuk || 'link'; $('eJenis').value = t.jenis || 'penugasan'; $('eDl').value = wibLocal(t.deadline);
+    $('eJudul').value = t.judul; $('eDesk').value = t.deskripsi || ''; $('eBentuk').value = t.bentuk || 'link'; $('eJenis').value = t.jenis || 'penugasan'; $('eAi').checked = !!t.aiNilai; syncAiForm(); $('eDl').value = wibLocal(t.deadline);
     $('eKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat)
       .map(k => `<label class="chk"><input type="checkbox" value="${esc(k.nama)}" ${t.kelas.includes(k.nama) ? 'checked' : ''}> ${esc(k.nama)}</label>`).join('');
     $('fEdit').hidden = !$('fEdit').hidden;
@@ -2888,7 +2900,7 @@
   $('btnSimpanEdit').onclick = async () => {
     const b = $('btnSimpanEdit'); b.disabled = true; msg('adminMsg');
     try {
-      await api('editTugas', { id: rekapId, judul: $('eJudul').value, deskripsi: $('eDesk').value, bentuk: $('eBentuk').value, jenis: $('eJenis').value, deadline: $('eDl').value,
+      await api('editTugas', { id: rekapId, judul: $('eJudul').value, deskripsi: $('eDesk').value, bentuk: $('eBentuk').value, jenis: $('eJenis').value, aiNilai: $('eAi').checked && !$('eAiWrap').hidden, deadline: $('eDl').value,
         kelas: [...document.querySelectorAll('#eKelas input:checked')].map(i => i.value) });
       await openRekap(rekapId); toast('Perubahan disimpan.');
     } catch (e) { msg('adminMsg', e.message); }
@@ -2931,7 +2943,7 @@
     const kolom = (idxs, grup) => idxs.length ? idxs.map(i => `<th title="${esc(nData.tugas[i].judul)}">${esc(nData.tugas[i].judul)}</th>`).join('') : '<th><span class="muted">–</span></th>';
     $('nHead').innerHTML = `<tr><th rowspan="2">Nama</th><th class="grp" colspan="${Math.max(1, L.sumatif.length)}">Sumatif</th><th class="grp" colspan="${Math.max(1, L.tugas.length)}">Tugas</th><th rowspan="2" title="${esc(L.sts.map(i => nData.tugas[i].judul).join(', '))}">STS</th><th rowspan="2" title="${esc(L.sas.map(i => nData.tugas[i].judul).join(', '))}">SAS</th><th rowspan="2">Nilai Akhir</th></tr>`
       + `<tr>${kolom(L.sumatif)}${kolom(L.tugas)}</tr>`;
-    const sel = (s, idxs) => idxs.length ? idxs.map(i => `<td>${cell(s.cells[i])}</td>`).join('') : '<td><span class="muted">–</span></td>';
+    const sel = (s, idxs) => idxs.length ? idxs.map(i => `<td>${cell(s.cells[i])}${s.ai && s.ai[i] ? '<sup class="ai" title="Nilai awal dari AI, belum kamu periksa">AI</sup>' : ''}</td>`).join('') : '<td><span class="muted">–</span></td>';
     $('nBody').innerHTML = nData.rows.map(s => `<tr><td>${esc(s.nama)}</td>${sel(s, L.sumatif)}${sel(s, L.tugas)}<td>${ks(selGabung(s, L.sts))}</td><td>${ks(selGabung(s, L.sas))}</td><td><strong>${s.akhir ?? ''}</strong></td></tr>`).join('')
       || '<tr><td>Belum ada siswa.</td></tr>';
   }
