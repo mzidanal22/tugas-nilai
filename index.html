@@ -670,7 +670,7 @@
 
       <div id="nvSemua">
         <p class="muted">Angka = nilai · … = sudah kumpul, belum dinilai · – = belum kumpul. Nilai akhir = rata-rata komponen yang ada (tugas, sumatif, STS, SAS); STS dan SAS dihitung kalau sudah ada nilainya.</p>
-        <div class="bar"><button class="ghost small" id="btnCsv">Unduh CSV</button></div>
+        <div class="bar"><button class="ghost small" id="btnCsv">Unduh CSV</button><button class="small" id="btnImpor" type="button">Impor nilai dari Excel</button></div>
         <div class="tablewrap"><table class="matrix"><thead id="nHead"></thead><tbody id="nBody"></tbody></table></div>
       </div>
 
@@ -790,6 +790,28 @@
   <p class="muted" style="margin:10px 0 0">Kalau ada yang tidak sesuai, tekan "Muat ulang data". Itu menghapus data tersimpan di HP ini lalu memuat dari awal.</p>
   <div class="actions"><button class="ghost" id="iaMuat" type="button">Muat ulang data</button><button id="iaTutup" type="button">Tutup</button></div>
 </dialog>
+<dialog id="dlgImpor" aria-labelledby="imJudul" style="max-width:min(96vw,44rem)">
+  <div class="row"><strong id="imJudul" style="font-size:1.15rem">Impor nilai dari Excel</strong><button class="ghost small" id="imX" type="button" aria-label="Tutup">×</button></div>
+  <p class="muted" style="margin:6px 0 12px">Untuk STS, SAS, atau nilai ujian dari aplikasi lain. Nilai dicocokkan ke siswa lewat nama, dan tidak terlihat siswa sebelum kamu merilisnya.</p>
+  <label for="imFile">File Excel (.xlsx atau .xls)</label><input id="imFile" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+  <div class="muted" id="imStatus" style="margin:8px 0"></div><div class="cerr" id="imErr" role="alert"></div>
+  <div id="imIsi" hidden>
+    <div class="grid2">
+      <div><label for="imMapel">Mapel</label><select id="imMapel" style="width:100%"></select></div>
+      <div><label for="imKelas">Kelas</label><select id="imKelas" style="width:100%"></select></div>
+    </div>
+    <label for="imKolom">Kolom nilai di file</label><select id="imKolom" style="width:100%;margin-bottom:14px"></select>
+    <label for="imTarget">Simpan ke</label><select id="imTarget" style="width:100%;margin-bottom:14px"></select>
+    <div id="imBaru"><div class="grid2">
+      <div><label for="imJenis">Jenis</label><select id="imJenis" style="width:100%"><option value="sts">STS (tengah semester)</option><option value="sas">SAS (akhir semester)</option><option value="sumatif">Sumatif</option><option value="penugasan">Tugas</option></select></div>
+      <div><label for="imJudul2">Judul</label><input id="imJudul2" maxlength="150"></div>
+    </div></div>
+    <div id="imRingkas" style="margin:6px 0 10px;font-weight:600"></div>
+    <div id="imMasalah"></div>
+    <details id="imCocok" style="margin-top:8px"></details>
+  </div>
+  <div class="actions"><button class="ghost" id="imBatal" type="button">Batal</button><button id="imSimpan" type="button" hidden>Impor nilai</button></div>
+</dialog>
 <dialog id="dlgTanya" aria-labelledby="tqJudul">
   <strong id="tqJudul" style="display:block;font-size:1.1rem;margin-bottom:6px">Konfirmasi</strong>
   <p id="tqPesan" style="margin:0 0 10px;white-space:pre-wrap"></p>
@@ -812,6 +834,12 @@
 <dialog id="dlgJadwalFoto" aria-labelledby="jfHead">
   <div class="dlg-head"><strong id="jfHead">Baca jadwal dari foto</strong><button class="ghost small" id="jfX" type="button" aria-label="Tutup">✕</button></div>
   <p class="muted" style="margin-top:0">Pilih foto jadwal dari sekolah (JPG atau PNG, tulisannya harus jelas). Hasil bacaan AI bisa keliru, jadi cek dan perbaiki dulu sebelum diterapkan.</p>
+  <details id="jfJamWrap" class="panel" style="margin:0 0 12px;padding:6px 14px">
+    <summary style="cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center">Waktu tiap jam pelajaran</summary>
+    <p class="muted" style="margin:4px 0 8px">Untuk jadwal yang hanya bernomor jam ke-1, ke-2, dan seterusnya (tanpa jam). Isi sekali, tersimpan untuk kelas ini. Kosongkan jam yang tidak dipakai.</p>
+    <div id="jfJam"></div>
+    <div class="bar"><button class="small" id="jfJamSimpan" type="button">Simpan waktu jam pelajaran</button></div>
+  </details>
   <input id="jfFile" type="file" accept="image/*">
   <div class="bar"><button class="small" id="jfBaca" type="button">Baca foto</button><span class="muted" id="jfStatus" role="status"></span></div>
   <div id="jfHasil" hidden>
@@ -1019,7 +1047,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.13-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.17-a'; // harus sama dengan VERSI di Code.gs
   // ----- Pembantu animasi: mengetik dan menghitung naik. Semuanya langsung ke hasil akhir kalau pengguna meminta gerakan dikurangi. -----
   const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ketikEl = async (el, teks, kec = 34, batal = () => false) => {
@@ -2815,7 +2843,40 @@
     });
     return { baris, salah };
   }
+  // Jadwal bernomor jam (tanpa jam): server mengembalikan baris dengan jpMulai/jpSelesai. Waktunya diisi lewat tabel jam, dihitung ulang di sini tanpa memanggil AI lagi.
+  let jfData = null;
+  const JF_JAM_MAKS = 12;
+  function jfJamIsi(jam) {
+    jam = jam || {};
+    $('jfJam').innerHTML = Array.from({ length: JF_JAM_MAKS }, (_, i) => i + 1).map(n => `<div style="display:grid;grid-template-columns:3.2rem minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:center;margin-bottom:6px"><span class="muted">Jam ${n}</span><input type="time" style="min-width:0;width:100%;padding-left:8px;padding-right:8px" data-jn="${n}" data-p="0" value="${esc((jam[n] || [])[0] || '')}" aria-label="Jam ke-${n} mulai"><input type="time" style="min-width:0;width:100%;padding-left:8px;padding-right:8px" data-jn="${n}" data-p="1" value="${esc((jam[n] || [])[1] || '')}" aria-label="Jam ke-${n} selesai"></div>`).join('');
+  }
+  function jfJamAmbil() {
+    const jam = {}; $('jfJam').querySelectorAll('input[data-jn]').forEach(i => { (jam[i.dataset.jn] = jam[i.dataset.jn] || ['', ''])[Number(i.dataset.p)] = i.value; }); return jam;
+  }
+  const jfTanpaJam = () => (jfData || []).reduce((t, x) => t + x.baris.filter(b => !b.mulai).length, 0);
+  function jfRender() {
+    $('jfHari').innerHTML = jfData.map(x => { const tak = x.baris.filter(b => !b.mulai).length, ada = x.baris.length - tak;
+      return `<div class="jfd" data-h="${x.hari}" style="margin-bottom:10px"><label style="display:flex;gap:8px;align-items:center;font-weight:600;margin:0 0 4px"><input type="checkbox" class="jfc" style="width:auto;margin:0"${ada ? ' checked' : ''}> ${HARI_ID[x.hari]}</label>`
+        + `<textarea class="jft" rows="${Math.max(3, ada + 1)}" aria-label="Jadwal ${HARI_ID[x.hari]}" style="min-height:4rem">${esc(x.baris.filter(b => b.mulai).map(b => `${b.mulai}-${b.selesai} ${b.mapel}`).join('\n'))}</textarea>`
+        + (tak ? `<div class="late" style="font-size:.85rem">${tak} jam pelajaran belum ada waktunya: ${esc(x.baris.filter(b => !b.mulai).map(b => `${b.mapel} (jam ke-${b.jpMulai === b.jpSelesai ? b.jpMulai : b.jpMulai + '–' + b.jpSelesai})`).join(', '))}.</div>` : '') + '</div>'; }).join('');
+  }
+  function jfCatatan(r) {
+    const ada = jfData.reduce((t, x) => t + x.baris.length, 0), tak = jfTanpaJam();
+    $('jfCatatan').textContent = (ada ? `Terbaca ${ada} jam pelajaran.` : 'Tidak ada jadwal yang berhasil dibaca.') + (r && r.dibuang ? ` ${r.dibuang} baris dibuang karena jamnya tidak valid.` : '')
+      + (tak ? ` ${tak} di antaranya hanya bernomor jam: isi dulu "Waktu tiap jam pelajaran" di atas lalu tekan Simpan, baru edit hasilnya.` : '') + (r && r.catatan ? ' Catatan AI: ' + r.catatan : '');
+  }
+  $('jfJamSimpan').onclick = async () => {
+    $('jfErr').textContent = ''; const b = $('jfJamSimpan'); b.disabled = true;
+    try {
+      const r = await api('jamPelajaranSimpan', { kelas: kelasData.kelas, jam: jfJamAmbil() });
+      if (kelasData.jadwal) kelasData.jadwal.jam = r.jam;
+      if (jfData) { jfData.forEach(x => x.baris.forEach(bb => { if (bb.jpMulai && !bb.mulai) { const a = r.jam[bb.jpMulai], z = r.jam[bb.jpSelesai]; if (a && z) { bb.mulai = a[0]; bb.selesai = z[1]; } } })); jfRender(); jfCatatan(null); }
+      toast('Waktu jam pelajaran disimpan.');
+    } catch (e) { $('jfErr').textContent = e.message; }
+    b.disabled = false;
+  };
   function bukaJadwalFoto() {
+    jfData = null; jfJamIsi((kelasData.jadwal && kelasData.jadwal.jam) || {});
     $('jfFile').value = ''; $('jfStatus').textContent = ''; $('jfErr').textContent = ''; $('jfHasil').hidden = true; $('jfTerapkan').hidden = true; $('jfBaca').disabled = false;
     $('dlgJadwalFoto').showModal();
   }
@@ -2828,10 +2889,8 @@
     try {
       const foto = { name: f.name, data: (await kecilkan(f, 2200, 2200, 3.8e6)).split(',')[1] };
       const r = await api('bacaJadwalFoto', { kelas: kelasData.kelas, foto });
-      const ada = r.hari.reduce((t, x) => t + x.baris.length, 0);
-      $('jfCatatan').textContent = (ada ? `Terbaca ${ada} jam pelajaran.` : 'Tidak ada jadwal yang berhasil dibaca.') + (r.dibuang ? ` ${r.dibuang} baris dibuang karena jamnya tidak valid.` : '') + (r.catatan ? ' Catatan AI: ' + r.catatan : '');
-      $('jfHari').innerHTML = r.hari.map(x => `<div class="jfd" data-h="${x.hari}" style="margin-bottom:10px"><label style="display:flex;gap:8px;align-items:center;font-weight:600;margin:0 0 4px"><input type="checkbox" class="jfc" style="width:auto;margin:0"${x.baris.length ? ' checked' : ''}> ${HARI_ID[x.hari]}</label>`
-        + `<textarea class="jft" rows="${Math.max(3, x.baris.length + 1)}" aria-label="Jadwal ${HARI_ID[x.hari]}" style="min-height:4rem">${esc(x.baris.map(b => `${b.mulai}-${b.selesai} ${b.mapel}`).join('\n'))}</textarea></div>`).join('');
+      jfData = r.hari; jfJamIsi(r.jam || {}); jfRender(); jfCatatan(r);
+      if (r.jamKurang && r.jamKurang.length) $('jfJamWrap').open = true; // foto bernomor jam: tabel jam perlu diisi
       $('jfHasil').hidden = false; $('jfTerapkan').hidden = false; $('jfStatus').textContent = '';
     } catch (e) { $('jfStatus').textContent = ''; $('jfErr').textContent = e.message === 'gambar_rusak' ? 'Foto tidak bisa dibaca. Coba foto lain (JPG atau PNG).' : e.message; }
     $('jfBaca').disabled = false;
@@ -2846,6 +2905,7 @@
       hari.push({ hari: h, baris: p.baris });
     }
     if (!hari.length) { $('jfErr').textContent = 'Centang minimal satu hari yang mau diterapkan.'; return; }
+    const tak = jfTanpaJam(); if (tak && !(await konfirmasi(`${tak} jam pelajaran belum punya waktu (hanya bernomor jam) dan tidak ikut diterapkan. Lanjut?`, { ya: 'Lanjut' }))) return;
     if (kosong.length && !(await konfirmasi(`${kosong.join(', ')} dicentang tapi kosong: jadwal lama hari itu akan DIKOSONGKAN. Lanjut?`, { ya: 'Kosongkan', bahaya: true }))) return;
     $('jfTerapkan').disabled = true;
     try {
@@ -2893,12 +2953,21 @@
   }
 
   /* ---------------- Info akun: bantu memeriksa HP yang bermasalah tanpa console ---------------- */
+  // Pengingat email tugas: siswa bisa mematikan atau menyalakan sendiri (server: pengingatSet)
+  const pengingatBaris = aktif => `<div id="iaPengWrap"><div class="kv"><span class="k">Pengingat email</span><span><span class="tag ${aktif ? 'ok' : 'bad'}">${aktif ? 'Aktif' : 'Mati'}</span> <button type="button" class="ghost small" id="iaPeng" data-aktif="${aktif ? 'ya' : 'tidak'}">${aktif ? 'Matikan' : 'Aktifkan'}</button></span></div>`
+    + `<p class="muted" style="margin:0 0 8px;font-size:.82rem">Email dikirim pukul 16.00 untuk tugas yang deadline-nya besok dan pukul 06.00 untuk yang deadline-nya hari ini, hanya kalau kamu belum mengumpulkan.</p></div>`;
+  $('iaIsi').onclick = async e => {
+    const b = e.target.closest('#iaPeng'); if (!b) return;
+    const mau = b.dataset.aktif !== 'ya'; b.disabled = true;
+    try { const r = await api('pengingatSet', { aktif: mau }); $('iaPengWrap').outerHTML = pengingatBaris(r.pengingat); toast(r.pengingat ? 'Pengingat email dinyalakan.' : 'Pengingat email dimatikan.'); }
+    catch (err) { b.disabled = false; toast(err.message, true); }
+  };
   $('avatar').onclick = async () => {
     $('iaIsi').innerHTML = '<p class="muted">Memuat…</p>'; $('dlgAkunInfo').showModal();
     let r = null; try { r = await api('me'); } catch (e) { $('iaIsi').innerHTML = `<p class="late">${esc(e.message || 'Gagal memuat dari server.')}</p>`; return; }
     const m = r.me || {}, baris = (k, v) => `<div class="kv"><span class="k">${k}</span><span>${v}</span></div>`;
     const ya = '<span class="tag ok">Ya</span>', tidak = '<span class="tag bad">Tidak</span>';
-    $('iaIsi').innerHTML = baris('Nama', esc(m.nama || '-')) + baris('Peran', esc(m.role || '-')) + (m.nis ? baris('NIS', esc(m.nis)) : '')
+    $('iaIsi').innerHTML = baris('Nama', esc(m.nama || '-')) + baris('Peran', esc(m.role || '-')) + (m.role === 'siswa' || m.role === 'ketua' ? pengingatBaris(m.pengingat !== false) : '') + (m.nis ? baris('NIS', esc(m.nis)) : '')
       + baris('Kelas', m.kelas ? `"${esc(m.kelas)}"` : '-') + baris('Jabatan', (m.jabatan || []).length ? esc(m.jabatan.join(', ')) : '-')
       + baris('Kelasku aktif', m.modulKelas ? ya : tidak) + baris('Kelas aktif', r.kelasModul ? esc(r.kelasModul.map(k => `"${k}"`).join(', ')) : '<span class="late">server belum diperbarui</span>')
       + baris('Versi halaman', esc(VERSI_WEB)) + baris('Versi server', r.versi ? esc(r.versi) + (r.versi === VERSI_WEB ? '' : ' <span class="tag warn">beda</span>') : '<span class="late">lama (deploy ulang)</span>');
@@ -2908,6 +2977,176 @@
     try { Object.keys(localStorage).filter(k => k.indexOf('cache_') === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {}
     try { if ('serviceWorker' in navigator) (await navigator.serviceWorker.getRegistrations()).forEach(x => x.unregister()); if (window.caches) (await caches.keys()).forEach(k => caches.delete(k)); } catch (e) {}
     location.reload();
+  };
+
+  /* ---------------- Impor nilai dari Excel (STS, SAS, nilai ujian) ---------------- */
+  // File dibaca di browser (pustaka SheetJS dimuat saat dibutuhkan), dicocokkan ke siswa lewat nama, lalu disimpan lewat
+  // buatTugas (bentuk "nilai", kalau belum ada) dan nilaiBanyak. Rilis ke siswa tetap kamu yang menentukan.
+  const imMuatXlsx = () => window.XLSX ? Promise.resolve(window.XLSX) : (imMuatXlsx.p = imMuatXlsx.p || new Promise((ok, gagal) => {
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = () => window.XLSX ? ok(window.XLSX) : gagal(new Error('xlsx')); s.onerror = () => { imMuatXlsx.p = null; gagal(new Error('xlsx')); }; document.head.appendChild(s);
+  }));
+  const imNorm = s => String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  const imAngka = v => { if (v === '' || v == null) return null; const n = typeof v === 'number' ? v : Number(String(v).trim().replace(',', '.')); return isFinite(n) ? n : null; };
+  const imSisa = (row, c) => { for (let i = c + 1; i < row.length; i++) { const t = String(row[i] == null ? '' : row[i]).trim(); if (t) return t; } return ''; };
+  function imJenisDari(teks) {
+    const t = imNorm(teks);
+    if (/\b(pts|uts|sts)\b|tengah semester/.test(t)) return { jenis: 'sts', label: /\bpts\b/.test(t) ? 'PTS' : /\buts\b/.test(t) ? 'UTS' : 'STS' };
+    if (/\b(pas|uas|sas)\b|akhir semester/.test(t)) return { jenis: 'sas', label: /\bpas\b/.test(t) ? 'PAS' : /\buas\b/.test(t) ? 'UAS' : 'SAS' };
+    if (/sumatif/.test(t)) return { jenis: 'sumatif', label: 'Sumatif' };
+    return { jenis: 'sts', label: 'STS' };
+  }
+  // Baca tabel nilai: cari baris judul yang punya kolom "Nama", susun judul kolom bertingkat, kumpulkan baris siswa.
+  function imParse(aoa) {
+    let h = -1, kn = -1;
+    for (let r = 0; r < Math.min(aoa.length, 30) && h < 0; r++) { const c = (aoa[r] || []).findIndex(x => /^nama( siswa| peserta| lengkap)?$/i.test(String(x == null ? '' : x).trim())); if (c >= 0) { h = r; kn = c; } }
+    if (h < 0) return null;
+    const meta = {};
+    for (let r = 0; r < h; r++) { const row = aoa[r] || []; row.forEach((x, c) => { const t = imNorm(x); if (t === 'mata pelajaran' || t === 'mapel') meta.mapel = imSisa(row, c); else if (t === 'kelas') meta.kelas = imSisa(row, c); }); }
+    const baris1 = aoa[h] || [], lebar = Math.max(baris1.length, (aoa[h + 1] || []).length), kolom = [];
+    // baris berikutnya adalah judul kolom tingkat dua hanya kalau kolom Nama-nya kosong (tabel bertingkat); kalau terisi, itu sudah data siswa
+    const baris2 = (String((aoa[h + 1] || [])[kn] == null ? '' : (aoa[h + 1] || [])[kn]).trim() ? [] : (aoa[h + 1] || []));
+    let grup = '';
+    for (let c = 0; c < lebar; c++) {
+      const a = String(baris1[c] == null ? '' : baris1[c]).trim(), b = String(baris2[c] == null ? '' : baris2[c]).trim();
+      if (a) grup = a;
+      kolom.push({ i: c, label: [b ? grup : a, b].filter(Boolean).join(' ') || ('Kolom ' + (c + 1)), grup: a || (b ? grup : '') });
+    }
+    const data = [];
+    for (let r = h + 1; r < aoa.length; r++) {
+      const row = aoa[r] || [], nama = String(row[kn] == null ? '' : row[kn]).trim();
+      if (!nama || !/[a-z]/i.test(nama) || /^(rata|jumlah|total|nilai (tertinggi|terendah)|min|max)/i.test(nama)) continue;
+      data.push({ nama, row, baris: r + 1 });
+    }
+    // kolom angka = minimal separuh baris berisi angka; kolom "Katrol" cukup terisi sebagian (hanya siswa yang dikatrol)
+    const angka = kolom.filter(k => { if (k.i === kn || /^(no|no\.?|nomor)( peserta| urut)?$/i.test(k.label) || !data.length) return false; const n = data.filter(d => imAngka(d.row[k.i]) !== null).length; return n / data.length >= 0.5 || (/katrol/i.test(k.label) && n >= 1); });
+    return { meta, kn, kolom: angka, data };
+  }
+  // Pencocokan nama: persis, urutan kata beda, kata siswa termuat di nama lain, lalu kemiripan huruf. Selain persis ditandai "perkiraan".
+  const imBigram = s => { const t = ' ' + s + ' ', o = {}; for (let i = 0; i < t.length - 1; i++) { const g = t.slice(i, i + 2); o[g] = (o[g] || 0) + 1; } return o; };
+  const imDice = (a, b) => { const x = imBigram(a), y = imBigram(b); let ir = 0, jx = 0, jy = 0; for (const k in x) { jx += x[k]; if (y[k]) ir += Math.min(x[k], y[k]); } for (const k in y) jy += y[k]; return jx + jy ? 2 * ir / (jx + jy) : 0; };
+  function imCocokkan(namaList, siswa) {
+    const pakai = new Set(), hasil = namaList.map(() => ({ nis: null, tipe: '' }));
+    const sn = siswa.map(s => ({ nis: s.nis, n: imNorm(s.nama), u: imNorm(s.nama).split(' ').sort().join(' '), t: imNorm(s.nama).split(' ').filter(Boolean) }));
+    const ambil = (i, s, tipe) => { hasil[i] = { nis: s.nis, tipe }; pakai.add(s.nis); };
+    const en = namaList.map(n => ({ n: imNorm(n), u: imNorm(n).split(' ').sort().join(' '), t: imNorm(n).split(' ').filter(Boolean) }));
+    en.forEach((e, i) => { const s = sn.find(x => !pakai.has(x.nis) && x.n === e.n); if (s) ambil(i, s, 'pasti'); });
+    en.forEach((e, i) => { if (hasil[i].nis) return; const s = sn.find(x => !pakai.has(x.nis) && x.u === e.u); if (s) ambil(i, s, 'pasti'); });
+    en.forEach((e, i) => { if (hasil[i].nis) return; const c = sn.filter(x => !pakai.has(x.nis) && x.t.length >= 2 && e.t.length >= 2 && (x.t.every(k => e.t.indexOf(k) >= 0) || e.t.every(k => x.t.indexOf(k) >= 0))); if (c.length === 1) ambil(i, c[0], 'perkiraan'); });
+    en.forEach((e, i) => { if (hasil[i].nis) return; const c = sn.filter(x => !pakai.has(x.nis)).map(x => ({ x, d: imDice(x.n, e.n) })).sort((a, b) => b.d - a.d); if (c.length && c[0].d >= 0.8 && (c.length < 2 || c[0].d - c[1].d >= 0.05)) ambil(i, c[0].x, 'perkiraan'); });
+    return hasil;
+  }
+  let im = null; // keadaan dialog impor
+  const imTugasNilai = () => (im.tugas || []).filter(t => t.bentuk === 'nilai' && t.mapel === $('imMapel').value && t.kelas.indexOf($('imKelas').value) >= 0);
+  const imTahunAjaran = () => { const t = hariIni(), y = Number(t.slice(0, 4)), m = Number(t.slice(5, 7)); return m >= 7 ? `Gasal ${y}/${y + 1}` : `Genap ${y - 1}/${y}`; };
+  const imMapelCocok = teks => { const t = imNorm(teks); let best = ''; (opsi.mapel || []).forEach(m => { const n = imNorm(m.nama); if (n && t.indexOf(n) >= 0 && n.length > imNorm(best).length) best = m.nama; }); return best; };
+  const imKelasCocok = teks => { const t = imNorm(teks); const k = (opsi.kelas || []).find(x => imNorm(x.nama) === t); return k ? k.nama : ''; };
+  function imKolomNilai(urut, pil) { // nilai tiap baris sesuai pilihan kolom; "katrol" = pakai Katrol kalau terisi, kalau tidak pakai Asli
+    return im.parse.data.map(d => {
+      if (pil === 'katrol_asli') { const k = imAngka(d.row[im.kKatrol.i]); return k !== null ? k : imAngka(d.row[im.kAsli.i]); }
+      return imAngka(d.row[Number(pil)]);
+    });
+  }
+  async function imSegarSiswa() {
+    $('imMasalah').innerHTML = ''; $('imSimpan').hidden = true;
+    const mapel = $('imMapel').value, kelas = $('imKelas').value;
+    if (!mapel || !kelas) { $('imRingkas').textContent = 'Pilih mapel dan kelas dulu.'; return; }
+    $('imRingkas').textContent = 'Memuat daftar siswa…';
+    try { im.rekap = await api('rekapNilai', { mapel, kelas }); } catch (e) { $('imRingkas').textContent = ''; $('imErr').textContent = e.message; return; }
+    $('imErr').textContent = '';
+    const opt = imTugasNilai();
+    $('imTarget').innerHTML = opt.map(t => `<option value="${esc(t.id)}">${esc(t.judul)} (${esc(JENIS_NAMA[t.jenis] || 'Tugas')})</option>`).join('') + '<option value="">+ Buat tugas penilaian baru…</option>';
+    const sama = opt.find(t => t.jenis === im.jenis.jenis && imNorm(t.judul).indexOf(imNorm(im.jenis.label)) >= 0); $('imTarget').value = sama ? sama.id : '';
+    imTampil();
+  }
+  function imTampil() {
+    $('imBaru').hidden = !!$('imTarget').value;
+    const siswa = (im.rekap && im.rekap.rows) || [], nilai = imKolomNilai(null, $('imKolom').value), nama = im.parse.data.map(d => d.nama);
+    if (!im.manual) im.cocok = imCocokkan(nama, siswa); // pilihan manual disimpan di im.cocok
+    const nm = nis => { const s = siswa.find(x => x.nis === nis); return s ? s.nama : ''; };
+    let pasti = 0, kira = 0, tidak = 0, kosong = 0, diluar = 0;
+    const rows = im.parse.data.map((d, i) => {
+      const c = im.cocok[i], v = nilai[i], salah = v !== null && (v < 0 || v > 100);
+      if (v === null) kosong++; else if (salah) diluar++; else if (!c.nis) tidak++; else if (c.tipe === 'perkiraan') kira++; else pasti++;
+      return { d, c, v, salah, status: v === null ? 'kosong' : salah ? 'diluar' : !c.nis ? 'tidak' : c.tipe === 'perkiraan' ? 'kira' : 'pasti' };
+    });
+    im.rows = rows;
+    const dipakai = new Set(rows.filter(r => r.c.nis && r.v !== null && !r.salah).map(r => r.c.nis));
+    const belum = siswa.filter(s => !dipakai.has(s.nis));
+    $('imRingkas').innerHTML = `${rows.length} baris di file · <span style="color:var(--ok)">${pasti} cocok</span>` + (kira ? ` · <span style="color:var(--warn)">${kira} perlu dicek</span>` : '') + (tidak ? ` · <span style="color:var(--bad)">${tidak} tidak ketemu</span>` : '') + (kosong ? ` · ${kosong} tanpa nilai` : '') + (diluar ? ` · <span style="color:var(--bad)">${diluar} nilai di luar 0-100</span>` : '');
+    const opsiSiswa = (pilih) => '<option value="">(lewati)</option>' + siswa.map(s => `<option value="${esc(s.nis)}"${s.nis === pilih ? ' selected' : ''}>${esc(s.nama)}</option>`).join('');
+    const baris = r => `<div class="item" style="display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)"><div><div style="font-weight:600">${esc(r.d.nama)}</div><div class="muted" style="font-size:.85rem">${r.status === 'kosong' ? 'tanpa nilai di file' : r.salah ? 'nilai ' + esc(r.v) + ' di luar 0-100' : 'nilai ' + esc(r.v)}${r.status === 'kira' ? ' · pencocokan perkiraan' : ''}</div></div><select data-imi="${r.d.baris}" aria-label="Siswa untuk ${esc(r.d.nama)}" style="max-width:13rem">${opsiSiswa(r.c.nis)}</select></div>`;
+    const bermasalah = rows.filter(r => r.status !== 'pasti');
+    $('imMasalah').innerHTML = bermasalah.length ? `<div class="banner warn"><strong>Perlu dicek (${bermasalah.length})</strong><div>Pilih siswa yang benar, atau biarkan "(lewati)".</div></div>` + bermasalah.map(baris).join('') : '';
+    const cocok = rows.filter(r => r.status === 'pasti');
+    $('imCocok').innerHTML = cocok.length ? `<summary class="muted">Lihat ${cocok.length} baris yang sudah cocok</summary>` + cocok.map(r => `<div class="muted" style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--line)"><span>${esc(r.d.nama)} → ${esc(nm(r.c.nis))}</span><strong>${esc(r.v)}</strong></div>`).join('') : '';
+    const siap = rows.filter(r => r.c.nis && r.v !== null && !r.salah).length;
+    $('imSimpan').hidden = !siap; $('imSimpan').textContent = `Impor ${siap} nilai`;
+    if (belum.length) $('imRingkas').innerHTML += `<div class="muted" style="font-weight:400;font-size:.85rem">Siswa di kelas ini yang belum ada nilainya dari file: ${belum.length}${belum.length <= 6 ? ' (' + belum.map(s => esc(s.nama)).join(', ') + ')' : ''}.</div>`;
+  }
+  function imBukaDialog() {
+    im = null; $('imFile').value = ''; $('imStatus').textContent = ''; $('imErr').textContent = ''; $('imIsi').hidden = true; $('imSimpan').hidden = true; $('dlgImpor').showModal();
+  }
+  async function imBacaFile() {
+    const f = $('imFile').files[0]; $('imErr').textContent = ''; if (!f) return;
+    $('imIsi').hidden = true; $('imSimpan').hidden = true; $('imStatus').textContent = 'Membaca file…';
+    let aoa;
+    try {
+      const X = await imMuatXlsx(), wb = X.read(await f.arrayBuffer(), { type: 'array' });
+      aoa = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: '' });
+    } catch (e) { $('imStatus').textContent = ''; $('imErr').textContent = e.message === 'xlsx' ? 'Pembaca Excel gagal dimuat. Cek internet lalu coba lagi.' : 'File tidak bisa dibaca. Pastikan itu file Excel (.xlsx atau .xls).'; return; }
+    const p = imParse(aoa);
+    if (!p || !p.data.length) { $('imStatus').textContent = ''; $('imErr').textContent = 'Tidak ditemukan tabel nilai. Pastikan ada kolom "Nama" dan kolom nilainya.'; return; }
+    if (!p.kolom.length) { $('imStatus').textContent = ''; $('imErr').textContent = 'Tidak ada kolom berisi angka nilai di file ini.'; return; }
+    let daftarTugas = []; try { const r = await api('listTugas'); opsi = r; daftarTugas = r.tugas || []; } catch (e) { $('imStatus').textContent = ''; $('imErr').textContent = e.message; return; }
+    const kKatrol = p.kolom.find(k => /katrol/i.test(k.label)), kAsli = p.kolom.find(k => /asli/i.test(k.label));
+    im = { parse: p, kKatrol, kAsli, tugas: daftarTugas, jenis: imJenisDari(f.name + ' ' + (p.meta.mapel || '')), manual: false, nama: f.name };
+    const pilih = [];
+    if (kKatrol && kAsli) pilih.push(['katrol_asli', 'Katrol kalau terisi, kalau kosong pakai Asli']);
+    p.kolom.forEach(k => pilih.push([String(k.i), k.label]));
+    $('imKolom').innerHTML = pilih.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join('');
+    if (!(kKatrol && kAsli)) { const g = p.kolom.find(k => /^(nilai|skor|hasil)( akhir| asli)?$/i.test(k.label) || /asli|akhir/i.test(k.label)) || p.kolom[p.kolom.length - 1]; $('imKolom').value = String(g.i); }
+    $('imMapel').innerHTML = (opsi.mapel || []).map(m => `<option>${esc(m.nama)}</option>`).join(''); $('imKelas').innerHTML = (opsi.kelas || []).map(k => `<option>${esc(k.nama)}</option>`).join('');
+    const mp = imMapelCocok(p.meta.mapel || ''), kl = imKelasCocok(p.meta.kelas || '');
+    if (mp) $('imMapel').value = mp; else if ($('nMapel') && $('nMapel').value) $('imMapel').value = $('nMapel').value;
+    if (kl) $('imKelas').value = kl; else if ($('nKelas') && $('nKelas').value) $('imKelas').value = $('nKelas').value;
+    $('imJenis').value = im.jenis.jenis; $('imJudul2').value = `${im.jenis.label} ${imTahunAjaran()}`;
+    $('imStatus').innerHTML = `${esc(f.name)}: ${p.data.length} siswa terbaca.` + (p.meta.mapel && !mp ? ` <span class="late">Mapel "${esc(p.meta.mapel)}" tidak ada di daftar, pilih manual.</span>` : '') + (p.meta.kelas && !kl ? ` <span class="late">Kelas "${esc(p.meta.kelas)}" tidak ada di daftar, pilih manual.</span>` : '');
+    $('imIsi').hidden = false; await imSegarSiswa();
+  }
+  $('btnImpor').onclick = imBukaDialog;
+  $('imFile').onchange = imBacaFile;
+  $('imX').onclick = $('imBatal').onclick = () => $('dlgImpor').close();
+  $('imMapel').onchange = $('imKelas').onchange = () => { im.manual = false; imSegarSiswa(); };
+  $('imKolom').onchange = () => imTampil();
+  $('imTarget').onchange = () => imTampil();
+  $('imJenis').onchange = () => { im.jenis = { jenis: $('imJenis').value, label: JENIS_NAMA[$('imJenis').value] === 'Tugas' ? 'Tugas' : { sts: 'STS', sas: 'SAS', sumatif: 'Sumatif' }[$('imJenis').value] }; };
+  $('imMasalah').addEventListener('change', e => {
+    const s = e.target.closest('select[data-imi]'); if (!s) return;
+    const idx = im.parse.data.findIndex(d => String(d.baris) === s.dataset.imi); if (idx < 0) return;
+    im.manual = true; im.cocok[idx] = { nis: s.value || null, tipe: s.value ? 'pasti' : '' };
+    // satu siswa hanya boleh dipakai satu baris
+    if (s.value) im.cocok.forEach((c, i) => { if (i !== idx && c.nis === s.value) im.cocok[i] = { nis: null, tipe: '' }; });
+    imTampil();
+  });
+  $('imSimpan').onclick = async () => {
+    $('imErr').textContent = ''; const b = $('imSimpan'); b.disabled = true;
+    try {
+      const mapel = $('imMapel').value, kelas = $('imKelas').value, siap = im.rows.filter(r => r.c.nis && r.v !== null && !r.salah), items = siap.map(r => ({ nis: r.c.nis, nilai: r.v }));
+      let id = $('imTarget').value, judul;
+      if (id) {
+        const t = imTugasNilai().find(x => x.id === id); judul = t ? t.judul : '';
+        const idx = (im.rekap.tugas || []).findIndex(x => x.id === id), ada = idx < 0 ? 0 : items.filter(it => { const s = im.rekap.rows.find(x => x.nis === it.nis); return s && typeof s.cells[idx] === 'number'; }).length;
+        if (ada && !(await konfirmasi(`${ada} siswa sudah punya nilai di "${judul}". Nilainya akan diganti dengan isi file.`, { ya: 'Ganti nilai', bahaya: true }))) { b.disabled = false; return; }
+      } else {
+        judul = $('imJudul2').value.trim();
+        if (judul.length < 3) { $('imErr').textContent = 'Judul tugas penilaian minimal 3 huruf.'; b.disabled = false; return; }
+        id = (await api('buatTugas', { mapel, judul, deskripsi: 'Diimpor dari Excel: ' + im.nama, bentuk: 'nilai', jenis: $('imJenis').value, deadline: hariIni() + 'T23:59', kelas: [kelas] })).id;
+      }
+      await api('nilaiBanyak', { id, items });
+      $('dlgImpor').close(); toast(`${items.length} nilai diimpor ke "${judul}". Belum dirilis ke siswa.`); if (typeof muatNilaiAktif === 'function') muatNilaiAktif();
+    } catch (e) { $('imErr').textContent = e.message; }
+    b.disabled = false;
   };
 
   /* ---------------- Admin ---------------- */
