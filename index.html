@@ -91,8 +91,8 @@
   .qa button.utama { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
   .qa button.utama .s { color: var(--accent-ink); opacity: 0.85; }
   @media (min-width: 720px) { .qa { grid-template-columns: repeat(3, 1fr); } }
-  .stats.s3 { grid-template-columns: repeat(3, 1fr); }
-  .stats.s2 { grid-template-columns: repeat(2, 1fr); }
+  .stats.s3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stats.s2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stats.s2 .stat { padding: 12px 14px; }
   .stats.s2 .stat .n { font-size: 1.6rem; overflow-wrap: anywhere; }
   .stats.s3 .stat .n { font-size: 1.9rem; }
@@ -100,6 +100,8 @@
   dialog .actions { position: sticky; bottom: -1px; background: var(--panel); padding-top: 12px; }
   #btnOut .ic { display: none; }
   @media (max-width: 480px) { header { gap: 8px; } .brand { white-space: nowrap; font-size: 1.15rem; } #btnOut .txt { display: none; } #btnOut .ic { display: inline-block; } dialog .actions { flex-direction: column-reverse; } dialog .actions button { width: 100%; } }
+  @media (max-width: 400px) { header { padding: 16px 10px 0; gap: 4px; } header .who { gap: 2px; } header .who > button, header .who .avatar { min-width: 0; } header .who button.small { padding-left: 8px; padding-right: 8px; } header .brand { font-size: 1.05rem; } }
+  @media (max-width: 340px) { header .brand { font-size: 0; gap: 0; } }
   .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }
   .matrix { min-width: 0; }
   .matrix th, .matrix td { white-space: nowrap; }
@@ -141,7 +143,7 @@
   button.stat.hot { border-color: var(--accent); }
   .stat .n { font-size: 2.3rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
   .stat.hot .n { color: var(--accent); }
-  .stat .l { color: var(--muted); font-size: .9rem; }
+  .stat .l { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
   .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 16px; align-items: start; margin-bottom: 4px; }
   .panel h2 { margin: 0 0 6px; font-size: 1.1rem; }
   .item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
@@ -836,8 +838,11 @@
   <p class="muted" style="margin-top:0">Pilih foto jadwal dari sekolah (JPG atau PNG, tulisannya harus jelas). Hasil bacaan AI bisa keliru, jadi cek dan perbaiki dulu sebelum diterapkan.</p>
   <details id="jfJamWrap" class="panel" style="margin:0 0 12px;padding:6px 14px">
     <summary style="cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center">Waktu tiap jam pelajaran</summary>
-    <p class="muted" style="margin:4px 0 8px">Untuk jadwal yang hanya bernomor jam ke-1, ke-2, dan seterusnya (tanpa jam). Isi sekali, tersimpan untuk kelas ini. Kosongkan jam yang tidak dipakai.</p>
+    <p class="muted" style="margin:4px 0 8px">Untuk jadwal yang hanya bernomor jam ke-1, ke-2, dan seterusnya (tanpa jam). Isi sekali, tersimpan untuk kelas ini. Kosongkan jam yang tidak dipakai. Jumat atau Sabtu yang dikosongkan memakai tabel Senin–Kamis.</p>
+    <div class="bar" id="jfGrup" role="group" aria-label="Hari"><button class="small" type="button" data-jg="sk">Senin–Kamis</button><button class="ghost small" type="button" data-jg="jm">Jumat</button><button class="ghost small" type="button" data-jg="sb">Sabtu</button></div>
     <div id="jfJam"></div>
+    <p class="muted" style="margin:8px 0 4px">Istirahat (kosongkan kalau tidak ada)</p>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:6px;margin-bottom:10px"><select id="jfIstK" style="margin:0;min-width:0" aria-label="Istirahat setelah jam ke"></select><input type="time" id="jfIstM" style="margin:0;min-width:0;padding-left:8px;padding-right:8px" aria-label="Istirahat mulai"><input type="time" id="jfIstS" style="margin:0;min-width:0;padding-left:8px;padding-right:8px" aria-label="Istirahat selesai"></div>
     <div class="bar"><button class="small" id="jfJamSimpan" type="button">Simpan waktu jam pelajaran</button></div>
   </details>
   <input id="jfFile" type="file" accept="image/*">
@@ -922,6 +927,29 @@
   <div class="cerr" id="akErr" role="alert"></div>
   <div class="actions"><button class="ghost danger" id="akHapus" type="button" style="margin-right:auto" hidden>Hapus hari ini</button><button id="akSimpan" type="button">Simpan absensi</button></div>
 </dialog>
+<dialog id="dlgAbsImpor" aria-labelledby="aiHead">
+  <div class="dlg-head"><strong id="aiHead">Impor absen harian dari Excel</strong><button class="ghost small" id="aiX" type="button" aria-label="Tutup">✕</button></div>
+  <p class="muted" style="margin-top:0">Untuk absensi bulan-bulan sebelum web dipakai. Satu kolom = satu tanggal, isi H, S, I atau A.</p>
+  <details class="panel" style="margin:0 0 12px;padding:6px 14px" open>
+    <summary style="cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center">1. Unduh template</summary>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px">
+      <div><label for="aiDari" style="margin:0 0 2px">Dari tanggal</label><input id="aiDari" type="date" style="min-width:0;margin:0;padding-left:8px;padding-right:4px;font-size:.9rem"></div>
+      <div><label for="aiSampai" style="margin:0 0 2px">Sampai tanggal</label><input id="aiSampai" type="date" style="min-width:0;margin:0;padding-left:8px;padding-right:4px;font-size:.9rem"></div>
+    </div>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:10px 0"><input id="aiSabtu" type="checkbox" checked style="width:auto;margin:0"> Termasuk hari Sabtu (Minggu selalu dilewati)</label>
+    <div class="bar"><button class="small" id="aiUnduh" type="button">Unduh template</button></div>
+  </details>
+  <p style="font-weight:700;margin:0 0 6px">2. Pilih file yang sudah diisi</p>
+  <input id="aiFile" type="file" accept=".xlsx,.xls" aria-label="File Excel absensi">
+  <div class="muted" id="aiStatus" role="status"></div>
+  <div id="aiIsi" hidden>
+    <p id="aiRingkas" style="margin:10px 0;line-height:1.5"></p>
+    <div id="aiMasalah"></div>
+    <label id="aiTimpaWrap" style="display:flex;gap:8px;align-items:center;font-weight:400;margin:10px 0" hidden><input id="aiTimpa" type="checkbox" style="width:auto;margin:0"> <span id="aiTimpaTeks"></span></label>
+  </div>
+  <div class="cerr" id="aiErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="aiTutup" type="button">Tutup</button><button id="aiSimpan" type="button" hidden>Impor</button></div>
+</dialog>
 <dialog id="dlgInfoKelas" aria-labelledby="ikHead">
   <p id="ikHead" style="font-weight:600;margin-top:0">Info kelas</p>
   <label for="ikJudul">Judul</label><input id="ikJudul" maxlength="120">
@@ -989,6 +1017,7 @@
     foto_terlalu_banyak: 'Maksimal 3 foto bukti per catatan piket.',
     foto_tidak_ada: 'Foto itu sudah tidak ada.',
     jadwal_tidak_valid: 'Jadwal tidak valid. Pastikan tiap baris punya nama mapel (maksimal 15 baris per hari).',
+    data_tidak_valid: 'Data absensi kosong atau terlalu banyak (maksimal 400 tanggal sekali impor).',
     jam_tidak_valid: 'Jam tidak valid. Semua jam harus diisi, dan jam selesai harus setelah jam mulai.',
     jumlah_barang_tidak_valid: 'Jumlah barang harus angka bulat 0 sampai 9999.',
     barang_nama_kosong: 'Nama barang wajib diisi (minimal 2 huruf).',
@@ -1047,7 +1076,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.17-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.17-b'; // harus sama dengan VERSI di Code.gs
   // ----- Pembantu animasi: mengetik dan menghitung naik. Semuanya langsung ke hasil akhir kalau pengguna meminta gerakan dikurangi. -----
   const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ketikEl = async (el, teks, kec = 34, batal = () => false) => {
@@ -2146,7 +2175,7 @@
     if (!r.izin.absensi) return '';
     const list = r.harian && r.harian.length ? r.harian.map(a => item(esc(tglIndo(a.tanggal)), `Hadir ${a.ringkas.H}, sakit ${a.ringkas.S}, izin ${a.ringkas.I}, alpa ${a.ringkas.A}${a.ringkas.belum ? ', belum ' + a.ringkas.belum : ''}`,
       (a.suratBelum ? `<div class="late">${a.suratBelum} surat sakit belum diupload</div>` : '') + `<div>${vTag('absen', a.id)}</div>${vAlasan('absen', a.id)}`, `<button class="ghost small" type="button" data-abuka="${esc(a.tanggal)}">Buka</button>`)).join('') : '<p class="muted">Belum ada absensi harian.</p>';
-    return `<div class="panel"><div class="row"><h2 style="margin:0">Absen harian</h2><button class="small" type="button" data-abuka="${hariIni()}">Isi hari ini</button></div>${list}</div>`;
+    return `<div class="panel"><div class="row"><h2 style="margin:0">Absen harian</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="ghost small" type="button" data-abimpor="1">Impor Excel</button><button class="small" type="button" data-abuka="${hariIni()}">Isi hari ini</button></div></div>${list}</div>`;
   }
   // ----- Validasi laporan: ketua, wakil, dan guru menerima atau menolak laporan pengurus -----
   const vStatus = (j, id) => (kelasData && kelasData.validasi && kelasData.validasi.status[j + '|' + id]) || null;
@@ -2303,6 +2332,7 @@
     if (d.retry === 'kelas') return loadKelas(kelasEl, kelasData && kelasData.kelas);
     if (d.kbaru) return bukaInfoKelas(null);
     if (d.abuka) return bukaAbsKelas(d.abuka);
+    if (d.abimpor) return abBuka();
     if (d.bfcepat) return briefingCepat();
     if (d.bfdialog) return bukaBriefing();
     if (d.jwatur) return bukaJadwal();
@@ -2798,9 +2828,9 @@
   let jw = null;
   const jwData = hari => kelasData.jadwal.hari.find(x => x.hari === hari);
   function jwTambahBaris(b) {
-    const d = document.createElement('div'); d.className = 'jwrow'; d.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px';
-    d.innerHTML = `<input type="time" class="jwm" aria-label="Jam mulai" style="width:110px;margin:0"><input type="time" class="jws" aria-label="Jam selesai" style="width:110px;margin:0">`
-      + '<input class="jwp" list="jwSaran" maxlength="40" placeholder="Nama mapel" aria-label="Nama mapel" style="flex:1;min-width:0;margin:0"><button class="ghost small jwx" type="button" aria-label="Hapus baris">✕</button>';
+    const d = document.createElement('div'); d.className = 'jwrow'; d.style.cssText = 'display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px;align-items:center;margin-bottom:10px';
+    d.innerHTML = `<input type="time" class="jwm" aria-label="Jam mulai" style="min-width:0;margin:0"><input type="time" class="jws" aria-label="Jam selesai" style="min-width:0;margin:0">`
+      + '<input class="jwp" list="jwSaran" maxlength="40" placeholder="Nama mapel" aria-label="Nama mapel" style="grid-column:1/-1;min-width:0;margin:0"><button class="ghost small jwx" type="button" aria-label="Hapus baris" style="grid-column:3;grid-row:1">✕</button>';
     d.querySelector('.jwm').value = b ? b.mulai : ''; d.querySelector('.jws').value = b ? b.selesai : ''; d.querySelector('.jwp').value = b ? b.mapel : '';
     $('jwBaris').appendChild(d);
   }
@@ -2846,13 +2876,23 @@
   // Jadwal bernomor jam (tanpa jam): server mengembalikan baris dengan jpMulai/jpSelesai. Waktunya diisi lewat tabel jam, dihitung ulang di sini tanpa memanggil AI lagi.
   let jfData = null;
   const JF_JAM_MAKS = 12;
+  let jfJamS = { sk: {}, jm: {}, sb: {}, ist: {} }, jfG = 'sk', jfMentah = [];
+  function jfJamTampil() {
+    $('jfJam').innerHTML = Array.from({ length: JF_JAM_MAKS }, (_, i) => i + 1).map(n => `<div style="display:grid;grid-template-columns:3.2rem minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:center;margin-bottom:6px"><span class="muted">Jam ${n}</span><input type="time" style="min-width:0;width:100%;padding-left:8px;padding-right:8px" data-jn="${n}" data-p="0" value="${esc((jfJamS[jfG][n] || [])[0] || '')}" aria-label="Jam ke-${n} mulai"><input type="time" style="min-width:0;width:100%;padding-left:8px;padding-right:8px" data-jn="${n}" data-p="1" value="${esc((jfJamS[jfG][n] || [])[1] || '')}" aria-label="Jam ke-${n} selesai"></div>`).join('');
+    $('jfGrup').querySelectorAll('[data-jg]').forEach(b => b.className = (b.dataset.jg === jfG ? '' : 'ghost ') + 'small');
+    const x = jfJamS.ist[jfG] || {};
+    $('jfIstK').innerHTML = '<option value="">Tanpa istirahat</option>' + Array.from({ length: JF_JAM_MAKS - 1 }, (_, i) => i + 1).map(n => `<option value="${n}"${Number(x.setelah) === n ? ' selected' : ''}>Setelah jam ke-${n}</option>`).join('');
+    $('jfIstM').value = x.mulai || ''; $('jfIstS').value = x.selesai || '';
+  }
+  function jfJamBaca() { // simpan isian layar ke state hari yang sedang tampil
+    const t = {}; $('jfJam').querySelectorAll('input[data-jn]').forEach(i => { (t[i.dataset.jn] = t[i.dataset.jn] || ['', ''])[Number(i.dataset.p)] = i.value; });
+    jfJamS[jfG] = t; jfJamS.ist[jfG] = { setelah: $('jfIstK').value, mulai: $('jfIstM').value, selesai: $('jfIstS').value };
+  }
   function jfJamIsi(jam) {
-    jam = jam || {};
-    $('jfJam').innerHTML = Array.from({ length: JF_JAM_MAKS }, (_, i) => i + 1).map(n => `<div style="display:grid;grid-template-columns:3.2rem minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:center;margin-bottom:6px"><span class="muted">Jam ${n}</span><input type="time" style="min-width:0;width:100%;padding-left:8px;padding-right:8px" data-jn="${n}" data-p="0" value="${esc((jam[n] || [])[0] || '')}" aria-label="Jam ke-${n} mulai"><input type="time" style="min-width:0;width:100%;padding-left:8px;padding-right:8px" data-jn="${n}" data-p="1" value="${esc((jam[n] || [])[1] || '')}" aria-label="Jam ke-${n} selesai"></div>`).join('');
+    jam = jam || {}; const sk = {}; Object.keys(jam).forEach(k => { if (/^\d+$/.test(k)) sk[k] = jam[k]; });
+    jfJamS = { sk: sk, jm: jam.jm || {}, sb: jam.sb || {}, ist: Object.assign({}, jam.ist) }; jfJamTampil();
   }
-  function jfJamAmbil() {
-    const jam = {}; $('jfJam').querySelectorAll('input[data-jn]').forEach(i => { (jam[i.dataset.jn] = jam[i.dataset.jn] || ['', ''])[Number(i.dataset.p)] = i.value; }); return jam;
-  }
+  $('jfGrup').onclick = e => { const b = e.target.closest('[data-jg]'); if (!b || b.dataset.jg === jfG) return; jfJamBaca(); jfG = b.dataset.jg; jfJamTampil(); };
   const jfTanpaJam = () => (jfData || []).reduce((t, x) => t + x.baris.filter(b => !b.mulai).length, 0);
   function jfRender() {
     $('jfHari').innerHTML = jfData.map(x => { const tak = x.baris.filter(b => !b.mulai).length, ada = x.baris.length - tak;
@@ -2868,15 +2908,17 @@
   $('jfJamSimpan').onclick = async () => {
     $('jfErr').textContent = ''; const b = $('jfJamSimpan'); b.disabled = true;
     try {
-      const r = await api('jamPelajaranSimpan', { kelas: kelasData.kelas, jam: jfJamAmbil() });
+      jfJamBaca();
+      const r = await api('jamPelajaranSimpan', { kelas: kelasData.kelas, jam: jfJamS.sk, jm: jfJamS.jm, sb: jfJamS.sb, ist: jfJamS.ist, mentah: jfData ? jfMentah : undefined });
       if (kelasData.jadwal) kelasData.jadwal.jam = r.jam;
-      if (jfData) { jfData.forEach(x => x.baris.forEach(bb => { if (bb.jpMulai && !bb.mulai) { const a = r.jam[bb.jpMulai], z = r.jam[bb.jpSelesai]; if (a && z) { bb.mulai = a[0]; bb.selesai = z[1]; } } })); jfRender(); jfCatatan(null); }
+      if (jfData && r.hari) { jfData = r.hari; jfRender(); jfCatatan(null); }
+      jfJamIsi(r.jam);
       toast('Waktu jam pelajaran disimpan.');
     } catch (e) { $('jfErr').textContent = e.message; }
     b.disabled = false;
   };
   function bukaJadwalFoto() {
-    jfData = null; jfJamIsi((kelasData.jadwal && kelasData.jadwal.jam) || {});
+    jfData = null; jfMentah = []; jfG = 'sk'; jfJamIsi((kelasData.jadwal && kelasData.jadwal.jam) || {});
     $('jfFile').value = ''; $('jfStatus').textContent = ''; $('jfErr').textContent = ''; $('jfHasil').hidden = true; $('jfTerapkan').hidden = true; $('jfBaca').disabled = false;
     $('dlgJadwalFoto').showModal();
   }
@@ -2889,7 +2931,7 @@
     try {
       const foto = { name: f.name, data: (await kecilkan(f, 2200, 2200, 3.8e6)).split(',')[1] };
       const r = await api('bacaJadwalFoto', { kelas: kelasData.kelas, foto });
-      jfData = r.hari; jfJamIsi(r.jam || {}); jfRender(); jfCatatan(r);
+      jfData = r.hari; jfMentah = r.mentah || []; jfJamIsi(r.jam || {}); jfRender(); jfCatatan(r);
       if (r.jamKurang && r.jamKurang.length) $('jfJamWrap').open = true; // foto bernomor jam: tabel jam perlu diisi
       $('jfHasil').hidden = false; $('jfTerapkan').hidden = false; $('jfStatus').textContent = '';
     } catch (e) { $('jfStatus').textContent = ''; $('jfErr').textContent = e.message === 'gambar_rusak' ? 'Foto tidak bisa dibaca. Coba foto lain (JPG atau PNG).' : e.message; }
@@ -3036,6 +3078,102 @@
     en.forEach((e, i) => { if (hasil[i].nis) return; const c = sn.filter(x => !pakai.has(x.nis)).map(x => ({ x, d: imDice(x.n, e.n) })).sort((a, b) => b.d - a.d); if (c.length && c[0].d >= 0.8 && (c.length < 2 || c[0].d - c[1].d >= 0.05)) ambil(i, c[0].x, 'perkiraan'); });
     return hasil;
   }
+  // ---- Impor absen harian dari Excel (template dibuat di sini, memakai ulang pembaca Excel dan pencocokan nama impor nilai) ----
+  let ai = null;
+  const abIso = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  function abTgl(v) { // sel tanggal -> 'yyyy-mm-dd' atau '' (angka serial Excel, 'yyyy-mm-dd', atau 'dd/mm/yyyy')
+    let y, m, d;
+    if (typeof v === 'number') { if (!(v >= 36526 && v <= 73050)) return ''; const t = new Date(Date.UTC(1899, 11, 30) + Math.floor(v) * 864e5); y = t.getUTCFullYear(); m = t.getUTCMonth() + 1; d = t.getUTCDate(); }
+    else { const t = String(v == null ? '' : v).trim(); let k;
+      if ((k = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?!\d)/))) { y = +k[1]; m = +k[2]; d = +k[3]; }
+      else if ((k = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/))) { d = +k[1]; m = +k[2]; y = +k[3]; }
+      else return ''; }
+    const c = new Date(Date.UTC(y, m - 1, d)); return c.getUTCFullYear() === y && c.getUTCMonth() === m - 1 && c.getUTCDate() === d && y >= 2000 ? abIso(y, m, d) : '';
+  }
+  const AB_ST = { H: 'H', HADIR: 'H', S: 'S', SAKIT: 'S', I: 'I', IZIN: 'I', IJIN: 'I', A: 'A', ALPA: 'A', ALPHA: 'A', ALFA: 'A' };
+  function abParse(aoa) { // -> { kolom: [{ i, tanggal }], baris: [{ nama, nis, sel }], tak, contoh } atau null
+    let hi = -1, cn = -1;
+    for (let r = 0; r < Math.min(aoa.length, 30) && hi < 0; r++) for (let c = 0; c < (aoa[r] || []).length; c++) if (imNorm(aoa[r][c]) === 'nama') { hi = r; cn = c; break; }
+    if (hi < 0) return null;
+    const h = aoa[hi], cnis = h.findIndex(x => ['nis', 'nisn'].indexOf(imNorm(x)) >= 0), kolom = [];
+    h.forEach((x, i) => { if (i === cn || i === cnis) return; const t = abTgl(x); if (t) kolom.push({ i, tanggal: t }); });
+    if (!kolom.length) return { kolom, baris: [], tak: 0, contoh: [], ganda: [] };
+    const ganda = kolom.map(k => k.tanggal).filter((t, i, a) => a.indexOf(t) !== i);
+    const baris = []; let tak = 0; const contoh = [];
+    for (let r = hi + 1; r < aoa.length; r++) {
+      const row = aoa[r] || [], nama = String(row[cn] == null ? '' : row[cn]).trim(); if (!nama) continue;
+      const sel = {};
+      kolom.forEach(k => { const raw = String(row[k.i] == null ? '' : row[k.i]).trim(); if (!raw) return; const st = AB_ST[raw.toUpperCase()]; if (st) sel[k.tanggal] = st; else { tak++; if (contoh.length < 3 && contoh.indexOf(raw) < 0) contoh.push(raw); } });
+      baris.push({ nama, nis: cnis >= 0 ? String(row[cnis] == null ? '' : row[cnis]).trim() : '', sel });
+    }
+    return { kolom, baris, tak, contoh, ganda };
+  }
+  function abHariDalam(dari, sampai, sabtu) { const o = []; for (let t = new Date(dari + 'T00:00:00Z'); t <= new Date(sampai + 'T00:00:00Z') && o.length < 400; t = new Date(t.getTime() + 864e5)) { const w = t.getUTCDay(); if (w === 0 || (w === 6 && !sabtu)) continue; o.push(abIso(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate())); } return o; }
+  function abBuatTemplate(X, kelas, sis, tanggal) {
+    const HR = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    const aoa = [[`Absen harian ${kelas}`], ['Isi H = Hadir, S = Sakit, I = Izin, A = Alpa. Kosongkan kalau tidak diketahui. Jangan ubah kolom NIS, Nama, dan baris tanggal.'],
+      ['', '', ''].concat(tanggal.map(t => HR[new Date(t + 'T00:00:00Z').getUTCDay()])), ['No', 'NIS', 'Nama'].concat(tanggal)];
+    sis.forEach((x, i) => aoa.push([i + 1, x.nis, x.nama]));
+    const ws = X.utils.aoa_to_sheet(aoa); ws['!cols'] = [{ wch: 5 }, { wch: 12 }, { wch: 32 }].concat(tanggal.map(() => ({ wch: 11 }))); ws['!freeze'] = { xSplit: 3, ySplit: 4 };
+    const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, 'Absensi'); return wb;
+  }
+  async function abBuka() {
+    ai = { sis: [], hasil: null }; $('aiFile').value = ''; $('aiStatus').textContent = ''; $('aiErr').textContent = ''; $('aiIsi').hidden = true; $('aiSimpan').hidden = true;
+    const t = hariIni(), y = Number(t.slice(0, 4)), m = Number(t.slice(5, 7));
+    $('aiDari').value = `${m >= 7 ? y : y - 1}-07-01`; $('aiSampai').value = t; $('aiDari').max = $('aiSampai').max = t;
+    $('dlgAbsImpor').showModal();
+    try { ai.sis = (await api('absenKelasHari', { kelas: kelasData.kelas, tanggal: t })).siswa || []; } catch (e) { $('aiErr').textContent = e.message; }
+  }
+  $('aiUnduh').onclick = async () => {
+    $('aiErr').textContent = ''; const dari = $('aiDari').value, sampai = $('aiSampai').value;
+    if (!dari || !sampai || dari > sampai) { $('aiErr').textContent = 'Isi rentang tanggal dengan benar (dari tidak boleh setelah sampai).'; return; }
+    const tg = abHariDalam(dari, sampai, $('aiSabtu').checked);
+    if (!tg.length) { $('aiErr').textContent = 'Tidak ada hari sekolah di rentang itu.'; return; }
+    if (tg.length >= 400) { $('aiErr').textContent = 'Terlalu panjang. Pecah jadi beberapa file (maksimal 400 tanggal).'; return; }
+    if (!ai.sis.length) { $('aiErr').textContent = 'Daftar siswa kelas belum termuat atau kelas ini kosong.'; return; }
+    try { const X = await imMuatXlsx(); X.writeFile(abBuatTemplate(X, kelasData.kelas, ai.sis, tg), `template-absen-${kelasData.kelas.replace(/\s+/g, '-')}.xlsx`); toast('Template diunduh.'); }
+    catch (e) { $('aiErr').textContent = 'Pembaca Excel gagal dimuat. Cek internet lalu coba lagi.'; }
+  };
+  const abTglPendek = t => tglIndo ? tglIndo(t) : t;
+  $('aiFile').onchange = async () => {
+    const f = $('aiFile').files[0]; $('aiErr').textContent = ''; $('aiIsi').hidden = true; $('aiSimpan').hidden = true; if (!f) return;
+    $('aiStatus').textContent = 'Membaca file…'; let aoa;
+    try { const X = await imMuatXlsx(), wb = X.read(await f.arrayBuffer(), { type: 'array' }); aoa = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: '' }); }
+    catch (e) { $('aiStatus').textContent = ''; $('aiErr').textContent = e.message === 'xlsx' ? 'Pembaca Excel gagal dimuat. Cek internet lalu coba lagi.' : 'File tidak bisa dibaca. Pastikan itu file Excel (.xlsx atau .xls).'; return; }
+    const p = abParse(aoa);
+    if (!p) { $('aiStatus').textContent = ''; $('aiErr').textContent = 'Kolom "Nama" tidak ditemukan. Pakai template dari tombol di atas.'; return; }
+    if (!p.kolom.length) { $('aiStatus').textContent = ''; $('aiErr').textContent = 'Tidak ada kolom tanggal di baris judul. Isi tanggal seperti 2026-07-20 atau 20/07/2026.'; return; }
+    if (!ai.sis.length) { $('aiStatus').textContent = ''; $('aiErr').textContent = 'Daftar siswa kelas belum termuat.'; return; }
+    // cocokkan: NIS dulu, sisanya lewat nama (pakai pencocok impor nilai)
+    const sisNis = new Set(ai.sis.map(x => x.nis)), cocok = p.baris.map(b => (b.nis && sisNis.has(b.nis)) ? b.nis : null);
+    const pakai = new Set(cocok.filter(Boolean)), sisa = ai.sis.filter(x => !pakai.has(x.nis)), idx = [];
+    p.baris.forEach((b, i) => { if (!cocok[i]) idx.push(i); });
+    imCocokkan(idx.map(i => p.baris[i].nama), sisa).forEach((h, k) => { if (h.nis) cocok[idx[k]] = h.nis; });
+    const tidak = p.baris.filter((b, i) => !cocok[i] && Object.keys(b.sel).length);
+    const per = {}; p.baris.forEach((b, i) => { if (!cocok[i]) return; Object.keys(b.sel).forEach(t => { (per[t] = per[t] || {})[cocok[i]] = b.sel[t]; }); });
+    const hari = Object.keys(per).sort().map(t => ({ tanggal: t, data: per[t] }));
+    if (!hari.length) { $('aiStatus').textContent = ''; $('aiErr').textContent = 'Tidak ada status H, S, I, atau A yang terisi untuk siswa kelas ini.'; return; }
+    let u; try { u = await api('simpanAbsenKelasBanyak', { kelas: kelasData.kelas, hari, uji: true }); } catch (e) { $('aiStatus').textContent = ''; $('aiErr').textContent = e.message; return; }
+    ai.hasil = { hari, u }; $('aiStatus').textContent = '';
+    const jml = hari.reduce((t, x) => t + Object.keys(x.data).length, 0), tg = hari.map(x => x.tanggal);
+    $('aiRingkas').innerHTML = `<strong>${u.baru.length + u.ada.length}</strong> tanggal terbaca (${esc(abTglPendek(tg[0]))} sampai ${esc(abTglPendek(tg[tg.length - 1]))}), ${jml} isian status untuk ${new Set(cocok.filter(Boolean)).size} dari ${ai.sis.length} siswa.<br>Tanggal baru: <strong>${u.baru.length}</strong>. Sudah ada di web: <strong>${u.ada.length}</strong>.`;
+    const m = [];
+    if (tidak.length) m.push(`<div class="late">${tidak.length} nama di Excel tidak cocok dengan siswa kelas dan dilewati: ${esc(tidak.slice(0, 6).map(b => b.nama).join(', '))}${tidak.length > 6 ? ', …' : ''}.</div>`);
+    if (p.tak) m.push(`<div class="late">${p.tak} sel berisi selain H, S, I, A dan dilewati (contoh: ${esc(p.contoh.join(', '))}).</div>`);
+    if (p.ganda.length) m.push(`<div class="late">Ada kolom tanggal ganda (${esc(p.ganda.map(abTglPendek).join(', '))}). Kalau isinya beda, kolom paling kanan yang dipakai.</div>`);
+    if (u.salah.length) m.push(`<div class="late">${u.salah.length} tanggal dibuang karena belum terjadi atau tidak valid.</div>`);
+    $('aiMasalah').innerHTML = m.join('');
+    $('aiTimpaWrap').hidden = !u.ada.length; $('aiTimpa').checked = false; $('aiTimpaTeks').textContent = `Perbarui ${u.ada.length} tanggal yang sudah ada (siswa lain di tanggal itu tetap)`;
+    $('aiIsi').hidden = false; $('aiSimpan').hidden = !u.baru.length; $('aiSimpan').textContent = `Impor ${u.baru.length} tanggal baru`;
+  };
+  $('aiTimpa').onchange = () => { const u = ai.hasil.u; $('aiSimpan').textContent = `Impor ${u.baru.length}${$('aiTimpa').checked ? ' baru + ' + u.ada.length + ' diperbarui' : ' tanggal baru'}`; $('aiSimpan').hidden = !(u.baru.length || $('aiTimpa').checked); };
+  $('aiSimpan').onclick = async () => {
+    const b = $('aiSimpan'); b.disabled = true; $('aiErr').textContent = '';
+    try { const r = await api('simpanAbsenKelasBanyak', { kelas: kelasData.kelas, hari: ai.hasil.hari, timpa: $('aiTimpa').checked }); $('dlgAbsImpor').close(); toast(`Impor selesai: ${r.baru} tanggal baru${r.diperbarui ? ', ' + r.diperbarui + ' diperbarui' : ''}${r.dilewati.length ? ', ' + r.dilewati.length + ' dilewati' : ''}.`); loadKelas(kelasEl, kelasData.kelas); }
+    catch (e) { $('aiErr').textContent = e.message; }
+    b.disabled = false;
+  };
+  $('aiX').onclick = $('aiTutup').onclick = () => $('dlgAbsImpor').close();
   let im = null; // keadaan dialog impor
   const imTugasNilai = () => (im.tugas || []).filter(t => t.bentuk === 'nilai' && t.mapel === $('imMapel').value && t.kelas.indexOf($('imKelas').value) >= 0);
   const imTahunAjaran = () => { const t = hariIni(), y = Number(t.slice(0, 4)), m = Number(t.slice(5, 7)); return m >= 7 ? `Gasal ${y}/${y + 1}` : `Genap ${y - 1}/${y}`; };
