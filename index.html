@@ -407,6 +407,7 @@
 <nav class="navbar" id="navbar" hidden aria-label="Menu utama"><div class="nav" id="nav"></div></nav>
 
 <main>
+<div id="pushBanner" class="panel" hidden role="region" aria-label="Notifikasi"><strong>Aktifkan notifikasi</strong><p class="muted" style="margin:2px 0 10px">Dapat pengingat deadline, tugas baru, nilai keluar, dan pengumuman langsung di perangkat ini.</p><div class="bar"><button class="small" id="pushBannerYa" type="button">Aktifkan</button><button class="ghost small" id="pushBannerNanti" type="button">Nanti</button></div></div>
   <div id="vLoad" role="status" aria-busy="true">
     <span class="sr">Memuat…</span>
     <div class="sk" style="width:55%;height:34px;margin:4px 0 10px"></div><div class="sk" style="width:35%;height:14px;margin-bottom:22px"></div>
@@ -1076,7 +1077,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.17-b'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.18-a'; // harus sama dengan VERSI di Code.gs
   // ----- Pembantu animasi: mengetik dan menghitung naik. Semuanya langsung ke hasil akhir kalau pengguna meminta gerakan dikurangi. -----
   const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ketikEl = async (el, teks, kec = 34, batal = () => false) => {
@@ -1213,10 +1214,11 @@
     $('whoName').textContent = m.role === 'belum_terdaftar' ? m.email : m.nama;
     $('avatar').textContent = String(m.nama || m.email || '?').trim().charAt(0).toUpperCase();
     if (m.role === 'belum_terdaftar') { $('navbar').hidden = true; $('cEmail').textContent = m.email; return show('vClaim'); }
-    if (m.role === 'admin') { buildNav('admin'); show('vAdmin'); return goAdmin('pHome'); }
+    if (m.role === 'admin') { buildNav('admin'); show('vAdmin'); pushSinkron(); return goAdmin('pHome'); }
     salam($('sHello'), greet() + ', ' + m.nama.split(' ')[0]);
     $('sInfo').textContent = 'Kelas ' + m.kelas + (m.role === 'ketua' ? ' · Ketua kelas' : '') + (m.jabatan || []).map(j => ' · ' + (JAB_NAMA[j] || j)).join('');
     buildNav(m.role === 'ketua' ? 'ketua' : 'siswa'); show('vSiswa'); goSiswa('sHome'); loadTugasSiswa(); loadPengumumanSiswa();
+    pushSinkron(); pushBannerTampil();
   }
 
   $('btnClaim').onclick = async () => {
@@ -1231,7 +1233,7 @@
   $('fNama').onkeydown = e => { if (e.key === 'Enter') $('fNis').focus(); };
   $('fNis').onkeydown = e => { if (e.key === 'Enter') $('btnClaim').click(); };
   $('cOut').onclick = e => { e.preventDefault(); logout(); };
-  $('btnOut').onclick = async () => { if (!(await konfirmasi('Keluar dari akun ini? Kamu perlu masuk lagi dengan Google untuk membuka aplikasi.', { ya: 'Keluar', tidak: 'Batal' }))) return; if (me && me.email) { try { localStorage.removeItem(kunciCache(me.email)); } catch (e) {} } logout(); };
+  $('btnOut').onclick = async () => { if (!(await konfirmasi('Keluar dari akun ini? Kamu perlu masuk lagi dengan Google untuk membuka aplikasi.', { ya: 'Keluar', tidak: 'Batal' }))) return; await pushCabutSaatKeluar(); if (me && me.email) { try { localStorage.removeItem(kunciCache(me.email)); } catch (e) {} } logout(); };
 
   /* ---------------- Siswa & ketua ---------------- */
   let tugasSiswa = [], kRows = [], dlgNis = null;
@@ -2994,11 +2996,76 @@
       + (nv ? `<div style="margin-top:10px">${todoBaris({ t: `${nv} laporan menunggu validasi atau ditolak`, bahaya: vt.tolak.length > 0 }, '<button class="small" type="button" data-go="pKelas">Periksa</button>')}</div>` : '') + '</div>';
   }
 
+  /* ---------------- Notifikasi push (Chrome/Android; server: Firebase Cloud Messaging) ---------------- */
+  // Butuh FIREBASE (config web app) dan VAPID_KEY di config.js, FCM_SERVICE_ACCOUNT di server, dan firebase-messaging-sw.js di folder yang sama.
+  const FB_VER = '10.14.1';
+  const pushCfgAda = () => !!(CFG.FIREBASE && CFG.FIREBASE.projectId && CFG.VAPID_KEY);
+  const pushDidukung = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const pushKunci = e => 'pushTok_' + String(e || '').toLowerCase();
+  const pushLokal = e => { try { return localStorage.getItem(pushKunci(e)) || ''; } catch (x) { return ''; } };
+  const pushSimpan = (e, v) => { try { v ? localStorage.setItem(pushKunci(e), v) : localStorage.removeItem(pushKunci(e)); } catch (x) {} };
+  const pushMuatJs = src => new Promise((ok, no) => { const el = document.createElement('script'); el.src = src; el.onload = ok; el.onerror = () => no(new Error('Pustaka notifikasi gagal dimuat. Cek internet lalu coba lagi.')); document.head.appendChild(el); });
+  async function pushAmbilToken() {
+    if (!window.firebase) { await pushMuatJs(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app-compat.js`); await pushMuatJs(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-messaging-compat.js`); }
+    if (!firebase.apps.length) firebase.initializeApp(CFG.FIREBASE);
+    const reg = await navigator.serviceWorker.register('firebase-messaging-sw.js', { scope: './fcm-push/' }); // lingkup terpisah supaya tidak bentrok dengan sw.js
+    return firebase.messaging().getToken({ vapidKey: CFG.VAPID_KEY, serviceWorkerRegistration: reg });
+  }
+  const pushPerangkat = () => String(navigator.platform || 'Chrome').slice(0, 40);
+  async function pushAktifkan() {
+    if (Notification.permission === 'denied') throw new Error('Notifikasi diblokir untuk situs ini. Di Chrome: ketuk ikon gembok di address bar, lalu Izin, lalu Notifikasi, lalu Izinkan.');
+    const izin = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+    if (izin !== 'granted') throw new Error('Izin notifikasi tidak diberikan.');
+    const tok = await pushAmbilToken(); if (!tok) throw new Error('Gagal mendapatkan token notifikasi dari Firebase.');
+    await api('pushDaftar', { fcm: tok, perangkat: pushPerangkat() });
+    pushSimpan(me.email, tok); return tok;
+  }
+  async function pushMatikan() {
+    const t = pushLokal(me.email); pushSimpan(me.email, '');
+    if (t) { try { await api('pushCabut', { fcm: t }); } catch (x) {} }
+    try { if (window.firebase && firebase.apps.length) await firebase.messaging().deleteToken(); } catch (x) {}
+  }
+  let pushSudahSinkron = false;
+  async function pushSinkron() { // diam-diam, sekali per muat halaman: token bisa berganti, dan sesudah keluar token di server sudah dicabut
+    if (pushSudahSinkron || !me || !pushDidukung() || !pushCfgAda() || Notification.permission !== 'granted' || !pushLokal(me.email)) return;
+    pushSudahSinkron = true;
+    try { const tok = await pushAmbilToken(); if (tok) { await api('pushDaftar', { fcm: tok, perangkat: pushPerangkat() }); pushSimpan(me.email, tok); } } catch (x) {}
+  }
+  async function pushCabutSaatKeluar() { const t = me && pushLokal(me.email); if (t) { try { await api('pushCabut', { fcm: t }); } catch (x) {} } } // tanda lokal dibiarkan: masuk lagi dengan akun yang sama mendaftarkan ulang otomatis
+  async function pushBannerTampil() {
+    const b = $('pushBanner'); b.hidden = true;
+    if (!me || (me.role !== 'siswa' && me.role !== 'ketua') || !pushDidukung() || !pushCfgAda() || Notification.permission !== 'default') return;
+    try { if (Number(localStorage.getItem('pushNanti') || 0) > Date.now()) return; } catch (x) {}
+    try { if (!(await api('pushStatus')).siap) return; } catch (x) { return; }
+    b.hidden = false;
+  }
+  $('pushBannerNanti').onclick = () => { try { localStorage.setItem('pushNanti', String(Date.now() + 7 * 864e5)); } catch (x) {} $('pushBanner').hidden = true; };
+  $('pushBannerYa').onclick = async () => {
+    const t = $('pushBannerYa'); t.disabled = true;
+    try { await pushAktifkan(); $('pushBanner').hidden = true; toast('Notifikasi aktif di perangkat ini.'); }
+    catch (e) { toast(e.message || 'Gagal mengaktifkan notifikasi.', true); }
+    t.disabled = false;
+  };
+  async function pushIsiBaris() { // baris "Notifikasi" di dialog Info akun
+    const w = $('iaPushWrap'); if (!w) return;
+    const kv = (v, ket) => `<div class="kv"><span class="k">Notifikasi</span><span>${v}</span></div>` + (ket ? `<p class="muted" style="margin:0 0 8px;font-size:.82rem">${ket}</p>` : '');
+    const admin = me && me.role === 'admin';
+    if (!pushCfgAda()) { w.innerHTML = admin ? kv('<span class="tag warn">Belum disiapkan</span>', 'Isi FIREBASE dan VAPID_KEY di config.js (lihat PANDUAN-PUSH.md).') : ''; return; }
+    if (!pushDidukung()) { w.innerHTML = kv('<span class="tag bad">Tidak didukung</span>', 'Pakai Chrome terbaru. Di iPhone, tambahkan aplikasi ke Layar Utama dulu.'); return; }
+    let st; try { st = await api('pushStatus'); } catch (x) { return; }
+    if (!st.siap) { w.innerHTML = admin ? kv('<span class="tag warn">Server belum siap</span>', 'Isi script property FCM_SERVICE_ACCOUNT (lihat PANDUAN-PUSH.md).') : ''; return; }
+    const blok = Notification.permission === 'denied', aktif = Notification.permission === 'granted' && !!pushLokal(me.email);
+    w.innerHTML = kv(`<span class="tag ${aktif ? 'ok' : 'bad'}">${blok ? 'Diblokir' : aktif ? 'Aktif' : 'Mati'}</span>` + (blok ? '' : ` <button type="button" class="ghost small" id="iaPush" data-aktif="${aktif ? 'ya' : 'tidak'}">${aktif ? 'Matikan' : 'Aktifkan'}</button>`),
+      blok ? 'Izinkan lagi lewat ikon gembok di address bar Chrome, lalu muat ulang.' : 'Pengingat deadline, tugas baru, nilai keluar, dan pengumuman. Berlaku di perangkat ini saja.');
+  }
+
   /* ---------------- Info akun: bantu memeriksa HP yang bermasalah tanpa console ---------------- */
   // Pengingat email tugas: siswa bisa mematikan atau menyalakan sendiri (server: pengingatSet)
   const pengingatBaris = aktif => `<div id="iaPengWrap"><div class="kv"><span class="k">Pengingat email</span><span><span class="tag ${aktif ? 'ok' : 'bad'}">${aktif ? 'Aktif' : 'Mati'}</span> <button type="button" class="ghost small" id="iaPeng" data-aktif="${aktif ? 'ya' : 'tidak'}">${aktif ? 'Matikan' : 'Aktifkan'}</button></span></div>`
     + `<p class="muted" style="margin:0 0 8px;font-size:.82rem">Email dikirim pukul 16.00 untuk tugas yang deadline-nya besok dan pukul 06.00 untuk yang deadline-nya hari ini, hanya kalau kamu belum mengumpulkan.</p></div>`;
   $('iaIsi').onclick = async e => {
+    const pb = e.target.closest('#iaPush');
+    if (pb) { pb.disabled = true; try { if (pb.dataset.aktif === 'ya') { await pushMatikan(); toast('Notifikasi dimatikan di perangkat ini.'); } else { await pushAktifkan(); toast('Notifikasi aktif di perangkat ini.'); } } catch (err) { toast(err.message || 'Gagal.', true); } return pushIsiBaris(); }
     const b = e.target.closest('#iaPeng'); if (!b) return;
     const mau = b.dataset.aktif !== 'ya'; b.disabled = true;
     try { const r = await api('pengingatSet', { aktif: mau }); $('iaPengWrap').outerHTML = pengingatBaris(r.pengingat); toast(r.pengingat ? 'Pengingat email dinyalakan.' : 'Pengingat email dimatikan.'); }
@@ -3008,11 +3075,11 @@
     $('iaIsi').innerHTML = '<p class="muted">Memuat…</p>'; $('dlgAkunInfo').showModal();
     let r = null; try { r = await api('me'); } catch (e) { $('iaIsi').innerHTML = `<p class="late">${esc(e.message || 'Gagal memuat dari server.')}</p>`; return; }
     const m = r.me || {}, baris = (k, v) => `<div class="kv"><span class="k">${k}</span><span>${v}</span></div>`;
-    const ya = '<span class="tag ok">Ya</span>', tidak = '<span class="tag bad">Tidak</span>';
+    const ya = '<span class="tag ok">Ya</span>', tidak = '<span class="tag bad">Tidak</span>'; setTimeout(pushIsiBaris, 0);
     $('iaIsi').innerHTML = baris('Nama', esc(m.nama || '-')) + baris('Peran', esc(m.role || '-')) + (m.role === 'siswa' || m.role === 'ketua' ? pengingatBaris(m.pengingat !== false) : '') + (m.nis ? baris('NIS', esc(m.nis)) : '')
       + baris('Kelas', m.kelas ? `"${esc(m.kelas)}"` : '-') + baris('Jabatan', (m.jabatan || []).length ? esc(m.jabatan.join(', ')) : '-')
       + baris('Kelasku aktif', m.modulKelas ? ya : tidak) + baris('Kelas aktif', r.kelasModul ? esc(r.kelasModul.map(k => `"${k}"`).join(', ')) : '<span class="late">server belum diperbarui</span>')
-      + baris('Versi halaman', esc(VERSI_WEB)) + baris('Versi server', r.versi ? esc(r.versi) + (r.versi === VERSI_WEB ? '' : ' <span class="tag warn">beda</span>') : '<span class="late">lama (deploy ulang)</span>');
+      + '<div id="iaPushWrap"></div>' + baris('Versi halaman', esc(VERSI_WEB)) + baris('Versi server', r.versi ? esc(r.versi) + (r.versi === VERSI_WEB ? '' : ' <span class="tag warn">beda</span>') : '<span class="late">lama (deploy ulang)</span>');
   };
   $('iaTutup').onclick = () => $('dlgAkunInfo').close();
   $('iaMuat').onclick = async () => {
