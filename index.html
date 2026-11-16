@@ -541,7 +541,7 @@
     <div id="sHadir" hidden><h1>Kehadiran</h1><div id="sHadirBody"></div></div>
     <div id="sKelas" hidden><h1>Kelasku</h1><div id="sKelasBody"></div></div>
     <div id="sLapKelas" hidden><div id="sLapKelasBody"></div></div>
-    <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Nilai akhir = rata-rata dari komponen yang sudah ada: rata-rata tugas, rata-rata sumatif, STS, dan SAS. STS dan SAS baru dihitung setelah ada nilainya. Hanya dari nilai yang sudah dirilis guru.</p><div id="sNilaiBody"></div></div>
+    <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Nilai akhir = rata-rata dari komponen yang sudah ada: rata-rata tugas, rata-rata sumatif, STS, dan SAS. STS dan SAS baru dihitung setelah ada nilainya. Hanya dari nilai yang sudah dirilis guru.</p><div id="sNilaiBody"></div><div id="sRiwWrap"></div></div>
     <div id="kBlock" hidden>
       <h1 style="margin-bottom:8px">Rekap kelas</h1>
       <div class="bar"><label for="kTugas" style="margin:0">Tugas</label><select id="kTugas"></select><button class="ghost small" id="kSalin">Salin daftar yang belum kumpul</button></div>
@@ -710,6 +710,7 @@
         <select id="aKelas"><option value="">Semua</option></select>
         <input id="aCari" type="search" placeholder="Cari nama atau NIS" aria-label="Cari siswa" style="width:14rem;margin:0">
         <button class="small" id="btnTambahSiswa" type="button">Tambah siswa</button>
+        <button class="ghost small" id="btnWali" type="button">Wali kelas</button>
       </div>
       <div class="tablewrap"><table class="tbl-kartu">
         <thead><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Status akun</th><th></th></tr></thead>
@@ -745,7 +746,7 @@
   </div>
   <div class="actions"><button class="ghost" id="nlRevisi" type="button">Minta revisi</button><button class="ghost" id="nlLewat" type="button">Lewati</button><button id="nlSimpan" type="button">Simpan dan berikutnya</button></div>
 </dialog>
-<dialog id="dlgRevisi">
+<dialog id="dlgRevisi" aria-label="Minta revisi tugas">
   <p id="rvJudul" style="font-weight:600;margin-top:0"></p>
   <p class="muted" style="margin-top:0">Siswa akan melihat catatan ini di kartu tugasnya dan bisa mengumpulkan ulang.</p>
   <textarea id="rvCat" maxlength="500" style="min-height:6rem"></textarea>
@@ -753,7 +754,7 @@
   <div class="cerr" id="rvErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="rvBatal" type="button">Batal</button><button id="rvKirim" type="button">Kirim permintaan revisi</button></div>
 </dialog>
-<dialog id="dlgShare">
+<dialog id="dlgShare" aria-label="Bagikan pesan">
   <p id="shareTitle" style="font-weight:600;margin-top:0"></p>
   <p class="muted" style="margin-top:0">Pratinjau pesan. Boleh diubah dulu sebelum dikirim.</p>
   <textarea id="shareText" style="min-height:12rem"></textarea>
@@ -951,6 +952,21 @@
   <div class="cerr" id="aiErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="aiTutup" type="button">Tutup</button><button id="aiSimpan" type="button" hidden>Impor</button></div>
 </dialog>
+<dialog id="dlgTutupBuku" aria-labelledby="tbJudul">
+  <div class="dlg-head"><strong id="tbJudul">Tutup buku</strong><button class="ghost small" id="tbX" type="button" aria-label="Tutup">✕</button></div>
+  <div class="bar" id="tbTab" role="group" aria-label="Pilih proses" style="flex-wrap:wrap"><button class="small" type="button" data-tbm="semester">Tutup semester</button><button class="ghost small" type="button" data-tbm="naik">Naik kelas</button><button class="ghost small" type="button" data-tbm="riwayat">Riwayat nilai</button></div>
+  <div id="tbIsi"></div>
+  <div id="tbKonfWrap" hidden><label for="tbKonf" id="tbKonfLabel"></label><input id="tbKonf" autocomplete="off" style="margin:0"></div>
+  <div class="cerr" id="tbErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="tbTutup" type="button">Tutup</button><button class="danger solid" id="tbAksi" type="button" hidden></button></div>
+</dialog>
+<dialog id="dlgWali" aria-labelledby="wlJudul">
+  <div class="dlg-head"><strong id="wlJudul">Akun wali kelas</strong><button class="ghost small" id="wlX" type="button" aria-label="Tutup">✕</button></div>
+  <p class="muted" style="margin-top:0">Isi email Google wali kelas. Wali kelas masuk dengan email itu dan hanya bisa <strong>melihat laporan mingguan kelasnya</strong>, tanpa bisa mengubah apa pun. Beberapa email dipisah koma, kosongkan untuk mencabut.</p>
+  <div id="wlIsi"></div>
+  <div class="cerr" id="wlErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="wlTutup" type="button">Tutup</button><button id="wlSimpan" type="button">Simpan</button></div>
+</dialog>
 <dialog id="dlgInfoKelas" aria-labelledby="ikHead">
   <p id="ikHead" style="font-weight:600;margin-top:0">Info kelas</p>
   <label for="ikJudul">Judul</label><input id="ikJudul" maxlength="120">
@@ -970,11 +986,11 @@
   <div id="pengBody"></div>
   <div class="actions"><button id="pengOk" type="button">Oke, mengerti</button></div>
 </dialog>
-<dialog id="dlgImg" style="max-width:min(96vw,60rem);padding:10px">
+<dialog id="dlgImg" aria-label="Pratinjau gambar" style="max-width:min(96vw,60rem);padding:10px">
   <img id="dlgImgEl" alt="" style="display:block;max-width:100%;max-height:82vh;margin:0 auto">
   <div class="actions" style="margin-top:10px"><button class="ghost" id="dlgImgClose" type="button">Tutup</button></div>
 </dialog>
-<dialog id="dlgLink">
+<dialog id="dlgLink" aria-label="Isi tautan atau unggah file">
   <p id="dlgTitle" style="font-weight:600"></p>
   <input id="dlgInput" placeholder="https://" inputmode="url" autocomplete="off">
   <input id="dlgFile" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,.zip" style="margin-top:8px">
@@ -1018,6 +1034,14 @@
     foto_terlalu_banyak: 'Maksimal 3 foto bukti per catatan piket.',
     foto_tidak_ada: 'Foto itu sudah tidak ada.',
     jadwal_tidak_valid: 'Jadwal tidak valid. Pastikan tiap baris punya nama mapel (maksimal 15 baris per hari).',
+    konfirmasi_salah: 'Teks konfirmasi tidak cocok.',
+    semester_ditutup: 'Semester ini sudah ditutup, datanya hanya bisa dilihat.',
+    semester_sudah_ditutup: 'Semester ini sudah ditutup.',
+    semester_berikut_kosong: 'Nama semester berikutnya tidak bisa ditentukan.',
+    belum_waktunya: 'Naik kelas baru bisa dilakukan setelah Semester 2 ditutup dan semua kelas punya tujuan.',
+    cadangan_gagal: 'Cadangan gagal dibuat, jadi proses dibatalkan. Tidak ada data yang diubah.',
+    email_tidak_valid: 'Email tidak valid (maksimal 3 email per kelas, pisahkan dengan koma).',
+    kelas_tidak_ada: 'Kelas tidak ditemukan.',
     data_tidak_valid: 'Data absensi kosong atau terlalu banyak (maksimal 400 tanggal sekali impor).',
     jam_tidak_valid: 'Jam tidak valid. Semua jam harus diisi, dan jam selesai harus setelah jam mulai.',
     jumlah_barang_tidak_valid: 'Jumlah barang harus angka bulat 0 sampai 9999.',
@@ -1077,7 +1101,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.18-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.21-a'; // harus sama dengan VERSI di Code.gs
   // ----- Pembantu animasi: mengetik dan menghitung naik. Semuanya langsung ke hasil akhir kalau pengguna meminta gerakan dikurangi. -----
   const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ketikEl = async (el, teks, kec = 34, batal = () => false) => {
@@ -1184,7 +1208,7 @@
   function logout(m) {
     token = null; me = null;
     try { sessionStorage.removeItem('tok'); } catch (e) {}
-    if (window.google && google.accounts) google.accounts.id.disableAutoSelect();
+    try { if (window.google && google.accounts) google.accounts.id.disableAutoSelect(); } catch (e) {}
     $('who').hidden = true; $('btnBell').hidden = true; $('navbar').hidden = true; msg('loginMsg', m); show('vLogin');
   }
 
@@ -1213,8 +1237,10 @@
     me = m; $('who').hidden = false; $('btnBell').hidden = true;
     $('whoName').textContent = m.role === 'belum_terdaftar' ? m.email : m.nama;
     $('avatar').textContent = String(m.nama || m.email || '?').trim().charAt(0).toUpperCase();
+    if (m.role === 'nonaktif') return logout('Akun ini sudah tidak aktif karena kamu sudah naik ke kelas yang tidak diajar guru ini. Hubungi guru kalau ini keliru.');
     if (m.role === 'belum_terdaftar') { $('navbar').hidden = true; $('cEmail').textContent = m.email; return show('vClaim'); }
     if (m.role === 'admin') { buildNav('admin'); show('vAdmin'); pushSinkron(); return goAdmin('pHome'); }
+    if (m.role === 'wali') { buildNav('wali'); show('vAdmin'); $('lpBack').hidden = true; pushSinkron(); return goAdmin('pLapor'); } // wali kelas: hanya laporan mingguan kelasnya, tanpa mengubah apa pun
     salam($('sHello'), greet() + ', ' + m.nama.split(' ')[0]);
     $('sInfo').textContent = 'Kelas ' + m.kelas + (m.role === 'ketua' ? ' · Ketua kelas' : '') + (m.jabatan || []).map(j => ' · ' + (JAB_NAMA[j] || j)).join('');
     buildNav(m.role === 'ketua' ? 'ketua' : 'siswa'); show('vSiswa'); goSiswa('sHome'); loadTugasSiswa(); loadPengumumanSiswa();
@@ -1274,7 +1300,7 @@
     const k = t.kumpul, st = statusOf(t), lewat = new Date() > new Date(t.deadline);
     const rev = !!(k && k.revisi && !k.revisi.dikirim), tag = rev ? 'Perlu revisi' : { belum: lewat ? 'Lewat deadline' : 'Belum dikumpulkan', terkumpul: 'Terkumpul', menunggu: 'Belum dinilai', dinilai: 'Dinilai' }[st];
     const dl = t.bentuk === 'nilai' ? '' : `<p class="muted">Deadline ${fmt(t.deadline)}${st === 'belum' ? ` · <span class="${lewat || new Date(t.deadline) - Date.now() < 864e5 ? 'due-soon' : ''}">${rel(t.deadline)}</span>` : ''}</p>`;
-    const kalH = st === 'belum' && t.bentuk !== 'nilai' && new Date(t.deadline) > Date.now() ? `<p class="muted" style="margin-top:-6px"><a href="${linkKalender(t)}" target="_blank" rel="noopener noreferrer">Tambahkan ke Google Kalender</a></p>` : '';
+    const kalH = st === 'belum' && t.bentuk !== 'nilai' && new Date(t.deadline) > Date.now() ? `<p class="muted" style="margin-top:-6px"><a href="${linkKalender(t)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;min-height:44px;padding:0 4px">Tambahkan ke Google Kalender</a></p>` : '';
     let body;
     if (st === 'dinilai') body = `<div class="banner nilai"><div class="muted">Nilai</div><div class="nilai-big">${esc(k.nilai)}</div>${k.catatanGuru ? `<p style="margin:8px 0 0">${esc(k.catatanGuru)}</p>` : ''}</div>${t.bentuk !== 'nilai' ? `<div class="muted">${ringkas(k)}</div>` : ''}`;
     else if (st === 'menunggu') body = '<p class="muted">Belum ada nilai dari guru.</p>';
@@ -1288,13 +1314,15 @@
 
   function drawTugasSiswa() {
     if (!tugasSiswa.length) { $('sList').innerHTML = '<div class="panel card"><strong>Belum ada tugas.</strong><br><span class="muted">Tugas dari guru akan muncul di sini.</span></div>'; return; }
+    if (fjSiswa !== 'semua' && !tugasSiswa.some(t => jenisDari(t) === fjSiswa)) fjSiswa = 'semua';
+    const bar = fjBar(tugasSiswa, fjSiswa, 'fj'), daftar = fjSiswa === 'semua' ? tugasSiswa : tugasSiswa.filter(t => jenisDari(t) === fjSiswa);
     const by = { belum: [], menunggu: [], terkumpul: [], dinilai: [] };
-    tugasSiswa.forEach(t => by[statusOf(t)].push(t));
+    daftar.forEach(t => by[statusOf(t)].push(t));
     by.belum.sort((a, b) => new Date(a.deadline) - new Date(b.deadline)); // yang paling mendesak di atas
     const tunggu = [...by.terkumpul, ...by.menunggu].sort(desc), nilai = by.dinilai.sort(desc);
     const sec = (judul, arr, kosong) => arr.length ? `<h2 class="sec">${judul} <span class="muted">(${arr.length})</span></h2>${arr.map(card).join('')}`
       : kosong ? `<h2 class="sec">${judul}</h2><p class="muted">${kosong}</p>` : '';
-    $('sList').innerHTML = `<div class="sum"><span class="chip"><b>${by.belum.length}</b> perlu dikumpulkan</span><span class="chip"><b>${tunggu.length}</b> menunggu nilai</span><span class="chip"><b>${nilai.length}</b> sudah dinilai</span></div>`
+    $('sList').innerHTML = bar + `<div class="sum"><span class="chip"><b>${by.belum.length}</b> perlu dikumpulkan</span><span class="chip"><b>${tunggu.length}</b> menunggu nilai</span><span class="chip"><b>${nilai.length}</b> sudah dinilai</span></div>`
       + sec('Perlu dikumpulkan', by.belum, 'Semua tugas sudah beres. Mantap!') + sec('Menunggu penilaian', tunggu) + sec('Sudah dinilai', nilai);
   }
 
@@ -1305,7 +1333,7 @@
       $('sNilaiBody').innerHTML = skBerisi(skPanel(3));
     }
     if (tugasSiswa.length && !$('sList').innerHTML) { segarBaru(); drawTugasSiswa(); drawDashSiswa(); drawNilaiSiswa(); pasangLencana(); } // dari cache
-    try { const rt = await api('tugasSaya'); tugasSiswa = rt.tugas; suratBelum = rt.suratBelum || 0; }
+    try { const rt = await api('tugasSaya'); tugasSiswa = rt.tugas; suratBelum = rt.suratBelum || 0; semSiswa = rt.semester || null; riwayatTampil(); }
     catch (e) {
       if (!e.message) return; // sesi habis: sudah diarahkan ke halaman masuk
       if (tugasSiswa.length) { toast('Tidak bisa memperbarui. Menampilkan data terakhir.', true); return; }
@@ -1327,6 +1355,7 @@
 
   const toB64 = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(f); });
   $('sList').onclick = async e => {
+    const fj = e.target.closest('[data-fj]'); if (fj) { fjSiswa = fj.dataset.fj; return drawTugasSiswa(); }
     const act = e.target.dataset.act; if (!act) return;
     const c = e.target.closest('.card');
     if (act === 'buka') { const f = c.querySelector('.form'); f.hidden = !f.hidden; e.target.textContent = f.hidden ? 'Kumpulkan tugas' : 'Tutup formulir'; e.target.classList.toggle('ghost', !f.hidden); if (!f.hidden) { const i = f.querySelector('input'); if (i) i.focus(); } return; }
@@ -1450,6 +1479,7 @@
   const NAV = {
     admin: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pAbsen', 'Kehadiran', 'absen'], ['pNilai', 'Nilai', 'nilai'], ['pSiswa', 'Siswa', 'users'], ['pInfo', 'Info', 'info']],
     siswa: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Kehadiran', 'absen'], ['sKelas', 'Kelasku', 'kelas']],
+    wali: [['pLapor', 'Laporan', 'kelas']],
     ketua: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Kehadiran', 'absen'], ['sKelas', 'Kelasku', 'kelas'], ['kBlock', 'Rekap', 'users']]
   };
   function buildNav(kind) {
@@ -1457,7 +1487,7 @@
     $('navbar').hidden = false;
   }
   function setActive(id) { document.querySelectorAll('#nav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === (id === 'pRekap' ? 'pTugas' : id === 'pProfil' ? 'pSiswa' : id === 'pLapor' || id === 'pKelas' || id === 'pLapKelas' ? 'pHome' : id === 'sLapKelas' ? 'sKelas' : id))); }
-  $('nav').onclick = async e => { const b = e.target.closest('[data-go]'); if (!b || (me.role === 'admin' && !(await izinPindah()))) return; (me.role === 'admin' ? goAdmin : goSiswa)(b.dataset.go); };
+  $('nav').onclick = async e => { const b = e.target.closest('[data-go]'); if (!b || (me.role === 'admin' && !(await izinPindah()))) return; (me.role === 'admin' || me.role === 'wali' ? goAdmin : goSiswa)(b.dataset.go); };
 
   const greet = () => { const j = Number(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false })) % 24; return j < 11 ? 'Selamat pagi' : j < 15 ? 'Selamat siang' : j < 18 ? 'Selamat sore' : 'Selamat malam'; };
   const avg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length * 10) / 10 : null;
@@ -1466,6 +1496,16 @@
   $('tBentuk').addEventListener('change', syncAiForm); $('eBentuk').addEventListener('change', syncAiForm);
   // Jenis penilaian dan nilai akhir (sama dengan hitungAkhir_ di server): rata-rata dari komponen yang ada = tugas, sumatif, STS, SAS.
   const JENIS_NAMA = { penugasan: 'Tugas', sumatif: 'Sumatif', sts: 'STS', sas: 'SAS' };
+  // Filter jenis tugas (Tugas, Sumatif, STS, SAS): chip hanya muncul kalau daftar memuat lebih dari satu jenis
+  let fjSiswa = 'semua', fjAdmin = 'semua', tugasAdmin = [];
+  const jenisDari = t => t.jenis || 'penugasan';
+  function fjBar(arr, aktif, atribut) {
+    const n = {}; arr.forEach(t => { n[jenisDari(t)] = (n[jenisDari(t)] || 0) + 1; });
+    const ada = Object.keys(JENIS_NAMA).filter(j => n[j]);
+    if (ada.length < 2) return '';
+    return '<div class="seg" role="group" aria-label="Filter jenis tugas" style="flex-wrap:wrap">' + [['semua', 'Semua', arr.length]].concat(ada.map(j => [j, JENIS_NAMA[j], n[j]]))
+      .map(x => `<button type="button" class="small${aktif === x[0] ? '' : ' ghost'}" data-${atribut}="${x[0]}" aria-pressed="${aktif === x[0]}">${x[1]} <span style="opacity:.7">${x[2]}</span></button>`).join('') + '</div>';
+  }
   const jenisTag = j => j && j !== 'penugasan' && JENIS_NAMA[j] ? ` <span class="tag me">${JENIS_NAMA[j]}</span>` : '';
   function hitungAkhir(items) { // items = [{ jenis, nilai }]
     const per = { penugasan: [], sumatif: [], sts: [], sas: [] };
@@ -1548,6 +1588,7 @@
       <button class="ghost small" data-cadang="1">Cadangkan sekarang</button></div></div>`;
   }
   const sistemPanel = () => `<div class="panel"><div class="row"><div class="grow"><h2 style="margin-bottom:4px">Kesehatan sistem</h2><div class="muted">Periksa sheet, izin Drive, cadangan, dan versi.</div></div><button class="ghost small" data-cek="1">Periksa sekarang</button></div><div id="aCekHasil" style="margin-top:8px"></div></div>`;
+  const tutupBukuPanel = () => `<div class="panel"><div class="row"><div class="grow"><h2 style="margin-bottom:4px">Tutup buku</h2><div class="muted">Ganti semester, naik kelas, dan lihat riwayat nilai.</div></div><button class="ghost small" data-tb="1">Buka</button></div></div>`;
   async function loadDash() {
     $('aHello').textContent = greet() + '!';
     $('aDate').textContent = new Date().toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -1562,7 +1603,8 @@
     const stat = (n, l, go, hot) => `<button class="stat${hot ? ' hot' : ''}" data-go="${go}"><div class="n">${n}</div><div class="l">${l}</div></button>`;
     const aksi = '<div class="bar"><button data-baru="1">+ Tugas baru</button></div><div id="aKelasRingkas"></div>'; muatRingkasKelasAdmin();
     if (!r.tugas.length) { $('aDash').innerHTML = aksi + '<div class="panel"><h2>Mulai dari tugas pertama</h2><p class="muted">Belum ada tugas. Buat satu, pilih mapel dan kelas tujuan, lalu siswa bisa langsung mengumpulkan.</p></div>'
-      + `<div class="stats">${stat(`${r.siswaTerhubung}/${r.siswaTotal}`, `${pct}% akun siswa terhubung`, 'pSiswa')}</div>`; return; }
+      + `<div class="stats">${stat(`${r.siswaTerhubung}/${r.siswaTotal}`, `${pct}% akun siswa terhubung`, 'pSiswa')}</div>`
+      + `<details class="panel sistem"><summary>Cadangan dan kesehatan sistem</summary>${cadanganPanel(r.cadangan)}${sistemPanel()}${tutupBukuPanel()}</details>`; return; }
     const perluH = perlu.slice(0, 5).map(t => item(`${esc(t.mapel)} · ${esc(t.kelas.join(', '))}`, esc(t.judul), '', `<button class="small" data-open="${esc(t.id)}">Nilai (${t.belumDinilai})</button>`)).join('');
     const aktifH = aktif.slice(0, 4).map(t => { const p = t.total ? Math.round(t.kumpul / t.total * 100) : 0;
       return `<div class="item"><div class="grow"><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}${jenisTag(t.jenis)}</div><div class="t">${esc(t.judul)}</div><div class="muted">${rel(t.deadline)} · ${t.kumpul} dari ${t.total} sudah kumpul</div><div class="meter"><i style="width:${p}%"></i></div></div><button class="ghost small" data-open="${esc(t.id)}">Buka</button></div>`; }).join('');
@@ -1572,9 +1614,10 @@
       + `<div class="stats s3">${stat(totalPerlu, 'perlu dinilai', 'pTugas', totalPerlu > 0)}${stat(aktif.length, 'tugas aktif', 'pTugas')}${stat(pct + '%', 'akun terhubung', 'pSiswa')}</div>`
       + `<div class="grid2"><div class="panel"><h2>Perlu dinilai</h2>${perluH || '<p class="muted">Semua pengumpulan sudah dinilai.</p>'}</div>`
       + `<div class="panel"><h2>Deadline terdekat</h2>${aktifH || '<p class="muted">Tidak ada tugas dengan deadline berjalan.</p>'}</div></div>`
-      + `<div class="panel"><h2>Akun terhubung per kelas</h2>${kelasH}</div>` + `<details class="panel sistem"><summary>Cadangan dan kesehatan sistem</summary>${cadanganPanel(r.cadangan)}${sistemPanel()}</details>`;
+      + `<div class="panel"><h2>Akun terhubung per kelas</h2>${kelasH}</div>` + `<details class="panel sistem"><summary>Cadangan dan kesehatan sistem</summary>${cadanganPanel(r.cadangan)}${sistemPanel()}${tutupBukuPanel()}</details>`;
   }
   $('aDash').onclick = async e => {
+    if (e.target.closest('[data-tb]')) return tbBuka('semester');
     if (e.target.dataset.retry) { $('aDash').innerHTML = ''; return loadDash(); }
     const ck = e.target.closest('[data-cek]');
     if (ck) {
@@ -2075,6 +2118,42 @@
     L.push('', 'Kumpulkan di: ' + appUrl());
     return L.join('\n');
   }
+  // ----- Laporan per siswa: alpa seminggu dan sebulan, dan teks siap bagikan ke grup -----
+  let lpSis = null;
+  const HARI_PJ = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'], BLN_PD = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const BLN_PJ = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const lpTgl = iso => { const d = new Date(iso + 'T12:00:00+07:00'); return { w: d.getUTCDay(), t: d.getUTCDate(), b: d.getUTCMonth(), y: d.getUTCFullYear() }; };
+  const lpGeser = (iso, n) => new Date(Date.parse(iso + 'T12:00:00+07:00') + n * 864e5).toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+  const lpTeksTgl = (iso, panjang) => { const d = lpTgl(iso); return `${HARI_PJ[d.w]}, ${d.t} ${panjang ? BLN_PJ[d.b] + ' ' + d.y : BLN_PD[d.b]}`; };
+  function lpRentang(r) { // Senin sampai Sabtu saja (Minggu tidak ada KBM)
+    let a = r.dari, b = r.sampai; if (lpTgl(a).w === 0) a = lpGeser(a, 1); if (lpTgl(b).w === 0) b = lpGeser(b, -1);
+    const da = lpTgl(a), db = lpTgl(b);
+    return { a, b, teks: da.b === db.b ? `${da.t}-${db.t} ${BLN_PD[db.b]}` : `${da.t} ${BLN_PD[da.b]}-${db.t} ${BLN_PD[db.b]}` };
+  }
+  const PENUTUP_ABSEN = 'paling banyak/boleh alpa maksimal 2x dalam sebulan yaa, diatas itu, saya lapor ke BK. jangan sepelein saya';
+  const PENUTUP_PIKET = 'List nama nama tersebut diatas dikenakan denda 5k sesuai dengan peraturan yang sudah disepakatin. Next time, kalo emang piket, lapor muka ke divisi kebersihan. Laporan Divisi Kebersihan Mutlak, jadi kalau menurut mereka, mereka nggak ngeliat kalian piket, maka kalian gak piket\n\ntolong ditagih yaa bendahara';
+  function pesanAlpa(k, r) {
+    const g = lpRentang(r), hari = (k.harian || []).filter(a => a.namaA.length && a.tanggal >= g.a && a.tanggal <= g.b), L = [`Riwayat Absensi Per tanggal ${g.teks}, Yang Alpa:`];
+    if (!hari.length) L.push('Tidak ada yang alpa.');
+    hari.forEach((a, i) => { L.push(`${i + 1}. ${lpTeksTgl(a.tanggal, false)}`); a.namaA.forEach(n => L.push('- ' + n)); L.push(''); });
+    L.push(PENUTUP_ABSEN); return L.join('\n');
+  }
+  function pesanPiket(k, r) {
+    const g = lpRentang(r), hari = (k.piket || []).filter(p => p.namaTidak.length && p.tanggal >= g.a && p.tanggal <= g.b);
+    if (!hari.length) return `Riwayat Piket tanggal ${g.teks}: semua yang kebagian piket sudah piket.`;
+    const L = [`Riwayat Piket tanggal ${g.teks}. yang gak piket:`];
+    hari.forEach((p, i) => { L.push(`${i + 1}. ${lpTeksTgl(p.tanggal, true)}`); p.namaTidak.forEach(n => L.push('* ' + n)); });
+    L.push(PENUTUP_PIKET); return L.join('\n');
+  }
+  function lpSiswaHtml(nk) {
+    const ks = lpSis && lpSis.kelas.find(x => x.kelas === nk); if (!ks) return '';
+    const b = lpSis.batas, ph = ks.siswa.filter(s => s.perhatian.minggu || s.perhatian.bulan), tg = a => a.map(t => tglPendek(t)).join(', ');
+    const bulan = (() => { const d = lpTgl(lpSis.bulanDari); return BLN_PJ[d.b] + ' ' + d.y; })();
+    const isi = ph.length ? ph.map(s => `<div class="item"><div class="grow"><div class="t">${esc(s.nama)}</div>${s.perhatian.minggu ? `<div class="late">Alpa ${s.minggu.A}x dalam seminggu: ${esc(tg(s.tglAlpaMinggu))}</div>` : ''}${s.perhatian.bulan ? `<div class="late">Alpa ${s.bulan.A}x bulan ini: ${esc(tg(s.tglAlpa))}</div>` : ''}</div></div>`).join('') : '<p class="muted">Tidak ada siswa yang melewati batas alpa.</p>';
+    const baris = ks.siswa.map(s => `<tr><td>${esc(s.nama)}</td><td>${s.minggu.A || '–'}</td><td${s.perhatian.bulan ? ' class="late"' : ''}><strong>${s.bulan.A || '–'}</strong></td><td>${s.bulan.S || '–'}</td><td>${s.bulan.I || '–'}</td><td>${s.tidakPiketBulan || '–'}</td></tr>`).join('');
+    return `<h3 style="margin:14px 0 4px">Perlu perhatian</h3><div class="muted" style="margin-bottom:6px">Batas: alpa ${b.minggu}x atau lebih dalam seminggu, atau lebih dari ${b.bulan}x dalam sebulan (${esc(bulan)}). Dari absen harian kelas.</div>${isi}`
+      + `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center">Rekap per siswa (${ks.siswa.length})</summary><div class="tablewrap"><table><thead><tr><th>Nama</th><th>Alpa<br>minggu</th><th>Alpa<br>bulan</th><th>Sakit<br>bulan</th><th>Izin<br>bulan</th><th>Tdk piket<br>bulan</th></tr></thead><tbody>${baris}</tbody></table></div></details>`;
+  }
   function lpKartu(k, i) {
     const abs = k.absensi.length ? k.absensi.map(a => `<div class="item"><div class="grow"><div class="t">${esc(a.mapel)} · pertemuan ${a.pertemuan}</div><div class="muted">${tglPendek(a.tanggal)} · hadir ${a.H}, sakit ${a.S}, izin ${a.I}, alpa ${a.A}</div>`
       + lpNama.filter(([, f]) => a[f].length).map(([lb, f]) => `<div class="${lb === 'Alpa' ? 'late' : 'muted'}">${lb}: ${esc(a[f].join(', '))}</div>`).join('') + '</div></div>').join('')
@@ -2094,13 +2173,14 @@
     const tunggak = k.menunggak.length ? '<div class="muted" style="margin-top:8px"><strong>Masih ada yang belum kumpul dari sebelumnya:</strong><br>' + k.menunggak.map(t => `${esc(t.judul)} (${t.belum} siswa)`).join('<br>') + '</div>' : '';
     const akan = k.akan.length ? '<div class="muted" style="margin-top:8px"><strong>Segera jatuh tempo:</strong><br>' + k.akan.map(t => `${esc(t.judul)} (${fmt(t.deadline)})`).join('<br>') + '</div>' : '';
     return `<div class="panel"><div class="row"><h2 style="margin:0">${esc(k.kelas)}</h2><button class="ghost small" data-wa="${i}">Bagikan</button></div>`
+      + (k.harian ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button class="small" type="button" data-waalpa="${i}">Teks absensi (alpa)</button><button class="small" type="button" data-wapiket="${i}">Teks piket (denda)</button></div>` : '') + lpSiswaHtml(k.kelas)
       + `<h3 style="margin:14px 0 4px">Absensi</h3>${abs}${hr}${pk}${ks}${iv}<h3 style="margin:14px 0 4px">Tugas</h3>${tg}${tunggak}${akan}</div>`;
   }
   async function loadLaporan() {
     if (!$('lpSampai').value) $('lpSampai').value = hariIni();
     $('lpBody').innerHTML = skBerisi(skKartu(3));
     try {
-      const r = await api('laporanMingguan', { sampai: $('lpSampai').value }); lpData = r;
+      const [r, rs] = await Promise.all([api('laporanMingguan', { sampai: $('lpSampai').value }), api('laporanSiswa', { sampai: $('lpSampai').value }).catch(() => null)]); lpData = r; lpSis = rs;
       $('lpRentang').textContent = `${tglPendek(r.dari)} – ${tglPendek(r.sampai)}`;
       $('lpBody').innerHTML = r.kelas.map(lpKartu).join('');
     } catch (e) { $('lpBody').innerHTML = ''; msg('adminMsg', e.message); }
@@ -2108,7 +2188,11 @@
   $('lpSampai').onchange = loadLaporan;
   $('lpBack').onclick = () => goAdmin('pHome');
   $('lpBody').onclick = e => {
-    const b = e.target.closest('[data-wa]'); if (!b || !lpData) return;
+    if (!lpData) return;
+    const ba = e.target.closest('[data-waalpa]'), bp = e.target.closest('[data-wapiket]');
+    if (ba) { const k = lpData.kelas[Number(ba.dataset.waalpa)]; return bagikan('Riwayat alpa ' + k.kelas, pesanAlpa(k, lpData)); }
+    if (bp) { const k = lpData.kelas[Number(bp.dataset.wapiket)]; return bagikan('Riwayat piket ' + k.kelas, pesanPiket(k, lpData)); }
+    const b = e.target.closest('[data-wa]'); if (!b) return;
     const k = lpData.kelas[Number(b.dataset.wa)]; bagikan('Laporan mingguan ' + k.kelas, pesanLaporan(k, lpData));
   };
 
@@ -2132,9 +2216,9 @@
     const tombol = k.izin ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0"><button class="small" type="button" data-kcatat="1">Catat transaksi</button><button class="ghost small" type="button" data-kiuran="1">Iuran siswa</button><button class="ghost small" type="button" data-kriwayat="1">Riwayat dan cek saldo</button></div>' : '';
     const saya = k.saya && k.saya.length ? '<h3 style="margin:14px 0 4px">Iuranmu</h3>' + k.saya.map(i => item(esc(i.judul), `${rp(i.nominal)} per siswa`, '',
       `<span class="tag ${i.status === 'lunas' ? 'ok' : i.status === 'kurang' ? 'warn' : 'bad'}">${i.status === 'lunas' ? 'Lunas' : i.status === 'kurang' ? 'Kurang ' + rp(i.nominal - i.dibayar) : 'Belum bayar'}</span>`)).join('') : '';
-    const keluar = '<h3 style="margin:14px 0 4px">Pengeluaran terakhir</h3>' + (k.pengeluaran.length ? k.pengeluaran.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), `<div>${vTag('kas', x.id)}</div>${vAlasan('kas', x.id)}`,
+    const keluar = '<h3 style="margin:14px 0 4px">Pengeluaran terakhir</h3>' + (k.pengeluaran.length ? k.pengeluaran.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), `<div>${vTag('kas', x.id)}</div>${vAlasan('kas', x.id)}${vAksi('kas', x.id)}`,
       `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><strong>${rp(x.jumlah)}</strong>${x.adaNota ? `<button class="ghost small" type="button" data-knota="${esc(x.id)}">Nota</button>` : ''}</div>`)).join('') : '<p class="muted">Belum ada pengeluaran.</p>');
-    const lain = k.lain.length ? '<h3 style="margin:14px 0 4px">Pemasukan lain</h3>' + k.lain.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), `<div>${vTag('kas', x.id)}</div>${vAlasan('kas', x.id)}`, `<strong>${rp(x.jumlah)}</strong>`)).join('') : '';
+    const lain = k.lain.length ? '<h3 style="margin:14px 0 4px">Pemasukan lain</h3>' + k.lain.map(x => item(esc(tglIndo(x.tanggal)), esc(x.ket), `<div>${vTag('kas', x.id)}</div>${vAlasan('kas', x.id)}${vAksi('kas', x.id)}`, `<strong>${rp(x.jumlah)}</strong>`)).join('') : '';
     const bulanan = `<h3 style="margin:14px 0 4px">Laporan bulanan</h3><div class="bar"><input id="kasBln" type="month" value="${esc(k.bulan)}" style="width:auto;margin:0" aria-label="Bulan"><button class="ghost small" type="button" data-kbulan="1">Lihat</button></div><div id="kasBulan"></div>`;
     return `<div class="panel"><h2>Kas kelas</h2><div style="font-size:1.8rem;font-weight:700">${rp(k.saldo)}</div><div class="muted">Saldo kas saat ini</div>`
       + `<div class="muted" style="margin-top:6px">Bulan ini: masuk ${rp(k.masukBulan)}, keluar ${rp(k.keluarBulan)}</div>${cek}${tombol}${saya}${keluar}${lain}${bulanan}</div>`;
@@ -2169,19 +2253,21 @@
       p.saya && p.saya.hari === j.hari ? '<div><span class="tag me">Hari piketmu</span></div>' : '', '')).join('');
     const rekap = p.saya && p.saya.total ? `<div class="muted" style="margin-top:8px">Piketmu tercatat ${p.saya.total} kali, terlaksana ${p.saya.ya} kali.</div>` : '';
     const lapor = r.izin.piketLapor && p.laporan && p.laporan.length ? '<h3 style="margin:14px 0 4px">Catatan piket terakhir</h3>' + p.laporan.map(x => item(esc(tglIndo(x.tanggal)),
-      `${x.ya} piket, ${x.tidak} tidak${x.kondisi ? ' · kelas ' + esc(x.kondisi) : ''}${x.foto ? ' · ' + x.foto + ' foto' : ''}`, `<div>${vTag('piket', x.id)}</div>${vAlasan('piket', x.id)}`, `<button class="ghost small" type="button" data-plapor="${esc(x.tanggal)}">Buka</button>`)).join('') : '';
+      `${x.ya} piket, ${x.tidak} tidak${x.kondisi ? ' · kelas ' + esc(x.kondisi) : ''}${x.foto ? ' · ' + x.foto + ' foto' : ''}`, `<div>${vTag('piket', x.id)}</div>${vAlasan('piket', x.id)}${vAksi('piket', x.id)}`, `<button class="ghost small" type="button" data-plapor="${esc(x.tanggal)}">Buka</button>`)).join('') : '';
     const tombol = (r.izin.piket ? '<button class="ghost small" type="button" data-pjadwal="1">Atur jadwal</button>' : '') + (r.izin.piketLapor ? `<button class="small" type="button" data-plapor="${hariIni()}">Catat piket</button>` : '');
     return `<div class="panel"><div class="row"><h2 style="margin:0">Jadwal piket</h2><div style="display:flex;gap:6px;flex-wrap:wrap">${tombol}</div></div>${jadwal}${rekap}${lapor}</div>`;
   }
   function harianHtml(r) { // daftar hari absensi untuk yang boleh mengisi (sekretaris, ketua, wakil, guru)
     if (!r.izin.absensi) return '';
     const list = r.harian && r.harian.length ? r.harian.map(a => item(esc(tglIndo(a.tanggal)), `Hadir ${a.ringkas.H}, sakit ${a.ringkas.S}, izin ${a.ringkas.I}, alpa ${a.ringkas.A}${a.ringkas.belum ? ', belum ' + a.ringkas.belum : ''}`,
-      (a.suratBelum ? `<div class="late">${a.suratBelum} surat sakit belum diupload</div>` : '') + `<div>${vTag('absen', a.id)}</div>${vAlasan('absen', a.id)}`, `<button class="ghost small" type="button" data-abuka="${esc(a.tanggal)}">Buka</button>`)).join('') : '<p class="muted">Belum ada absensi harian.</p>';
+      (a.suratBelum ? `<div class="late">${a.suratBelum} surat sakit belum diupload</div>` : '') + `<div>${vTag('absen', a.id)}</div>${vAlasan('absen', a.id)}${vAksi('absen', a.id)}`, `<button class="ghost small" type="button" data-abuka="${esc(a.tanggal)}">Buka</button>`)).join('') : '<p class="muted">Belum ada absensi harian.</p>';
     return `<div class="panel"><div class="row"><h2 style="margin:0">Absen harian</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="ghost small" type="button" data-abimpor="1">Impor Excel</button><button class="small" type="button" data-abuka="${hariIni()}">Isi hari ini</button></div></div>${list}</div>`;
   }
   // ----- Validasi laporan: ketua, wakil, dan guru menerima atau menolak laporan pengurus -----
   const vStatus = (j, id) => (kelasData && kelasData.validasi && kelasData.validasi.status[j + '|' + id]) || null;
   const vTag = (j, id) => { const v = vStatus(j, id); return !v ? '' : v.s === 'diterima' ? '<span class="tag ok">Diterima</span>' : v.s === 'ditolak' ? '<span class="tag bad">Ditolak</span>' : `<span class="tag warn">${v.lagi ? 'Diubah, menunggu validasi' : 'Menunggu validasi'}</span>`; };
+  // Tombol validasi langsung di daftar (Kas, Piket, Absen), bukan hanya di panel "Menunggu validasi" yang membatasi 7 hari terakhir
+  const vAksi = (j, id) => { const a = kelasData && kelasData.validasi && kelasData.validasi.antrian.find(x => x.jenis === j && x.id === id && x.s === 'menunggu' && x.bisa); return a ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><button class="small" type="button" data-vterima="${esc(j + '|' + id)}">Terima</button><button class="ghost small danger" type="button" data-vtolak="${esc(j + '|' + id)}">Tolak</button></div>` : ''; };
   const vAlasan = (j, id) => { const v = vStatus(j, id); return v && v.s === 'ditolak' ? `<div class="late">Ditolak${v.o ? ' oleh ' + esc(v.o) : ''}: ${esc(v.a)}</div>` : ''; };
   const vTanggal7 = () => new Date(Date.parse(hariIni() + 'T12:00:00+07:00') - 7 * 864e5).toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
   function vAntrian(r) { // yang ditolak selalu tampil; yang menunggu hanya 7 hari terakhir supaya tidak menumpuk
@@ -2213,6 +2299,10 @@
   async function segarKelas() { // muat ulang diam-diam (tanpa kerangka loading) supaya posisi gulir tidak lompat
     try { const r = await api('kelasSaya', kelasData && kelasData.kelas ? { kelas: kelasData.kelas } : {}); kelasData = r; $(kelasEl).innerHTML = kelasHalaman(r); } catch (e) { toast(e.message, true); }
   }
+  async function liburKlik(t) {
+    if (!(await konfirmasi(`Tandai ${tglIndo(t)} sebagai libur atau tidak ada KBM? Pengingat absen dan piket untuk hari itu dihentikan.`, { ya: 'Tandai libur', tidak: 'Batal' }))) return;
+    try { await api('liburTandai', { kelas: kelasData.kelas, tanggal: t, libur: true }); toast('Ditandai libur.'); await segarKelas(); } catch (e) { toast(e.message, true); }
+  }
   async function vSet(kunci, status) {
     const p = kunci.indexOf('|'), jenis = kunci.slice(0, p), id = kunci.slice(p + 1); let alasan = '';
     if (status === 'ditolak') { alasan = await mintaTeks('Tolak laporan', 'Kenapa ditolak? (wajib, supaya pembuatnya tahu apa yang harus diperbaiki)', { wajib: true, ya: 'Tolak laporan', bahaya: true }); if (!alasan) return; }
@@ -2240,8 +2330,16 @@
       if (n.length) a.push({ t: n.length === 1 ? `Iuran "${n[0].judul}" ${n[0].status === 'kurang' ? 'masih kurang ' + rp(n[0].nominal - n[0].dibayar) : 'belum dibayar'}` : `${n.length} iuran belum lunas`, b: 'Lihat', d: 'ktab', v: 'kas', tab: 'kas' });
     }
     if (p && p.saya && dow >= 1 && p.saya.hari === dow) a.push({ t: 'Hari ini giliran piketmu', tab: 'jadwal' });
-    if (r.izin.absensi && dow >= 1 && !(r.harian || []).some(x => x.tanggal === hari)) a.push({ t: 'Absen harian hari ini belum diisi', b: 'Isi sekarang', d: 'abuka', v: hari, tab: 'absensi', bahaya: true });
-    if (r.izin.piketLapor && dow >= 1 && p && (p.jadwal.find(x => x.hari === dow) || { orang: [] }).orang.length && !(p.laporan || []).some(x => x.tanggal === hari)) a.push({ t: 'Catatan piket hari ini belum ada', b: 'Catat piket', d: 'plapor', v: hari, tab: 'jadwal' });
+    // Hari ini DAN hari-hari kelewat (7 hari terakhir, Senin–Sabtu): yang belum diisi tidak hilang begitu ganti hari.
+    // Hari sebelum data pertama tercatat dan tanggal yang ditandai libur dilewati supaya tidak menagih hari yang memang kosong.
+    const libur = new Set(r.libur || []), mundur = n => new Date(Date.parse(hari + 'T12:00:00+07:00') - n * 864e5).toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+    const dowDari = t => new Date(t + 'T12:00:00+07:00').getUTCDay(), hariKelewat = [];
+    for (let n = 0; n <= 7; n++) { const t = n === 0 ? hari : mundur(n); if (dowDari(t) >= 1 && !libur.has(t)) hariKelewat.push(t); }
+    const harian = r.harian || [], tglHarian = new Set(harian.map(x => x.tanggal)), awalHarian = harian.length ? harian.reduce((m, x) => x.tanggal < m ? x.tanggal : m, hari) : hari;
+    const lap = (p && p.laporan) || [], tglLap = new Set(lap.map(x => x.tanggal)), awalLap = lap.length ? lap.reduce((m, x) => x.tanggal < m ? x.tanggal : m, hari) : hari;
+    const libuBtn = t => ({ b2: 'Libur', d2: 'libur', v2: t });
+    if (r.izin.absensi) hariKelewat.filter(t => !tglHarian.has(t) && t >= awalHarian).slice(0, 5).forEach(t => a.push(Object.assign({ t: t === hari ? 'Absen harian hari ini belum diisi' : `Absen harian ${tglIndo(t)} belum diisi`, b: 'Isi sekarang', d: 'abuka', v: t, tab: 'absensi', bahaya: true }, t === hari ? {} : libuBtn(t))));
+    if (r.izin.piketLapor && p) hariKelewat.filter(t => !tglLap.has(t) && t >= awalLap && (p.jadwal.find(x => x.hari === dowDari(t)) || { orang: [] }).orang.length).slice(0, 5).forEach(t => a.push(Object.assign({ t: t === hari ? 'Catatan piket hari ini belum ada' : `Catatan piket ${tglIndo(t)} belum ada`, b: 'Catat piket', d: 'plapor', v: t, tab: 'jadwal', bahaya: t !== hari }, t === hari ? {} : libuBtn(t))));
     const vt = vAntrian(r);
     if (vt.tolak.length) a.push({ t: vt.tolak.length === 1 ? 'Satu laporan ditolak, perbaiki dulu' : `${vt.tolak.length} laporan ditolak, perbaiki dulu`, b: 'Lihat', d: 'vgulir', v: '1', tab: '-', bahaya: true });
     if (r.validasi && r.validasi.izin && vt.tunggu.some(x => x.bisa)) a.push({ t: `${vt.tunggu.filter(x => x.bisa).length} laporan menunggu validasimu`, b: 'Periksa', d: 'vgulir', v: '1', tab: '-' });
@@ -2256,7 +2354,7 @@
   function perluHtml(r) {
     const a = perluItems(r);
     if (!a.length) return '<div class="todo ok"><span class="t">Beres. Tidak ada yang perlu kamu kerjakan sekarang.</span></div>';
-    return '<h2 class="sec">Perlu kamu kerjakan</h2>' + a.map(x => todoBaris(x, x.b ? `<button class="small" type="button" data-${x.d}="${esc(x.v)}">${esc(x.b)}</button>` : '')).join('');
+    return '<h2 class="sec">Perlu kamu kerjakan</h2>' + a.map(x => todoBaris(x, (x.b ? `<button class="small" type="button" data-${x.d}="${esc(x.v)}">${esc(x.b)}</button>` : '') + (x.b2 ? `<button class="ghost small" type="button" data-${x.d2}="${esc(x.v2)}">${esc(x.b2)}</button>` : ''))).join('');
   }
   function setupHtml(r) { // petunjuk awal untuk yang boleh mengelola: apa yang masih kosong
     const s = [];
@@ -2334,6 +2432,7 @@
     if (d.retry === 'kelas') return loadKelas(kelasEl, kelasData && kelasData.kelas);
     if (d.kbaru) return bukaInfoKelas(null);
     if (d.abuka) return bukaAbsKelas(d.abuka);
+    if (d.libur) return liburKlik(d.libur);
     if (d.abimpor) return abBuka();
     if (d.bfcepat) return briefingCepat();
     if (d.bfdialog) return bukaBriefing();
@@ -3241,6 +3340,92 @@
     b.disabled = false;
   };
   $('aiX').onclick = $('aiTutup').onclick = () => $('dlgAbsImpor').close();
+  // ---- Akun wali kelas (guru mengisi email; wali hanya melihat laporan kelasnya) ----
+  let wlAwal = {};
+  $('btnWali').onclick = async () => {
+    $('wlErr').textContent = ''; $('wlIsi').innerHTML = '<p class="muted">Memuat…</p>'; $('dlgWali').showModal();
+    try {
+      const r = await api('waliList'); wlAwal = {};
+      $('wlIsi').innerHTML = r.kelas.map((k, i) => { wlAwal[k.kelas] = k.email; return `<label for="wl${i}" style="margin:8px 0 2px">${esc(k.kelas)}${k.wali ? ' <span class="muted" style="font-weight:400">· ' + esc(k.wali) + '</span>' : ''}</label><input id="wl${i}" type="text" inputmode="email" autocomplete="off" data-k="${esc(k.kelas)}" value="${esc(k.email)}" placeholder="email wali kelas (opsional)" style="margin:0">`; }).join('');
+    } catch (e) { $('wlIsi').innerHTML = ''; $('wlErr').textContent = e.message; }
+  };
+  $('wlSimpan').onclick = async () => {
+    const b = $('wlSimpan'); b.disabled = true; $('wlErr').textContent = ''; let n = 0;
+    try {
+      for (const el of $('wlIsi').querySelectorAll('input[data-k]')) { if (el.value.trim() === (wlAwal[el.dataset.k] || '')) continue; await api('waliSet', { kelas: el.dataset.k, email: el.value.trim() }); wlAwal[el.dataset.k] = el.value.trim(); n++; }
+      toast(n ? `Wali kelas disimpan (${n} kelas).` : 'Tidak ada perubahan.'); if (n) $('dlgWali').close();
+    } catch (e) { $('wlErr').textContent = e.message; }
+    b.disabled = false;
+  };
+  $('wlX').onclick = $('wlTutup').onclick = () => $('dlgWali').close();
+  // ---- Tutup buku (guru): tutup semester, naik kelas, riwayat nilai ----
+  let tbMode = 'semester', tbData = null;
+  const tbAngka = v => v === null || v === undefined ? '–' : v;
+  function tbBuka(mode) { tbMode = mode; $('dlgTutupBuku').showModal(); tbTampil(); }
+  $('tbTab').onclick = e => { const b = e.target.closest('[data-tbm]'); if (b) { tbMode = b.dataset.tbm; tbTampil(); } };
+  $('tbX').onclick = $('tbTutup').onclick = () => $('dlgTutupBuku').close();
+  function tbKonfirmasi(label, harus) {
+    $('tbKonfWrap').hidden = false; $('tbKonfLabel').innerHTML = label; $('tbKonf').value = ''; $('tbKonf').placeholder = harus; $('tbAksi').hidden = false; $('tbAksi').disabled = true; tbData.harus = harus;
+  }
+  $('tbKonf').oninput = () => { $('tbAksi').disabled = $('tbKonf').value.trim() !== tbData.harus || (tbMode === 'naik' && !tbData.siap); };
+  async function tbTampil() {
+    $('tbTab').querySelectorAll('[data-tbm]').forEach(b => b.className = (b.dataset.tbm === tbMode ? '' : 'ghost ') + 'small');
+    $('tbErr').textContent = ''; $('tbAksi').hidden = true; $('tbKonfWrap').hidden = true; $('tbIsi').innerHTML = '<p class="muted">Memuat…</p>';
+    try {
+      if (tbMode === 'semester') {
+        const r = tbData = await api('tutupSemesterPratinjau');
+        $('tbIsi').innerHTML = `<p>Semester aktif <strong>${esc(r.semester)}</strong> akan ditutup. Setelah itu semester aktif menjadi <strong>${esc(r.berikut || '(isi manual)')}</strong>.</p>
+          <p class="muted" style="margin-top:0">Yang terjadi: nilai akhir semua siswa difoto ke Riwayat, tugas semester ini dikunci (tidak bisa dikumpul, dinilai, atau diubah lagi), dan siswa mulai dengan daftar tugas dan nilai semester baru yang kosong.</p>
+          <div class="sum"><span class="chip"><b>${r.jumlahTugas}</b> tugas</span><span class="chip"><b>${r.belumDinilai}</b> kiriman belum dinilai</span><span class="chip"><b>${r.belumRilis}</b> nilai belum dirilis</span><span class="chip"><b>${r.belumLewat}</b> deadline belum lewat</span></div>`
+          + (r.daftar.length ? '<p style="font-weight:700;margin:12px 0 4px">Sebaiknya dirapikan dulu:</p>' + r.daftar.map(d => `<div class="late" style="margin-bottom:6px"><strong>${esc(d.judul)}</strong> <span class="muted">· ${esc(d.mapel)} · ${esc(d.kelas)}</span><br>${esc(d.masalah)}</div>`).join('') + (r.lebihBanyak ? `<p class="muted">…dan ${r.lebihBanyak} tugas lagi.</p>` : '') : '<p class="muted">Semua tugas sudah rapi.</p>');
+        if (r.sudahDitutup) { $('tbIsi').insertAdjacentHTML('beforeend', '<p class="late">Semester ini sudah ditutup.</p>'); return; }
+        tbKonfirmasi(`Ketik <strong>${esc(r.semester)}</strong> untuk menyetujui`, r.semester); $('tbAksi').textContent = 'Tutup semester';
+      } else if (tbMode === 'naik') {
+        const r = tbData = await api('naikKelasPratinjau');
+        $('tbIsi').innerHTML = `<p class="muted" style="margin-top:0">Cadangan dibuat otomatis lebih dulu (kalau gagal, semua dibatalkan). Kelas X naik ke XI dengan nomor yang sama. Jabatan dan role ketua direset, dipilih ulang di kelas baru. Siswa kelas XI menjadi alumni dan tidak bisa masuk lagi. Data kas, piket, dan absen harian kelas lama tetap tersimpan di nama kelas lama.</p>
+          <div class="tablewrap"><table><thead><tr><th>Kelas</th><th>Menjadi</th><th>Siswa</th></tr></thead><tbody>${r.kelas.map(k => `<tr><td>${esc(k.dari)}</td><td>${k.aksi === 'naik' ? esc(k.ke) : k.aksi === 'alumni' ? 'Alumni ' + esc(r.tahunLulus) : '<span class="late">' + esc(k.alasan) + '</span>'}</td><td>${k.jumlah}</td></tr>`).join('')}</tbody></table></div>`
+          + (r.siap ? '' : `<p class="late">${esc(r.alasanBelum)}</p>`);
+        tbKonfirmasi('Ketik <strong>NAIK KELAS</strong> untuk menyetujui', 'NAIK KELAS'); $('tbAksi').textContent = 'Naikkan semua kelas'; if (!r.siap) $('tbAksi').disabled = true;
+      } else {
+        await tbRiwayat({});
+      }
+    } catch (e) { $('tbIsi').innerHTML = ''; $('tbErr').textContent = e.message; }
+  }
+  async function tbRiwayat(pilih) {
+    const r = await api('riwayatNilai', pilih);
+    if (!r.semester.length) { $('tbIsi').innerHTML = '<p class="muted">Belum ada riwayat. Riwayat terisi saat semester ditutup.</p>'; return; }
+    const mapel = Array.from(new Set(r.rows.map(x => x.mapel))).sort(), per = {};
+    r.rows.forEach(x => { (per[x.nis] = per[x.nis] || { nama: x.nama, m: {} }).m[x.mapel] = x.akhir; });
+    $('tbIsi').innerHTML = `<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin-bottom:8px"><select id="tbSem" aria-label="Semester" style="margin:0;min-width:0">${r.semester.map(x => `<option${x === r.pilih.semester ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select><select id="tbKel" aria-label="Kelas" style="margin:0;min-width:0">${r.kelas.map(x => `<option${x === r.pilih.kelas ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
+      <p class="muted" style="margin:0 0 6px">Nilai akhir per mapel, seperti saat semester ditutup.</p>
+      <div class="tablewrap"><table><thead><tr><th>Nama</th>${mapel.map(m => `<th>${esc(m)}</th>`).join('')}</tr></thead><tbody>${Object.keys(per).sort((a, b) => per[a].nama.localeCompare(per[b].nama)).map(n => `<tr><td>${esc(per[n].nama)}</td>${mapel.map(m => `<td>${tbAngka(per[n].m[m])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    $('tbSem').onchange = () => tbRiwayat({ semester: $('tbSem').value }).catch(e => { $('tbErr').textContent = e.message; });
+    $('tbKel').onchange = () => tbRiwayat({ semester: $('tbSem').value, kelas: $('tbKel').value }).catch(e => { $('tbErr').textContent = e.message; });
+  }
+  $('tbAksi').onclick = async () => {
+    const b = $('tbAksi'), semula = b.textContent; b.disabled = true; b.textContent = 'Memproses…'; $('tbErr').textContent = '';
+    try {
+      if (tbMode === 'semester') { const r = await api('tutupSemester', { konfirmasi: $('tbKonf').value.trim() }); toast(`Semester ditutup. Aktif sekarang: ${r.aktif}.`); }
+      else { const r = await api('naikKelas', { konfirmasi: $('tbKonf').value.trim() }); toast(`Selesai: ${r.naik} siswa naik kelas, ${r.alumni} jadi alumni.`); }
+      $('dlgTutupBuku').close(); loadDash();
+    } catch (e) { $('tbErr').textContent = e.message; b.textContent = semula; b.disabled = false; }
+  };
+  // Siswa: riwayat nilai semester sebelumnya (muncul setelah ada semester yang ditutup)
+  let semSiswa = null, riwayatDimuat = false;
+  function riwayatTampil() {
+    const w = $('sRiwWrap'); if (!w) return;
+    if (!semSiswa || !semSiswa.ditutup.length) { w.innerHTML = ''; return; }
+    if (w.firstChild) return;
+    w.innerHTML = '<details class="panel" id="sRiw"><summary style="cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center">Riwayat semester sebelumnya</summary><div id="sRiwIsi" class="muted">Memuat…</div></details>';
+    $('sRiw').ontoggle = async () => {
+      if (!$('sRiw').open || riwayatDimuat) return;
+      try {
+        const r = await api('riwayatSaya'), per = {}; r.riwayat.forEach(x => { (per[x.semester + ' · ' + x.kelas] = per[x.semester + ' · ' + x.kelas] || []).push(x); });
+        riwayatDimuat = true;
+        $('sRiwIsi').className = ''; $('sRiwIsi').innerHTML = Object.keys(per).sort().reverse().map(k => `<h3 style="margin:10px 0 4px">${esc(k)}</h3>` + per[k].sort((a, b) => a.mapel.localeCompare(b.mapel)).map(x => `<div class="kv"><span class="k">${esc(x.mapel)}</span><span><strong>${tbAngka(x.akhir)}</strong> <span class="muted">tugas ${tbAngka(x.tugas)} · sumatif ${tbAngka(x.sumatif)} · STS ${tbAngka(x.sts)} · SAS ${tbAngka(x.sas)}</span></span></div>`).join('')).join('') || '<p class="muted">Belum ada riwayat nilai.</p>';
+      } catch (e) { $('sRiwIsi').textContent = e.message || 'Gagal memuat riwayat.'; }
+    };
+  }
   let im = null; // keadaan dialog impor
   const imTugasNilai = () => (im.tugas || []).filter(t => t.bentuk === 'nilai' && t.mapel === $('imMapel').value && t.kelas.indexOf($('imKelas').value) >= 0);
   const imTahunAjaran = () => { const t = hariIni(), y = Number(t.slice(0, 4)), m = Number(t.slice(5, 7)); return m >= 7 ? `Gasal ${y}/${y + 1}` : `Genap ${y - 1}/${y}`; };
@@ -3364,17 +3549,22 @@
     ({ pHome: loadDash, pTugas: loadTugasAdmin, pNilai: loadNilaiOpsi, pAbsen: loadAbsenOpsi, pSiswa: loadSiswa, pInfo: loadInfo, pLapor: loadLaporan, pKelas: () => loadKelas('pKelasBody', kelasData && kelasData.kelas), pLapKelas: () => loadLapKelas('pLapKelasBody') })[id]();
   }
 
-  async function loadTugasAdmin() {
-    if (!$('tList').innerHTML) $('tList').innerHTML = skBerisi(skKartu(3));
-    try {
-      const r = await api('listTugas'); opsi = r;
-      $('tMapel').innerHTML = r.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
-      drawKelasBox();
-      $('tList').innerHTML = r.tugas.length ? r.tugas.map(t => `<div class="panel card"><div class="row">
+  function drawTugasAdmin() {
+    if (fjAdmin !== 'semua' && !tugasAdmin.some(t => jenisDari(t) === fjAdmin)) fjAdmin = 'semua';
+    const daftar = fjAdmin === 'semua' ? tugasAdmin : tugasAdmin.filter(t => jenisDari(t) === fjAdmin);
+    $('tList').innerHTML = fjBar(tugasAdmin, fjAdmin, 'fja') + (daftar.length ? daftar.map(t => `<div class="panel card"><div class="row">
         <div><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}${jenisTag(t.jenis)}</div><h3>${esc(t.judul)}</h3>
         <div class="muted">Deadline ${fmt(t.deadline)} · ${t.kumpul} dari ${t.total} sudah kumpul</div>${!t.rilis && t.kumpul - t.belumDinilai > 0 ? '<div class="due-soon">Nilai belum dirilis ke siswa</div>' : ''}</div>
         <button class="ghost small" data-id="${esc(t.id)}">Buka</button></div></div>`).join('')
-        : '<p class="muted">Belum ada tugas. Klik "Tugas baru" untuk membuat yang pertama.</p>';
+      : '<p class="muted">Belum ada tugas. Klik "Tugas baru" untuk membuat yang pertama.</p>');
+  }
+  async function loadTugasAdmin() {
+    if (!$('tList').innerHTML) $('tList').innerHTML = skBerisi(skKartu(3));
+    try {
+      const r = await api('listTugas'); opsi = r; tugasAdmin = r.tugas;
+      $('tMapel').innerHTML = r.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
+      drawKelasBox();
+      drawTugasAdmin();
     } catch (e) { msg('adminMsg', e.message); }
   }
   function drawKelasBox() {
@@ -3397,7 +3587,7 @@
     } catch (e) { msg('adminMsg', e.message); }
     b.disabled = false;
   };
-  $('tList').onclick = e => { if (e.target.dataset.id) openRekap(e.target.dataset.id); };
+  $('tList').onclick = e => { const f = e.target.closest('[data-fja]'); if (f) { fjAdmin = f.dataset.fja; return drawTugasAdmin(); } if (e.target.dataset.id) openRekap(e.target.dataset.id); };
   $('btnBack').onclick = () => { tab('pTugas'); loadTugasAdmin(); };
 
   async function openRekap(id) {
