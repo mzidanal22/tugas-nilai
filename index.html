@@ -191,32 +191,38 @@
   .cellin.dirty { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
   :root[data-tema=dark] { --bg: #0D231A; --ink: #EAF2E4; --muted: #9DB8A6; --line: #25402F; --panel: #143324; --accent: #D4F02A; --accent-ink: #0F2A1C; --ok: #5FE0A0; --bad: #FF8A80; --warn: #FFB454; --dot: #17352A; --edge: #46664F; --shd: #040E08; --lime: #D4F02A; --lime-ink: #0F2A1C; }
   :root[data-tema=light] { --bg: #F1F4EC; --ink: #0F2A1C; --muted: #4B6656; --line: #C5D2C3; --panel: #FFFFFF; --accent: #12372A; --accent-ink: #FFFFFF; --ok: #1B7A45; --bad: #B3261E; --warn: #8A5300; --dot: #DDE5D6; --edge: #0F2A1C; --shd: #0F2A1C; --lime: #D4F02A; --lime-ink: #0F2A1C; }
-  .login { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 28px; align-items: center; min-height: 68vh; }
-  .hero h1 { max-width: 17ch; }
+  .login { display: grid; place-items: center; min-height: calc(100svh - 150px); }
+  body.masuk main { padding: 12px 20px 20px; } /* halaman masuk tidak punya menu bawah, jadi tidak perlu ruang kosong di bawah */
+  @media (max-width: 360px) { .logincard { padding: 18px; } .logincard h1 { font-size: 1.65rem; } .logincard .script { font-size: 1.25rem; } }
   .lead { font-size: 1.05rem; color: var(--muted); max-width: 46ch; }
-  .ftabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 6px; }
   .ftab { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 99px; padding: 6px 16px; min-height: 38px; }
   .ftab.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  .frame { position: relative; margin: 30px 8px 8px; padding: 18px; max-width: 26rem; border: 1.5px solid var(--accent); border-radius: 4px; background: var(--panel); }
-  .fname { position: absolute; top: -23px; left: -1px; font-size: .8rem; font-weight: 600; color: var(--accent); }
-  .hd { position: absolute; width: 9px; height: 9px; background: var(--panel); border: 1.5px solid var(--accent); }
   .hd.tl { top: -5px; left: -5px; } .hd.tr { top: -5px; right: -5px; } .hd.bl { bottom: -5px; left: -5px; } .hd.br { bottom: -5px; right: -5px; }
-  .fbody h3 { margin-top: 2px; }
-  .logincard { padding: 28px; margin: 0; }
-  .logincard h2 { font-size: 1.7rem; margin: 0 0 16px; }
-  .steps { list-style: none; counter-reset: s; padding: 0; margin: 24px 0 0; display: grid; gap: 14px; }
-  .steps li { counter-increment: s; display: grid; grid-template-columns: 28px 1fr; column-gap: 12px; }
-  .steps li::before { content: counter(s); grid-row: span 2; width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); display: grid; place-items: center; font-weight: 800; font-size: .85rem; }
-  .steps span { color: var(--muted); font-size: .9rem; }
-  @media (max-width: 860px) { .login { grid-template-columns: 1fr; gap: 20px; } .logincard { order: -1; } }
+  .logincard { padding: 28px; margin: 0; width: 100%; max-width: 26rem; position: relative; }
+  /* latar halaman masuk: garis diagonal yang bergerak turun, teks kecil yang muncul lalu memudar (hiasan saja) */
+  .bgfx { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  .bgfx[hidden] { display: none; }
+  .bgfx .pita { position: absolute; inset: -240px; display: block; }
+  .bgfx .pita.a { background: linear-gradient(135deg, transparent 46%, var(--edge) 46% 54%, transparent 54%) 0 0 / 56px 56px; opacity: .10; }
+  .bgfx .pita.b { background: linear-gradient(135deg, transparent 38%, var(--lime) 38% 62%, transparent 62%) 0 0 / 224px 224px; opacity: .24; }
+  .bgfx .pop { position: absolute; opacity: 0; white-space: nowrap; padding: 8px 16px; border: 2px solid var(--edge); border-radius: 99px; background: var(--panel); color: var(--ink); font-weight: 700; font-size: .9rem; box-shadow: 3px 3px 0 var(--shd); }
+  .bgfx .pop.lime { background: var(--lime); color: var(--lime-ink); border-color: var(--shd); }
   @media (prefers-reduced-motion: no-preference) {
-    .frame { animation: frameIn .7s cubic-bezier(.2,.8,.2,1) both; }
-    .hd { animation: pop .35s .45s cubic-bezier(.3,1.6,.5,1) both; }
+    .bgfx .pita.a { animation: diagA 16s linear infinite; }
+    .bgfx .pita.b { animation: diagB 36s linear infinite; }
+    .bgfx .pop.on { animation: popFade 3.6s ease both; }
+  }
+  @media (prefers-reduced-motion: reduce) { .bgfx .pop { display: none; } }
+  :root[data-tema=dark] .bgfx .pita.b { opacity: .11; }
+  @media (prefers-color-scheme: dark) { :root:not([data-tema=light]) .bgfx .pita.b { opacity: .11; } }
+  @keyframes diagA { to { transform: translate3d(56px, 56px, 0); } }
+  @keyframes diagB { to { transform: translate3d(224px, 224px, 0); } }
+  @keyframes popFade { 0% { opacity: 0; transform: translateY(16px) scale(.92); } 14% { opacity: 1; transform: none; } 76% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-10px) scale(.98); } }
+  .logincard h1 { font-size: clamp(1.8rem, 8vw, 2.3rem); margin: 0 0 8px; max-width: none; }
+  @media (prefers-reduced-motion: no-preference) {
     .fade { animation: naik .18s ease-out both; }
     button:active:not(:disabled) { transform: translateY(1px); }
   }
-  @keyframes frameIn { from { opacity: 0; transform: scale(.96); } }
-  @keyframes pop { from { opacity: 0; transform: scale(0); } }
   @keyframes naik { from { opacity: 0; transform: translateY(6px); } }
   .abrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
   .abrow:last-child { border-bottom: 0; }
@@ -314,27 +320,17 @@
   table.matrix th { max-width: 8rem; }
   table.matrix thead tr:nth-child(2) th:first-child { position: static; background: transparent; text-align: center; }
   /* layar awal: kartu fitur, panduan pasang, bantuan masuk */
-  .fitur-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 14px; }
-  .fitur { display: block; background: var(--panel); border: 2px solid var(--edge); border-radius: 16px; box-shadow: 3px 3px 0 var(--shd); padding: 12px 14px; }
-  .fitur b { display: block; margin-bottom: 4px; }
-  .fitur span { display: block; color: var(--muted); font-size: .875rem; }
-  details.pasang summary, details.bantuan summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
-  details.pasang p { margin: 6px 0; }
   details.bantuan { margin-top: 12px; border-top: 1px solid var(--line); }
   details.bantuan ul { margin: 4px 0 12px; padding-left: 1.2rem; }
   a.tombol { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 18px; border: 2px solid var(--shd); border-radius: 99px; background: var(--accent); color: var(--accent-ink); font-weight: 700; text-decoration: none; box-shadow: 3px 3px 0 var(--shd); }
   a.tombol[hidden] { display: none; }
-  @media (min-width: 720px) { .fitur-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   label.cek { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 14px; font-weight: 600; cursor: pointer; }
   label.cek[hidden] { display: none; }
   label.cek input { width: 22px; height: 22px; flex: none; margin: 2px 0 0; accent-color: var(--accent); }
   label.cek .muted { display: block; font-weight: 400; font-size: .85rem; }
   sup.ai { margin-left: 3px; padding: 0 4px; border-radius: 6px; background: var(--lime); color: var(--lime-ink); font-size: .62rem; font-weight: 800; }
   /* ===== Animasi: hanya dijalankan kalau pengguna tidak meminta gerakan dikurangi ===== */
-  .login { align-items: start; }
   .login > * { min-width: 0; }
-  .marquee { max-width: 100%; contain: paint; }
-  @media (min-width: 861px) { .logincard { position: sticky; top: 16px; } }
   .caret { display: inline-block; width: 2px; height: 1.1em; margin-left: 2px; background: var(--ink); vertical-align: -0.2em; }
   .ketik { border: 2px solid var(--edge); border-radius: 12px; background: var(--panel); padding: 10px 12px; min-height: 44px; margin: 4px 0 10px; font-weight: 600; word-break: break-all; }
   .btn-demo { display: inline-block; padding: 9px 18px; border: 2px solid var(--shd); border-radius: 99px; background: var(--accent); color: var(--accent-ink); font-weight: 700; box-shadow: 3px 3px 0 var(--shd); transition: transform .12s, box-shadow .12s; }
@@ -347,41 +343,13 @@
   .v-row .tag { transition: transform .2s; }
   #ak4chips .chip { opacity: 0; transform: translateY(8px) scale(.9); transition: opacity .3s, transform .3s; }
   #ak4chips .chip.muncul { opacity: 1; transform: none; }
-  .marquee { overflow: hidden; margin: 18px 0 6px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); padding: 4px 0 6px; }
-  .marquee .track { display: flex; gap: 10px; width: max-content; }
-  .marquee .track span { white-space: nowrap; padding: 8px 16px; border: 2px solid var(--edge); border-radius: 99px; background: var(--panel); font-weight: 700; box-shadow: 2px 2px 0 var(--shd); }
-  .marquee .track span:nth-child(3n) { background: var(--lime); color: var(--lime-ink); border-color: var(--shd); }
-  .alur { margin-top: 34px; }
-  .alur h2 { margin: 0 0 8px; }
-  .alur-sticky { position: sticky; top: 6px; z-index: 3; padding: 8px 0; background: color-mix(in srgb, var(--bg) 94%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-  .alur-bar { display: flex; align-items: center; gap: 10px; font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: 10px; --p: 0; }
-  .alur-bar ol { list-style: none; display: flex; flex: 1; justify-content: space-between; align-items: center; margin: 0; padding: 0; position: relative; }
-  .alur-bar ol::before { content: ''; position: absolute; left: 15px; right: 15px; top: 50%; height: 3px; transform: translateY(-50%); background: var(--line); }
-  .alur-bar ol::after { content: ''; position: absolute; left: 15px; top: 50%; height: 3px; transform: translateY(-50%); background: var(--accent); width: calc((100% - 30px) * var(--p)); transition: width .45s ease; }
-  .alur-bar li { position: relative; z-index: 1; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--edge); background: var(--panel); color: var(--ink); display: grid; place-items: center; font-size: .72rem; transition: background .25s, transform .25s; }
-  .alur-bar li.lalu { background: var(--accent); color: var(--accent-ink); }
-  .alur-bar li.on { background: var(--lime); color: var(--lime-ink); transform: scale(1.18); box-shadow: 2px 2px 0 var(--shd); }
-  .alur-frame { position: relative; min-height: 232px; overflow: hidden; margin: 0; padding: 0; }
-  .alur-frame .pane { position: absolute; inset: 0; padding: 16px 18px; opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .3s, transform .3s; }
-  .alur-frame .pane.on { opacity: 1; transform: none; }
-  .alur-frame .pane h3 { margin: 2px 0 4px; }
-  .alur-langkah { list-style: none; padding: 0; margin: 0; }
-  .alur-langkah li { min-height: 50vh; padding: 26px 0; opacity: .3; transition: opacity .35s; }
-  .alur-langkah li.on { opacity: 1; }
-  .alur-langkah .no { display: block; font-weight: 700; font-size: .85rem; color: var(--ok); }
-  .alur-langkah h3 { font-size: 1.55rem; letter-spacing: -0.035em; margin: 4px 0 8px; }
   h1.mengetik::after { content: ''; display: inline-block; width: 3px; height: .9em; margin-left: 3px; background: var(--lime); vertical-align: -0.1em; }
   @keyframes kedip { 50% { opacity: 0; } }
-  @keyframes melayang { 50% { transform: translateY(-6px); } }
-  @keyframes jalan { to { transform: translateX(calc(-50% - 5px)); } }
   @keyframes dlgMuncul { from { opacity: 0; transform: translateY(14px) scale(.97); } }
   @keyframes bdMuncul { from { opacity: 0; } }
   @media (prefers-reduced-motion: no-preference) {
     .caret { animation: kedip 1s steps(1) infinite; }
     h1.mengetik::after { animation: kedip .9s steps(1) infinite; }
-    .marquee .track { animation: jalan 32s linear infinite; }
-    .marquee:hover .track { animation-play-state: paused; }
-    .fitur { animation: melayang 6s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -1.5s); }
     .fitur:nth-child(2) { --i: 1; } .fitur:nth-child(3) { --i: 2; } .fitur:nth-child(4) { --i: 3; }
     .fade > * { animation: naik .4s cubic-bezier(.2,.8,.2,1) both; }
     .fade > *:nth-child(2) { animation-delay: .05s; } .fade > *:nth-child(3) { animation-delay: .1s; } .fade > *:nth-child(4) { animation-delay: .15s; }
@@ -390,14 +358,11 @@
     dialog[open]::backdrop { animation: bdMuncul .2s ease-out; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .marquee .track { width: auto; flex-wrap: wrap; }
-    .marquee .track .dup { display: none; }
-    .alur-langkah li { opacity: 1; min-height: 0; }
-    .alur-sticky { position: static; }
   }
 </style>
 </head>
 <body>
+<div class="bgfx" id="bgfx" aria-hidden="true" hidden><i class="pita a"></i><i class="pita b"></i><span class="pop"></span><span class="pop"></span><span class="pop"></span></div>
 <div id="topbar" aria-hidden="true"><i></i></div>
 <header>
   <span class="brand"><span class="logo-mark" role="img" aria-label="Logo Zidan Labs"></span>Zidan Labs</span>
@@ -416,94 +381,13 @@
   </div>
 
   <section id="vLogin" class="login" hidden>
-    <div class="hero">
-      <span class="script">buka, cek, kumpulkan.</span>
-      <h1>Tugas, deadline, dan nilaimu ada di <span class="hl">satu tempat.</span></h1>
-      <p class="lead">Kumpulkan tugas lewat link atau file, lihat kapan batasnya, dan baca nilai beserta catatan guru tanpa bertanya di grup.</p>
-      <div class="marquee" aria-hidden="true"><div class="track">
-        <span>Tugas dan deadline</span><span>Nilai akhir</span><span>Absen harian</span><span>Kas kelas</span><span>Jadwal piket</span><span>Validasi laporan</span><span>Seragam hari ini</span><span>Info kelas</span>
-        <span class="dup">Tugas dan deadline</span><span class="dup">Nilai akhir</span><span class="dup">Absen harian</span><span class="dup">Kas kelas</span><span class="dup">Jadwal piket</span><span class="dup">Validasi laporan</span><span class="dup">Seragam hari ini</span><span class="dup">Info kelas</span>
-      </div></div>
-      <div class="ftabs" role="group" aria-label="Contoh tampilan">
-        <button class="ftab on" data-fitur="tugas" aria-pressed="true" type="button">Tugas</button>
-        <button class="ftab" data-fitur="nilai" aria-pressed="false" type="button">Nilai</button>
-        <button class="ftab" data-fitur="info" aria-pressed="false" type="button">Pengumuman</button>
-      </div>
-      <div class="frame" id="frame">
-        <span class="fname">Contoh tampilan, tidak ada data yang dikirim</span>
-        <i class="hd tl"></i><i class="hd tr"></i><i class="hd bl"></i><i class="hd br"></i>
-        <div class="fbody" data-p="tugas">
-          <div id="demoForm">
-            <div class="muted">Desain Komputer Grafis</div>
-            <h3>Poster Event Sekolah</h3>
-            <p class="muted">Deadline Jumat 19.00 WIB, <span class="due-soon">19 jam lagi</span></p>
-            <label for="demoLink">Link tugas</label>
-            <input id="demoLink" placeholder="https://figma.com/..." autocomplete="off">
-            <button id="demoKirim" type="button">Kumpulkan</button>
-          </div>
-          <div id="demoOk" hidden>
-            <div class="banner"><strong>✓ Berhasil dikumpulkan</strong><div class="muted" id="demoJam"></div><div class="muted" style="margin-top:6px">Nilai akan muncul di sini setelah guru menilai.</div></div>
-            <button class="ghost small" id="demoUlang" type="button">Coba lagi</button>
-          </div>
-        </div>
-        <div class="fbody" data-p="nilai" hidden>
-          <div class="muted">Poster Event Sekolah</div>
-          <div class="nilai-big">88</div>
-          <p style="margin:8px 0 0">Komposisi rapi dan kontras warna sudah pas. Tambahkan variasi ukuran huruf.</p>
-        </div>
-        <div class="fbody" data-p="info" hidden>
-          <span class="tag">Disematkan</span>
-          <h3 style="margin-top:8px">Besok bawa laptop</h3>
-          <p style="margin:0">Praktik Figma di lab. Link tugas dikumpulkan sebelum jam 12.</p>
-        </div>
-      </div>
-      <section class="alur" id="alur" aria-labelledby="alurJudul">
-        <span class="script">scroll pelan-pelan.</span>
-        <h2 id="alurJudul">Dari tugas sampai nilai akhir.</h2>
-        <div class="alur-sticky">
-          <div class="alur-bar" id="alurBar" aria-hidden="true"><span>Tugas</span><ol id="alurDots"><li class="on">00</li><li>01</li><li>02</li><li>03</li><li>04</li></ol><span>Nilai</span></div>
-          <div class="alur-frame panel" id="alurFrame" aria-hidden="true">
-            <div class="pane on"><div class="muted">Dasar Komputer Grafis</div><h3>Poster Event Sekolah</h3><p class="muted">Deadline Jumat 19.00 WIB · <span class="due-soon">19 jam lagi</span></p>
-              <div class="muted" style="font-size:.8rem">Catatan untuk dirimu</div><div class="ketik"><span id="ak0"></span><i class="caret"></i></div></div>
-            <div class="pane"><div class="muted">Link tugas</div><div class="ketik"><span id="ak1"></span><i class="caret"></i></div>
-              <span class="btn-demo" id="akKirim">Kumpulkan</span><div class="banner" id="akOk" style="opacity:0;margin-top:12px"><strong>✓ Berhasil dikumpulkan</strong></div></div>
-            <div class="pane"><div class="muted">Poster Event Sekolah</div><div class="nilai-big"><span id="ak2n">0</span></div><div class="meter" style="margin:8px 0"><i id="ak2m" style="width:0"></i></div>
-              <p style="margin:0;min-height:2.6em"><span id="ak2c"></span><i class="caret"></i></p></div>
-            <div class="pane"><div class="v-row"><span>Absen harian</span><span class="tag ok">Diterima</span></div><div class="v-row"><span>Catatan piket</span><span class="tag warn" id="ak3a">Menunggu validasi</span></div><div class="v-row"><span>Nota kas</span><span class="tag bad" id="ak3b">Ditolak: nota buram</span></div></div>
-            <div class="pane"><div class="muted">Nilai akhir</div><div class="nilai-big"><span id="ak4n">0.0</span></div><div id="ak4chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><span class="chip">Tugas <b>90</b></span><span class="chip">Sumatif <b>80</b></span><span class="chip">STS <b>60</b></span></div></div>
-          </div>
-        </div>
-        <ol class="alur-langkah">
-          <li data-i="0" class="on"><span class="no">00 · Hari ini</span><h3>Tugas tampil jelas.</h3><p class="muted">Mapel, judul, dan batas waktunya langsung kelihatan di Beranda. Nggak perlu nanya lagi di grup.</p></li>
-          <li data-i="1"><span class="no">01 · Kumpul</span><h3>Tinggal tempel link atau pilih file.</h3><p class="muted">Sekali tekan, waktunya tercatat. Salah file? Ganti dulu sebelum dinilai.</p></li>
-          <li data-i="2"><span class="no">02 · Dinilai</span><h3>Nilai dan catatan guru muncul di sini.</h3><p class="muted">Begitu guru merilis, kamu bisa melihat nilai beserta catatannya.</p></li>
-          <li data-i="3"><span class="no">03 · Dicek</span><h3>Laporan kelas ada yang mengecek.</h3><p class="muted">Absen, piket, dan kas diperiksa ketua, wakil, dan guru, jadi datanya bisa dipercaya.</p></li>
-          <li data-i="4"><span class="no">04 · Nilai akhir</span><h3>Semua jadi satu nilai akhir.</h3><p class="muted">Rata-rata tugas, sumatif, STS, dan SAS digabung otomatis. Rinciannya bisa kamu lihat.</p></li>
-        </ol>
-      </section>
-      <h2 class="sec" style="margin-top:26px">Isi aplikasinya</h2>
-      <div class="fitur-grid">
-        <div class="fitur"><b>Tugas dan deadline</b><span>Kumpulkan lewat link atau file, lengkap dengan batas waktunya.</span></div>
-        <div class="fitur"><b>Nilai akhir</b><span>Tugas, sumatif, STS, dan SAS dirangkum jadi satu nilai.</span></div>
-        <div class="fitur"><b>Kelasku</b><span>Absen harian, kas, piket, jadwal, dan info kelas.</span></div>
-        <div class="fitur"><b>Validasi laporan</b><span>Ketua, wakil, dan guru memeriksa laporan pengurus.</span></div>
-      </div>
-      <details class="panel pasang">
-        <summary>Pasang di layar utama HP</summary>
-        <p><strong>iPhone (Safari):</strong> ketuk ikon Bagikan, lalu pilih "Tambahkan ke Layar Utama".</p>
-        <p><strong>Android (Chrome):</strong> ketuk titik tiga di pojok kanan atas, lalu pilih "Tambahkan ke layar utama" atau "Instal aplikasi".</p>
-      </details>
-      <p class="muted" style="margin-top:14px">Nilai dan data kelas hanya bisa dibuka setelah masuk dengan akun Google sekolahmu. Nilai tiap siswa hanya terlihat oleh siswa itu sendiri dan guru.</p>
-    </div>
     <div class="panel logincard">
-      <h2>Masuk</h2>
+      <span class="script">buka, cek, kumpulkan.</span>
+      <h1>Masuk ke Zidan Labs</h1>
+      <p class="muted" style="margin:0 0 18px">Tugas, nilai, dan info kelasmu ada di sini. Pakai akun Google sekolahmu.</p>
       <div id="gbtn"></div>
       <div class="msg" id="loginMsg" role="alert"></div>
-      <ol class="steps">
-        <li><strong>Masuk dengan Google</strong><span>Pakai akun Google sekolahmu.</span></li>
-        <li><strong>Hubungkan akunmu</strong><span>Isi nama dan NIS (atau kode dari guru). Cukup sekali.</span></li>
-        <li><strong>Mulai</strong><span>Tugas dan nilaimu langsung muncul.</span></li>
-      </ol>
+      <p class="muted" style="margin:14px 0 0;font-size:.9rem">Pertama kali masuk? Kamu diminta mengisi nama dan NIS (atau kode dari guru), cukup sekali.</p>
       <details class="bantuan">
         <summary>Tidak bisa masuk?</summary>
         <ul>
@@ -513,6 +397,7 @@
         </ul>
         <a class="tombol" id="waBantuan" target="_blank" rel="noopener noreferrer" hidden>Chat wali kelas</a>
       </details>
+      <p class="muted" style="margin:14px 0 0;font-size:.82rem">Nilai tiap siswa hanya terlihat oleh siswa itu sendiri dan guru.</p>
     </div>
   </section>
 
@@ -1101,7 +986,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.21-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.22-a'; // harus sama dengan VERSI di Code.gs
   // ----- Pembantu animasi: mengetik dan menghitung naik. Semuanya langsung ke hasil akhir kalau pengguna meminta gerakan dikurangi. -----
   const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ketikEl = async (el, teks, kec = 34, batal = () => false) => {
@@ -1163,7 +1048,7 @@
   const JAB_NAMA = { wakil: 'Wakil ketua', sekretaris: 'Sekretaris', bendahara: 'Bendahara', kebersihan: 'Divisi kebersihan' };
   try { token = sessionStorage.getItem('tok'); } catch (e) {}
 
-  function show(id) { $('vLoad').hidden = true; ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); anim($(id)); }
+  function show(id) { document.body.classList.toggle('masuk', id === 'vLogin'); $('vLoad').hidden = true; ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); $('bgfx').hidden = id !== 'vLogin'; anim($(id)); }
   function toast(text, err) {
     const el = document.createElement('div'); el.className = 'toast' + (err ? ' err' : ''); el.textContent = text;
     $('toasts').appendChild(el); setTimeout(() => el.remove(), err ? 6000 : 3500);
@@ -3866,80 +3751,22 @@
     const t = gelap ? 'light' : 'dark'; pasangTema(t); try { localStorage.setItem('tema', t); } catch (e) {}
   };
 
-  /* halaman masuk: contoh tampilan yang bisa dicoba */
-  const ftabs = [...document.querySelectorAll('.ftab')];
-  ftabs.forEach(b => b.onclick = () => {
-    ftabs.forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); });
-    document.querySelectorAll('#frame .fbody').forEach(p => { p.hidden = p.dataset.p !== b.dataset.fitur; if (!p.hidden) anim(p); });
-  });
-  const demoKirim = () => {
-    if (!$('demoLink').value.trim()) { $('demoLink').focus(); return; }
-    $('demoJam').textContent = 'Dikumpulkan pukul ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    $('demoForm').hidden = true; $('demoOk').hidden = false; anim($('demoOk'));
-  };
-  $('demoKirim').onclick = demoKirim;
-  $('demoLink').onkeydown = e => { if (e.key === 'Enter') demoKirim(); };
-  $('demoUlang').onclick = () => { $('demoLink').value = ''; $('demoOk').hidden = true; $('demoForm').hidden = false; anim($('demoForm')); $('demoLink').focus(); };
-
-  /* ---------- animasi halaman awal: alur bergulir, demo otomatis ---------- */
+  /* halaman masuk: teks kecil yang muncul di tiga tempat berbeda lalu memudar. Hiasan saja: dimatikan kalau pengguna meminta gerakan dikurangi, berhenti saat tab tersembunyi atau sesudah masuk. */
   (() => {
-    const bagian = $('alur'); if (!bagian) return;
-    const panes = [...document.querySelectorAll('#alurFrame .pane')], langkah = [...document.querySelectorAll('.alur-langkah li')], titik = [...document.querySelectorAll('#alurDots li')];
-    const LINK = 'https://figma.com/poster-event', KOM = 'Komposisi rapi, tambahkan variasi ukuran huruf.';
-    let tok = 0, aktif = -1, idx = 0, terlihat = false;
-    const mati = t => t !== tok, k = (id, teks, t, kec) => ketikEl($(id), teks, kec, () => mati(t)), h = (id, ke, t, des, dur) => hitungEl($(id), ke, des, dur, () => mati(t));
-    const tag = (el, kelas, teks) => { el.className = 'tag ' + kelas; el.textContent = teks; };
-    const adegan = [
-      async t => { if (REDUCE) { $('ak0').textContent = 'Tugas apa yang harus kukumpulkan hari ini?'; return; }
-        while (!mati(t)) { await k('ak0', 'Tugas apa yang harus kukumpulkan hari ini?', t); await tunggu(2200); if (mati(t)) return; $('ak0').textContent = ''; await tunggu(400); } },
-      async t => { const ok = $('akOk'), b = $('akKirim'); if (REDUCE) { $('ak1').textContent = LINK; ok.style.opacity = 1; return; }
-        while (!mati(t)) { ok.style.opacity = 0; $('ak1').textContent = ''; await k('ak1', LINK, t, 28); await tunggu(500); if (mati(t)) return;
-          b.classList.add('tekan'); await tunggu(180); b.classList.remove('tekan'); ok.style.opacity = 1; await tunggu(2600); } },
-      async t => { const m = $('ak2m'); if (REDUCE) { $('ak2n').textContent = '88'; m.style.width = '88%'; $('ak2c').textContent = KOM; return; }
-        while (!mati(t)) { $('ak2n').textContent = '0'; m.style.width = '0'; $('ak2c').textContent = ''; await tunggu(250); if (mati(t)) return;
-          m.style.width = '88%'; await h('ak2n', 88, t, 0, 1100); await k('ak2c', KOM, t, 24); await tunggu(2400); } },
-      async t => { const a = $('ak3a'), b = $('ak3b'); if (REDUCE) { tag(a, 'ok', 'Diterima'); tag(b, 'ok', 'Diterima'); return; }
-        while (!mati(t)) { tag(a, 'warn', 'Menunggu validasi'); tag(b, 'bad', 'Ditolak: nota buram'); await tunggu(1300); if (mati(t)) return;
-          tag(a, 'ok', 'Diterima'); a.classList.add('pop'); await tunggu(1200); a.classList.remove('pop'); if (mati(t)) return;
-          tag(b, 'warn', 'Nota diganti, menunggu'); await tunggu(1200); if (mati(t)) return; tag(b, 'ok', 'Diterima'); b.classList.add('pop'); await tunggu(2200); b.classList.remove('pop'); } },
-      async t => { const cs = [...document.querySelectorAll('#ak4chips .chip')]; if (REDUCE) { cs.forEach(c => c.classList.add('muncul')); $('ak4n').textContent = '76.7'; return; }
-        while (!mati(t)) { cs.forEach(c => c.classList.remove('muncul')); $('ak4n').textContent = '0.0';
-          for (const c of cs) { await tunggu(380); if (mati(t)) return; c.classList.add('muncul'); }
-          await h('ak4n', 76.7, t, 1, 1000); await tunggu(2800); } },
-    ];
-    const set = i => {
-      if (i === aktif) return; aktif = i; const t = ++tok;
-      panes.forEach((p, n) => p.classList.toggle('on', n === i)); langkah.forEach((l, n) => l.classList.toggle('on', n === i));
-      titik.forEach((d, n) => { d.classList.toggle('on', n === i); d.classList.toggle('lalu', n < i); });
-      $('alurBar').style.setProperty('--p', i / (panes.length - 1)); adegan[i](t);
-    };
-    const berhenti = () => { ++tok; aktif = -1; };
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(es => es.forEach(e => { terlihat = e.isIntersecting; terlihat ? set(idx) : berhenti(); }), { threshold: 0.05 }).observe(bagian);
-      const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { idx = Number(e.target.dataset.i); if (terlihat) set(idx); } }), { rootMargin: '-50% 0px -42% 0px' });
-      langkah.forEach(l => io.observe(l));
-    } else { set(0); }
-    document.addEventListener('visibilitychange', () => { if (document.hidden) berhenti(); else if (terlihat) set(idx); });
-
-    // demo "Contoh tampilan" berjalan sendiri sampai pengunjung menyentuhnya
-    if (REDUCE) return;
-    const frame = $('frame'); if (!frame) return;
-    let td = 0, lihat = false, sentuh = 0;
-    const pegang = () => { sentuh = Date.now(); };
-    ['pointerdown', 'keydown', 'focusin'].forEach(ev => { frame.addEventListener(ev, pegang, true); document.querySelector('.ftabs').addEventListener(ev, pegang, true); });
-    const boleh = t => t === td && lihat && !document.hidden && Date.now() - sentuh > 25000;
-    const tabKe = n => ftabs.find(x => x.dataset.fitur === n).click();
-    (async function putar(t) {
-      while (t === td) {
-        if (!boleh(t)) { await tunggu(800); continue; }
-        tabKe('tugas'); $('demoOk').hidden = true; $('demoForm').hidden = false; $('demoLink').value = '';
-        for (const c of 'https://figma.com/poster-event') { if (!boleh(t)) break; $('demoLink').value += c; await tunggu(46); }
-        if (!boleh(t)) continue; await tunggu(450); demoKirim(); await tunggu(2300);
-        if (!boleh(t)) continue; tabKe('nilai'); await hitungEl(frame.querySelector('[data-p="nilai"] .nilai-big'), 88, 0, 900, () => !boleh(t)); await tunggu(2800);
-        if (!boleh(t)) continue; tabKe('info'); await tunggu(3200);
-      }
-    })(td);
-    if ('IntersectionObserver' in window) new IntersectionObserver(es => es.forEach(e => { lihat = e.isIntersecting; }), { threshold: 0.3 }).observe(frame);
+    const fx = $('bgfx'); if (!fx || REDUCE) return;
+    const pops = [...fx.querySelectorAll('.pop')];
+    const kata = ['Tugas dan deadline', 'Nilai akhir', 'Absen harian', 'Kas kelas', 'Jadwal piket', 'Info kelas', 'Kumpulkan lewat link atau file', 'Pengingat sebelum deadline', 'Nilai dirangkum otomatis'];
+    const HP = [{ top: '14%', left: '6%' }, { top: '20%', right: '5%' }, { bottom: '14%', left: '7%' }, { bottom: '8%', right: '6%' }];
+    const DESK = [{ top: '16%', left: '8%' }, { top: '28%', right: '7%' }, { bottom: '26%', left: '10%' }, { bottom: '12%', right: '9%' }, { top: '10%', left: '40%' }, { bottom: '8%', left: '42%' }];
+    let n = 0, k = 0;
+    function tampil() {
+      if ($('vLogin').hidden || document.hidden) return;
+      const slot = (matchMedia('(max-width: 600px)').matches ? HP : DESK), s = slot[n % slot.length], p = pops[n % pops.length]; n++;
+      p.className = 'pop' + (n % 3 === 0 ? ' lime' : ''); p.style.cssText = ''; Object.assign(p.style, s);
+      p.textContent = kata[k % kata.length]; k += 1 + (n % 2);
+      void p.offsetWidth; p.classList.add('on');
+    }
+    tampil(); setInterval(tampil, 1500);
   })();
 
   /* pasang di layar utama (PWA). Service worker sengaja tidak menyimpan cache, jadi pembaruan aplikasi selalu langsung terpakai. */
