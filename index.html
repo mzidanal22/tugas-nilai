@@ -665,6 +665,26 @@
   <div class="cerr" id="plErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="plBatal" type="button">Batal</button><button id="plSimpan" type="button">Simpan</button></div>
 </dialog>
+<dialog id="dlgKerohanianLapor" aria-labelledby="klHead">
+  <div class="dlg-head"><strong id="klHead">Catat kerohanian</strong><button class="ghost small" id="klX" type="button" aria-label="Tutup">✕</button></div>
+  <div class="bar"><label for="klTgl" style="margin:0">Tanggal</label><input id="klTgl" type="date" style="width:auto;margin:0"><span class="muted" id="klHari"></span></div>
+  <label for="klMasuk">Sudah siapkan kelas untuk berdoa waktu masuk?</label>
+  <select id="klMasuk"><option value="">(belum diisi)</option><option value="ya">Ya</option><option value="tidak">Tidak</option></select>
+  <label for="klPulang">Sudah siapkan kelas untuk berdoa waktu pulang?</label>
+  <select id="klPulang"><option value="">(belum diisi)</option><option value="ya">Ya</option><option value="tidak">Tidak</option></select>
+  <label for="klCatatan">Catatan (opsional)</label><input id="klCatatan" maxlength="300">
+  <div class="cerr" id="klErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="klBatal" type="button">Batal</button><button id="klSimpan" type="button">Simpan</button></div>
+</dialog>
+<dialog id="dlgKeamananLapor" aria-labelledby="mlHead">
+  <div class="dlg-head"><strong id="mlHead">Catat keamanan</strong><button class="ghost small" id="mlX" type="button" aria-label="Tutup">✕</button></div>
+  <div class="bar"><label for="mlTgl" style="margin:0">Tanggal</label><input id="mlTgl" type="date" style="width:auto;margin:0"><span class="muted" id="mlHari"></span></div>
+  <label for="mlKondisi">Kondisi kelas hari ini</label>
+  <select id="mlKondisi"><option value="">(belum dinilai)</option><option value="aman">Aman</option><option value="perlu_perhatian">Perlu perhatian</option><option value="bermasalah">Bermasalah</option></select>
+  <label for="mlCatatan">Catatan (wajib kalau bukan "Aman")</label><input id="mlCatatan" maxlength="300">
+  <div class="cerr" id="mlErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="mlBatal" type="button">Batal</button><button id="mlSimpan" type="button">Simpan</button></div>
+</dialog>
 <dialog id="dlgAturKelas" aria-labelledby="atHead">
   <div class="dlg-head"><strong id="atHead">Atur kelas</strong><button class="ghost small" id="atX" type="button" aria-label="Tutup">✕</button></div>
   <label for="atWali">Wali kelas</label><input id="atWali" maxlength="80">
@@ -948,6 +968,9 @@
     judul_kosong: 'Judul iuran wajib diisi.',
     nota_tidak_ada: 'Transaksi ini tidak punya foto nota.',
     piket_tidak_valid: 'Data piket tidak valid. Muat ulang halamannya lalu coba lagi.',
+    kerohanian_tidak_valid: 'Jawaban harus "Ya" atau "Tidak".',
+    keamanan_tidak_valid: 'Pilih dulu kondisi kelasnya.',
+    catatan_wajib: 'Kalau kondisinya bukan aman, tulis catatan singkat dulu (minimal 3 huruf).',
     jabatan_penuh: 'Jabatan itu sudah penuh di kelas ini. Lepas dulu dari siswa lain.',
     jabatan_tidak_valid: 'Jabatan tidak dikenal.',
     kelas_tidak_aktif: 'Modul kelas belum diaktifkan untuk kelas ini.',
@@ -986,7 +1009,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.22-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.22-b'; // harus sama dengan VERSI di Code.gs
   // ----- Pembantu animasi: mengetik dan menghitung naik. Semuanya langsung ke hasil akhir kalau pengguna meminta gerakan dikurangi. -----
   const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ketikEl = async (el, teks, kec = 34, batal = () => false) => {
@@ -1045,7 +1068,9 @@
   const safeUrl = u => /^https?:\/\/\S+$/i.test(u) ? u : '';
   let token = null, me = null, allSiswa = [], opsi = { mapel: [], kelas: [] }, rekapId = null, curTugas = null, curRows = [], nData = null, suratBelum = 0;
   let kelasData = null, kelasEl = 'sKelasBody';
-  const JAB_NAMA = { wakil: 'Wakil ketua', sekretaris: 'Sekretaris', bendahara: 'Bendahara', kebersihan: 'Divisi kebersihan' };
+  const JAB_NAMA = { wakil: 'Wakil ketua', sekretaris: 'Sekretaris', bendahara: 'Bendahara', kebersihan: 'Divisi kebersihan', kerohanian: 'Divisi kerohanian', keamanan: 'Divisi keamanan' };
+  // Ketua atau wakil ketua: boleh bantu kumpulkan tugas teman dan lihat rekap kelas (lihat bolehBantuTugas_ di Code.gs).
+  const bisaBantuTugas = m => m.role === 'ketua' || (m.jabatan || []).indexOf('wakil') >= 0;
   try { token = sessionStorage.getItem('tok'); } catch (e) {}
 
   function show(id) { document.body.classList.toggle('masuk', id === 'vLogin'); $('vLoad').hidden = true; ['vLogin', 'vClaim', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); $('bgfx').hidden = id !== 'vLogin'; anim($(id)); }
@@ -1128,7 +1153,7 @@
     if (m.role === 'wali') { buildNav('wali'); show('vAdmin'); $('lpBack').hidden = true; pushSinkron(); return goAdmin('pLapor'); } // wali kelas: hanya laporan mingguan kelasnya, tanpa mengubah apa pun
     salam($('sHello'), greet() + ', ' + m.nama.split(' ')[0]);
     $('sInfo').textContent = 'Kelas ' + m.kelas + (m.role === 'ketua' ? ' · Ketua kelas' : '') + (m.jabatan || []).map(j => ' · ' + (JAB_NAMA[j] || j)).join('');
-    buildNav(m.role === 'ketua' ? 'ketua' : 'siswa'); show('vSiswa'); goSiswa('sHome'); loadTugasSiswa(); loadPengumumanSiswa();
+    buildNav(bisaBantuTugas(m) ? 'ketua' : 'siswa'); show('vSiswa'); goSiswa('sHome'); loadTugasSiswa(); loadPengumumanSiswa();
     pushSinkron(); pushBannerTampil();
   }
 
@@ -1230,7 +1255,7 @@
       const el = $('sList').querySelector(`[data-id="${CSS.escape(highlight)}"]`);
       if (el) { el.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); el.classList.add('flash'); }
     }
-    if (me.role === 'ketua') {
+    if (bisaBantuTugas(me)) {
       const cur = $('kTugas').value;
       $('kTugas').innerHTML = tugasSiswa.map(t => `<option value="${esc(t.id)}">${esc(t.mapel)}: ${esc(t.judul)}</option>`).join('');
       if (tugasSiswa.some(t => t.id === cur)) $('kTugas').value = cur;
@@ -1442,7 +1467,7 @@
       return `<div class="item"><div class="grow"><div class="t">${esc(n)}</div><div class="muted">${m.total ? `${m.kumpul} dari ${m.total} tugas dikumpulkan` : 'Dinilai langsung oleh guru'}${r !== null ? ` · rata-rata nilai tugas ${r}` : ''}</div>${m.total ? `<div class="meter"><i style="width:${p}%"></i></div>` : ''}</div></div>`; }).join('');
     $('sDash').innerHTML = (suratBelum > 0 ? `<div class="panel"><div class="row"><div><strong>Upload surat sakit</strong><div class="late">${suratBelum} hari tercatat sakit, tapi suratnya belum diupload.</div></div><button class="small" data-go="sKelas">Upload</button></div></div>` : '')
       + `<div class="stats s3">${stat(by.belum.length, 'perlu dikumpulkan', 'sTugas', by.belum.length > 0)}${stat(by.terkumpul.length + by.menunggu.length, 'menunggu nilai', 'sTugas')}${stat(rata === null ? '–' : rata, 'rata-rata nilai akhir', 'sNilai')}</div>`
-      + (me.role === 'ketua' ? '<div class="panel"><div class="row"><div><strong>Rekap kelas</strong><div class="muted">Lihat siapa yang belum kumpul dan bantu teman yang kendala.</div></div><button class="small" data-go="kBlock">Buka</button></div></div>' : '')
+      + (bisaBantuTugas(me) ? '<div class="panel"><div class="row"><div><strong>Rekap kelas</strong><div class="muted">Lihat siapa yang belum kumpul dan bantu teman yang kendala.</div></div><button class="small" data-go="kBlock">Buka</button></div></div>' : '')
       + `<div class="grid2"><div class="panel"><h2>Segera dikumpulkan</h2>${rows || '<p class="muted">Semua tugas sudah beres. Mantap!</p>'}${segera.length > 3 ? `<button class="ghost small" data-go="sTugas">Lihat semua (${segera.length})</button>` : ''}</div>`
       + `<div class="panel"><h2>Nilai terbaru</h2>${baru || '<p class="muted">Belum ada nilai.</p>'}</div></div>`
       + `<div class="panel"><h2>Progres per mapel</h2>${prog}</div>`;
@@ -2142,6 +2167,22 @@
     const tombol = (r.izin.piket ? '<button class="ghost small" type="button" data-pjadwal="1">Atur jadwal</button>' : '') + (r.izin.piketLapor ? `<button class="small" type="button" data-plapor="${hariIni()}">Catat piket</button>` : '');
     return `<div class="panel"><div class="row"><h2 style="margin:0">Jadwal piket</h2><div style="display:flex;gap:6px;flex-wrap:wrap">${tombol}</div></div>${jadwal}${rekap}${lapor}</div>`;
   }
+  function kerohanianHtml(r) { // laporan kerohanian: siap berdoa waktu masuk & pulang, hanya untuk divisi kerohanian/ketua/wakil
+    if (!r.izin.kerohanianLapor || !r.kerohanian) return '';
+    const yt = v => v === 'ya' ? 'Ya' : v === 'tidak' ? 'Tidak' : 'Belum diisi';
+    const lapor = r.kerohanian.laporan.length ? '<h3 style="margin:14px 0 4px">Catatan kerohanian terakhir</h3>' + r.kerohanian.laporan.map(x => item(esc(tglIndo(x.tanggal)),
+      `Masuk: ${yt(x.masuk)} · Pulang: ${yt(x.pulang)}`, (x.catatan ? `<div class="muted">${esc(x.catatan)}</div>` : '') + `<div>${vTag('kerohanian', x.id)}</div>${vAlasan('kerohanian', x.id)}${vAksi('kerohanian', x.id)}`,
+      `<button class="ghost small" type="button" data-klapor="${esc(x.tanggal)}">Buka</button>`)).join('') : '<p class="muted">Belum ada catatan.</p>';
+    return `<div class="panel"><div class="row"><h2 style="margin:0">Kerohanian</h2><button class="small" type="button" data-klapor="${hariIni()}">Catat hari ini</button></div>${lapor}</div>`;
+  }
+  function keamananHtml(r) { // laporan keamanan: kondisi kelas hari itu, hanya untuk divisi keamanan/ketua/wakil
+    if (!r.izin.keamananLapor || !r.keamanan) return '';
+    const KOND = { aman: 'Aman', perlu_perhatian: 'Perlu perhatian', bermasalah: 'Bermasalah' };
+    const lapor = r.keamanan.laporan.length ? '<h3 style="margin:14px 0 4px">Catatan keamanan terakhir</h3>' + r.keamanan.laporan.map(x => item(esc(tglIndo(x.tanggal)),
+      x.kondisi ? (KOND[x.kondisi] || x.kondisi) : 'Belum diisi', (x.catatan ? `<div class="muted">${esc(x.catatan)}</div>` : '') + `<div>${vTag('keamanan', x.id)}</div>${vAlasan('keamanan', x.id)}${vAksi('keamanan', x.id)}`,
+      `<button class="ghost small" type="button" data-mlapor="${esc(x.tanggal)}">Buka</button>`)).join('') : '<p class="muted">Belum ada catatan.</p>';
+    return `<div class="panel"><div class="row"><h2 style="margin:0">Keamanan</h2><button class="small" type="button" data-mlapor="${hariIni()}">Catat hari ini</button></div>${lapor}</div>`;
+  }
   function harianHtml(r) { // daftar hari absensi untuk yang boleh mengisi (sekretaris, ketua, wakil, guru)
     if (!r.izin.absensi) return '';
     const list = r.harian && r.harian.length ? r.harian.map(a => item(esc(tglIndo(a.tanggal)), `Hadir ${a.ringkas.H}, sakit ${a.ringkas.S}, izin ${a.ringkas.I}, alpa ${a.ringkas.A}${a.ringkas.belum ? ', belum ' + a.ringkas.belum : ''}`,
@@ -2164,11 +2205,15 @@
     const kunci = esc(x.jenis + '|' + x.id), tgl = esc(tglIndo(x.tanggal));
     const lihat = x.jenis === 'kas' ? (x.foto ? `<button class="ghost small" type="button" data-knota="${esc(x.id)}">Lihat nota</button>` : '')
       : x.jenis === 'piket' ? `<button class="ghost small" type="button" data-plapor="${esc(x.tanggal)}">Lihat${x.foto ? ' foto' : ''}</button>`
-      : x.jenis === 'absen' ? `<button class="ghost small" type="button" data-abuka="${esc(x.tanggal)}">Lihat</button>` : '';
+      : x.jenis === 'absen' ? `<button class="ghost small" type="button" data-abuka="${esc(x.tanggal)}">Lihat</button>`
+      : x.jenis === 'kerohanian' ? `<button class="ghost small" type="button" data-klapor="${esc(x.tanggal)}">Lihat</button>`
+      : x.jenis === 'keamanan' ? `<button class="ghost small" type="button" data-mlapor="${esc(x.tanggal)}">Lihat</button>` : '';
     const nilai = x.bisa ? `<button class="small" type="button" data-vterima="${kunci}">Terima</button><button class="ghost small danger" type="button" data-vtolak="${kunci}">Tolak</button>` : '';
     const betul = x.s === 'ditolak' && x.perbaiki ? (x.jenis === 'kas' ? (r.kas && r.kas.izin ? `<button class="small" type="button" data-kganti="${esc(x.id)}">Ganti foto nota</button>` : '')
       : x.jenis === 'piket' ? `<button class="small" type="button" data-plapor="${esc(x.tanggal)}">Perbaiki</button>`
       : x.jenis === 'absen' ? `<button class="small" type="button" data-abuka="${esc(x.tanggal)}">Perbaiki</button>`
+      : x.jenis === 'kerohanian' ? `<button class="small" type="button" data-klapor="${esc(x.tanggal)}">Perbaiki</button>`
+      : x.jenis === 'keamanan' ? `<button class="small" type="button" data-mlapor="${esc(x.tanggal)}">Perbaiki</button>`
       : `<button class="small" type="button" data-kriwayat="1">Cek ulang saldo</button>`) : '';
     const info = `${x.pembuat ? 'Dibuat ' + esc(x.pembuat) : ''}${x.jenis === 'kas' && !x.foto ? (x.pembuat ? ' · ' : '') + 'tanpa foto nota' : ''}`;
     return item(tgl, esc(x.judul), (info ? `<div class="muted">${info}</div>` : '') + (x.s === 'ditolak' ? `<div class="late">Ditolak: ${esc(x.a)}</div>` : x.lagi ? '<div class="muted">Sudah diubah setelah divalidasi.</div>' : '')
@@ -2265,6 +2310,8 @@
     if (r.izin.absensi) q.push(['Isi absen harian', 'Kehadiran seluruh kelas hari ini', 'abuka', hari, true]);
     if (r.izin.briefing) q.push(['Briefing hari ini', 'Teks siap kirim ke WhatsApp', 'bfcepat', '1', !r.izin.absensi]);
     if (r.izin.piketLapor) q.push(['Catat piket', 'Siapa piket dan foto kelas', 'plapor', hari]);
+    if (r.izin.kerohanianLapor) q.push(['Catat kerohanian', 'Siap berdoa masuk & pulang?', 'klapor', hari]);
+    if (r.izin.keamananLapor) q.push(['Catat keamanan', 'Kondisi kelas hari ini', 'mlapor', hari]);
     if (r.kas && r.kas.izin) q.push(['Catat transaksi', 'Pemasukan atau pengeluaran kas', 'kcatat', '1'], ['Iuran siswa', 'Catat siapa yang sudah bayar', 'kiuran', '1']);
     if (r.inventaris && r.inventaris.izin) q.push(['Tambah barang', 'Inventaris kelas', 'btambah', '1']);
     if (r.izin.info) q.push(['Tulis info', 'Kabar untuk seluruh kelas', 'kbaru', '1']);
@@ -2285,7 +2332,7 @@
       case 'kas': return kasHtml(r);
       case 'barang': return invHtml(r);
       case 'info': return `<div class="panel"><div class="row"><h2 style="margin:0">Info kelas</h2>${r.izin.info ? '<button class="small" type="button" data-kbaru="1">Tulis info</button>' : ''}</div>${info}</div><div class="panel"><h2>Pengurus kelas</h2>${pengurus}</div>`;
-      default: return perluHtml(r) + validasiHtml(r) + setupHtml(r) + hariIniHtml(r) + aksiCepatHtml(r) + infoSematHtml(r);
+      default: return perluHtml(r) + validasiHtml(r) + setupHtml(r) + hariIniHtml(r) + aksiCepatHtml(r) + kerohanianHtml(r) + keamananHtml(r) + infoSematHtml(r);
     }
   }
   function kelasHtml(r) {
@@ -2341,6 +2388,8 @@
     if (d.kbagi && kasBulanData) return bagikan('Laporan kas ' + kasBulanData.bulan, pesanKas(kasBulanData));
     if (d.pjadwal) return bukaPiketJadwal();
     if (d.plapor) return bukaPiketLapor(d.plapor);
+    if (d.klapor) return bukaKerohanianLapor(d.klapor);
+    if (d.mlapor) return bukaKeamananLapor(d.mlapor);
     if (d.usurat) { suratTarget = { id: d.usurat }; $('suratFile').value = ''; $('suratFile').click(); return; }
     if (d.kedit) return bukaInfoKelas(d.kedit);
     if (d.khapus) {
@@ -2512,7 +2561,47 @@
     $('plSimpan').disabled = false;
   };
 
-  const JAB_ATUR = [['ketua', 'Ketua kelas', 1], ['wakil', 'Wakil ketua', 1], ['sekretaris', 'Sekretaris', 2], ['bendahara', 'Bendahara', 2], ['kebersihan', 'Divisi kebersihan', 2]];
+  let kl = null;
+  async function bukaKerohanianLapor(tanggal) {
+    let r;
+    try { r = await api('kerohanianHari', { kelas: kelasData.kelas, tanggal }); } catch (e) { toast(e.message, true); return; }
+    kl = { tanggal: r.tanggal };
+    $('klTgl').value = r.tanggal; $('klTgl').max = hariIni(); $('klHari').textContent = r.namaHari;
+    $('klMasuk').value = r.masuk || ''; $('klPulang').value = r.pulang || ''; $('klCatatan').value = r.catatan || ''; $('klErr').textContent = '';
+    if (!$('dlgKerohanianLapor').open) $('dlgKerohanianLapor').showModal();
+  }
+  $('klTgl').onchange = () => { if ($('klTgl').value) bukaKerohanianLapor($('klTgl').value); };
+  $('klX').onclick = $('klBatal').onclick = () => $('dlgKerohanianLapor').close();
+  $('klSimpan').onclick = async () => {
+    $('klSimpan').disabled = true; $('klErr').textContent = '';
+    try {
+      await api('simpanKerohanianLapor', { kelas: kelasData.kelas, tanggal: kl.tanggal, masuk: $('klMasuk').value, pulang: $('klPulang').value, catatan: $('klCatatan').value });
+      $('dlgKerohanianLapor').close(); toast('Catatan kerohanian tersimpan.'); muatUlangKelas();
+    } catch (e) { $('klErr').textContent = e.message; }
+    $('klSimpan').disabled = false;
+  };
+
+  let ml = null;
+  async function bukaKeamananLapor(tanggal) {
+    let r;
+    try { r = await api('keamananHari', { kelas: kelasData.kelas, tanggal }); } catch (e) { toast(e.message, true); return; }
+    ml = { tanggal: r.tanggal };
+    $('mlTgl').value = r.tanggal; $('mlTgl').max = hariIni(); $('mlHari').textContent = r.namaHari;
+    $('mlKondisi').value = r.kondisi || ''; $('mlCatatan').value = r.catatan || ''; $('mlErr').textContent = '';
+    if (!$('dlgKeamananLapor').open) $('dlgKeamananLapor').showModal();
+  }
+  $('mlTgl').onchange = () => { if ($('mlTgl').value) bukaKeamananLapor($('mlTgl').value); };
+  $('mlX').onclick = $('mlBatal').onclick = () => $('dlgKeamananLapor').close();
+  $('mlSimpan').onclick = async () => {
+    $('mlSimpan').disabled = true; $('mlErr').textContent = '';
+    try {
+      await api('simpanKeamananLapor', { kelas: kelasData.kelas, tanggal: ml.tanggal, kondisi: $('mlKondisi').value, catatan: $('mlCatatan').value });
+      $('dlgKeamananLapor').close(); toast('Catatan keamanan tersimpan.'); muatUlangKelas();
+    } catch (e) { $('mlErr').textContent = e.message; }
+    $('mlSimpan').disabled = false;
+  };
+
+  const JAB_ATUR = [['ketua', 'Ketua kelas', 1], ['wakil', 'Wakil ketua', 1], ['sekretaris', 'Sekretaris', 2], ['bendahara', 'Bendahara', 2], ['kebersihan', 'Divisi kebersihan', 2], ['kerohanian', 'Divisi kerohanian', 2], ['keamanan', 'Divisi keamanan', 2]];
   function bukaAturKelas() {
     const sis = kelasData.siswa || [], pn = kelasData.pengurusNis || {};
     $('atWali').value = kelasData.wali || '';
