@@ -249,6 +249,66 @@
   summary { cursor: pointer; color: var(--accent); font-weight: 600; }
   @media print { header, .navbar, #topbar, .toast-wrap, dialog, button, .noprint { display: none !important; } body { background: #fff; color: #000; } main { padding: 0; } .panel { break-inside: avoid; } .print-only { display: block !important; } }
   .print-only { display: none; }
+  /* ===== Laporan absensi cetak (PDF A4 landscape, seragam mapel & kelas) ===== */
+  #abPrintWrap { position: fixed; inset: 0; z-index: 60; overflow: auto; background: #E2E8F0; color: #0F172A; padding: 0 16px 32px; }
+  .ab-pbar { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #0F2A1C; color: #fff; padding: 10px 16px; margin: 0 -16px 18px; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .ab-pbar .ab-ptitle { font-weight: 700; font-size: .95rem; }
+  .ab-pbar .ab-pacts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ab-pbar button { background: #D4F02A; color: #0F2A1C; border-color: #040E08; box-shadow: 2px 2px 0 #040E08; }
+  .ab-pbar button.ghost { background: #143324; color: #EAF2E4; border-color: #46664F; box-shadow: none; }
+  .ab-sheet { background: #fff; color: #0F172A; max-width: 1120px; margin: 0 auto 20px; padding: 18px 20px 20px; border: 1px solid #CBD5E1; border-radius: 6px; box-shadow: 0 6px 20px rgba(15,23,42,.12); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .ab-shead { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; border-bottom: 2px solid #0F172A; padding-bottom: 8px; margin-bottom: 10px; }
+  .ab-shead h2 { margin: 0 0 2px; font-size: 15px; letter-spacing: 0; color: #0F172A; text-transform: uppercase; }
+  .ab-smeta { font-size: 11px; color: #334155; line-height: 1.45; }
+  .ab-smeta strong { color: #0F172A; }
+  .ab-sright { text-align: right; font-size: 10.5px; color: #475569; white-space: nowrap; }
+  .ab-tblwrap { overflow-x: auto; }
+  table.ab-tbl { width: 100%; min-width: 0; border-collapse: collapse; table-layout: fixed; }
+  .ab-tbl th, .ab-tbl td { border: 1px solid #334155 !important; padding: 3px 2px; font-size: 10px; line-height: 1.2; color: #0F172A; text-align: center; vertical-align: middle; }
+  .ab-tbl tr:last-child td { border-bottom: 1px solid #334155 !important; }
+  .ab-tbl thead th { background: #F1F5F9; font-weight: 700; color: #0F172A; }
+  .ab-tbl th.ab-day { font-size: 8.5px; font-weight: 600; color: #475569; padding: 2px 1px; }
+  .ab-tbl th.ab-tgl { font-size: 9px; font-weight: 700; padding: 2px 1px; }
+  .ab-tbl th.ab-col-no, .ab-tbl td.ab-no { width: 24px; }
+  .ab-tbl th.ab-col-nis, .ab-tbl td.ab-nis { width: 64px; font-variant-numeric: tabular-nums; padding: 3px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ab-tbl th.ab-col-nama, .ab-tbl td.ab-nama { width: 165px; text-align: left; padding: 3px 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ab-tbl th.ab-col-sum, .ab-tbl td.ab-sum { width: 23px; font-weight: 600; }
+  .ab-tbl th.ab-col-pct, .ab-tbl td.ab-pct { width: 32px; font-weight: 700; }
+  .ab-tbl.ab-compact { table-layout: auto; }
+  .ab-tbl.ab-compact th.ab-day, .ab-tbl.ab-compact th.ab-tgl { width: 38px; }
+  .ab-tbl.ab-compact th.ab-col-nama, .ab-tbl.ab-compact td.ab-nama { width: auto; min-width: 170px; max-width: none; }
+  .ab-sheet.ab-dense .ab-shead { padding-bottom: 5px; margin-bottom: 6px; }
+  .ab-sheet.ab-dense .ab-shead h2 { font-size: 13.5px; }
+  .ab-sheet.ab-dense .ab-tbl th, .ab-sheet.ab-dense .ab-tbl td { padding: 1.5px 2px; font-size: 9px; line-height: 1.12; }
+  .ab-sheet.ab-dense .ab-tbl th.ab-day { font-size: 8px; padding: 1.5px 1px; }
+  .ab-sheet.ab-dense .ab-tbl th.ab-tgl { font-size: 8.5px; padding: 1.5px 1px; }
+  .ab-sheet.ab-dense .ab-sfoot { margin-top: 6px; font-size: 9.5px; }
+  .ab-sheet.ab-dense .ab-ttd-sp { height: 32px; }
+  .ab-tbl td.ab-c-h { font-weight: 600; color: #0F172A; }
+  .ab-tbl td.ab-c-s { font-weight: 700; color: #0F172A; }
+  .ab-tbl td.ab-c-i { font-weight: 700; color: #0F172A; }
+  .ab-tbl td.ab-c-a { background: #DC2626 !important; color: #FFFFFF !important; font-weight: 800; border-color: #991B1B !important; }
+  .ab-tbl td.ab-c-libur { background: #F1F5F9 !important; color: #94A3B8; }
+  .ab-tbl tbody tr:nth-child(even) td:not(.ab-c-a):not(.ab-c-libur) { background: #FAFAFA; }
+  .ab-tbl tfoot td { background: #F1F5F9 !important; font-weight: 700; color: #0F172A; }
+  .ab-sw-a { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; background: #DC2626; color: #FFFFFF; font-weight: 800; font-size: 10px; border: 1px solid #991B1B; vertical-align: middle; line-height: 1; }
+  .ab-sfoot { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-top: 10px; font-size: 10.5px; color: #334155; }
+  .ab-legend { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .ab-ttd { text-align: center; min-width: 170px; line-height: 1.4; }
+  .ab-ttd-sp { height: 42px; }
+  .ab-ttd-nm { font-weight: 700; color: #0F172A; border-top: 1px solid #334155; padding-top: 2px; min-width: 150px; display: inline-block; }
+  @media print {
+    body.cetak-absen > *:not(#abPrintWrap) { display: none !important; }
+    body.cetak-absen { background: #fff !important; background-image: none !important; margin: 0 !important; padding: 0 !important; color: #000 !important; }
+    body.cetak-absen #abPrintWrap { position: static !important; inset: auto !important; overflow: visible !important; background: #fff !important; padding: 0 !important; display: block !important; }
+    body.cetak-absen .ab-sheet { max-width: none !important; width: 100% !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+    body.cetak-absen .ab-sheet + .ab-sheet { break-before: page; page-break-before: always; }
+    body.cetak-absen .ab-tblwrap { overflow: visible !important; }
+    body.cetak-absen .ab-tbl thead { display: table-header-group; }
+    body.cetak-absen .ab-tbl tr { break-inside: avoid; page-break-inside: avoid; }
+    body.cetak-absen .ab-sfoot { break-inside: avoid; page-break-inside: avoid; }
+    body.cetak-absen * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
   a { color: var(--accent); }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
@@ -458,7 +518,7 @@
       </div>
       <div id="abList"></div>
       <div id="abForm" hidden>
-        <div class="row"><h2 id="abJudul" style="margin:0"></h2><span><button class="ghost small" id="abHapus" type="button">Hapus</button> <button class="ghost small" id="abBatal" type="button">Kembali</button></span></div>
+        <div class="row"><h2 id="abJudul" style="margin:0"></h2><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="small" id="abSimpanAtas" type="button">Simpan</button><button class="ghost small" id="abHapus" type="button">Hapus</button><button class="ghost small" id="abBatal" type="button">Kembali</button></span></div>
         <div class="bar">
           <label for="abTgl" style="margin:0">Tanggal</label><input id="abTgl" type="date" style="width:auto;margin:0">
           <label for="abKe" style="margin:0">Pertemuan ke</label><input id="abKe" type="number" min="1" style="width:5rem;margin:0">
@@ -481,7 +541,7 @@
     </div>
 
     <div id="pLapor" hidden>
-      <div class="row"><h1 style="margin:0">Laporan mingguan</h1><button class="ghost small" id="lpBack" type="button">← Beranda</button></div>
+      <div class="row noprint" id="lpHeadRow"><h1 id="lpTitle" style="margin:0">Laporan mingguan</h1><button class="ghost small" id="lpBack" type="button">← Beranda</button></div>
       <div class="bar noprint" id="lpBarMinggu">
         <label for="lpSampai" style="margin:0">7 hari sampai</label><input id="lpSampai" type="date" style="width:auto;margin:0"><span class="muted" id="lpRentang"></span>
         <button class="ghost small" id="lbBuka" type="button">Laporan bulanan (cetak)</button>
@@ -532,7 +592,12 @@
         <label>Kelas tujuan</label><div id="tKelas" style="margin-bottom:14px"></div>
         <button id="btnSimpanTugas">Simpan tugas</button>
       </div>
-      <div id="tList" style="margin-top:16px"></div>
+      <div class="bar" id="tFilterBar" style="margin-top:12px">
+        <select id="tFilMapel" aria-label="Filter mapel" style="width:auto;margin:0"><option value="">Semua mapel</option></select>
+        <select id="tFilKelas" aria-label="Filter kelas" style="width:auto;margin:0"><option value="">Semua kelas</option></select>
+        <input id="tFilCari" type="search" placeholder="Cari judul tugas…" aria-label="Cari judul tugas" style="width:13rem;margin:0">
+      </div>
+      <div id="tList" style="margin-top:8px"></div>
     </div>
 
     <div id="pRekap" hidden>
@@ -562,7 +627,13 @@
     </div>
 
     <div id="pNilai" hidden>
-      <h1>Nilai</h1>
+      <div class="row">
+        <h1 style="margin:0">Nilai</h1>
+        <div class="seg" role="group" aria-label="Tampilan nilai" style="margin:0">
+          <button class="ghost small on" type="button" data-mode="semua">Semua nilai</button>
+          <button class="ghost small" type="button" data-mode="rapor">Rapor &amp; salin</button>
+        </div>
+      </div>
       <div class="bar">
         <label for="nMapel" style="margin:0">Mapel</label><select id="nMapel"></select>
         <label for="nKelas" style="margin:0">Kelas</label><select id="nKelas"></select>
@@ -625,7 +696,7 @@
   <label for="sdKelas">Kelas</label><select id="sdKelas" style="width:100%;margin-bottom:14px"></select>
   <label for="sdRole">Peran</label><select id="sdRole" style="width:100%;margin-bottom:14px"><option value="siswa">Siswa</option><option value="ketua">Ketua kelas</option></select>
   <label>Jabatan pengurus (opsional)</label>
-  <div id="sdJab" style="display:flex;gap:6px 16px;flex-wrap:wrap;margin-bottom:14px"><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="wakil" style="width:auto;margin:0"> Wakil ketua</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="sekretaris" style="width:auto;margin:0"> Sekretaris</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="bendahara" style="width:auto;margin:0"> Bendahara</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="kebersihan" style="width:auto;margin:0"> Divisi kebersihan</label></div>
+  <div id="sdJab" style="display:flex;gap:6px 16px;flex-wrap:wrap;margin-bottom:14px"><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="wakil" style="width:auto;margin:0"> Wakil ketua</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="sekretaris" style="width:auto;margin:0"> Sekretaris</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="bendahara" style="width:auto;margin:0"> Bendahara</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="kebersihan" style="width:auto;margin:0"> Divisi kebersihan</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="kerohanian" style="width:auto;margin:0"> Divisi kerohanian</label><label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400"><input type="checkbox" value="keamanan" style="width:auto;margin:0"> Divisi keamanan</label></div>
   <div class="cerr" id="sdErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="sdHapus" type="button" style="margin-right:auto">Hapus siswa</button><button class="ghost" id="sdBatal" type="button">Batal</button><button id="sdSimpan" type="button">Simpan</button></div>
 </dialog>
@@ -841,7 +912,8 @@
   <div class="dlg-head"><strong id="akHead">Absensi harian</strong><button class="ghost small" id="akX" type="button" aria-label="Tutup">✕</button></div>
   <div class="bar"><label for="akTgl" style="margin:0">Tanggal</label><input id="akTgl" type="date" style="width:auto;margin:0"></div>
   <div class="sum" id="akRingkas"></div>
-  <div class="bar"><button class="ghost small" id="akSisa" type="button">Tandai sisanya hadir</button></div>
+  <div class="bar"><button class="ghost small" id="akSisa" type="button">Tandai sisanya hadir</button><button class="ghost small" id="akKosong" type="button">Kosongkan semua</button></div>
+  <p class="muted" style="margin:0 0 6px;font-size:.82rem">Tips keyboard: klik baris siswa lalu tekan H, S, I, atau A untuk lanjut otomatis.</p>
   <div id="akDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0 14px;max-height:50vh;overflow:auto"></div>
   <div class="cerr" id="akErr" role="alert"></div>
   <div class="actions"><button class="ghost danger" id="akHapus" type="button" style="margin-right:auto" hidden>Hapus hari ini</button><button id="akSimpan" type="button">Simpan absensi</button></div>
@@ -868,6 +940,24 @@
   </div>
   <div class="cerr" id="aiErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="aiTutup" type="button">Tutup</button><button id="aiSimpan" type="button" hidden>Impor</button></div>
+</dialog>
+<dialog id="dlgLapAbsen" aria-labelledby="laHead">
+  <div class="dlg-head"><strong id="laHead">Laporan absensi</strong><button class="ghost small" id="laX" type="button" aria-label="Tutup">✕</button></div>
+  <p class="muted" id="laSub" style="margin-top:0"></p>
+  <div class="bar" id="laPreset" style="margin:0 0 10px;gap:6px">
+    <button class="ghost small" type="button" data-lapr="bulan">Bulan ini</button>
+    <button class="ghost small" type="button" data-lapr="lalu">Bulan lalu</button>
+    <button class="ghost small" type="button" data-lapr="semester">Semester ini</button>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px">
+    <div><label for="laDari" style="margin:0 0 2px">Dari tanggal</label><input id="laDari" type="date" style="min-width:0;margin:0;padding-left:8px;padding-right:4px;font-size:.9rem"></div>
+    <div><label for="laSampai" style="margin:0 0 2px">Sampai tanggal</label><input id="laSampai" type="date" style="min-width:0;margin:0;padding-left:8px;padding-right:4px;font-size:.9rem"></div>
+  </div>
+  <label id="laSabtuWrap" style="display:flex;gap:8px;align-items:center;font-weight:400;margin:10px 0 6px"><input id="laSabtu" type="checkbox" checked style="width:auto;margin:0"> Termasuk hari Sabtu (Minggu selalu dilewati)</label>
+  <label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:0 0 10px"><input id="laTerisi" type="checkbox" style="width:auto;margin:0"> Hanya tanggal yang ada data absensi</label>
+  <p class="muted" style="margin:0 0 8px;font-size:.875rem">Format cetak PDF: <strong>v</strong> = Hadir · <strong>s</strong> = Sakit · <strong>i</strong> = Izin · <span class="ab-sw-a">a</span> = Alpa</p>
+  <div class="cerr" id="laErr" role="alert"></div>
+  <div class="actions"><button class="ghost" id="laTutup" type="button">Tutup</button><button class="ghost" id="laLihat" type="button">Pratinjau</button><button id="laCetak" type="button">Cetak PDF</button></div>
 </dialog>
 <dialog id="dlgTutupBuku" aria-labelledby="tbJudul">
   <div class="dlg-head"><strong id="tbJudul">Tutup buku</strong><button class="ghost small" id="tbX" type="button" aria-label="Tutup">✕</button></div>
@@ -1021,7 +1111,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.22-d'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.26-a'; // harus sama dengan VERSI di Code.gs
   // ----- Pembantu animasi: mengetik dan menghitung naik. Semuanya langsung ke hasil akhir kalau pengguna meminta gerakan dikurangi. -----
   const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ketikEl = async (el, teks, kec = 34, batal = () => false) => {
@@ -1095,7 +1185,7 @@
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
   let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
-  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'suratFoto', 'kelasSaya', 'absenKelasHari', 'piketHari', 'kasKelola', 'kasIuranDetail', 'kasLaporan', 'kasNota', 'inventarisRiwayat', 'laporanKelas', 'briefingHari', 'piketFoto', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
+  const ULANG = new Set(['me', 'tugasSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'laporanAbsensi', 'suratFoto', 'kelasSaya', 'absenKelasHari', 'piketHari', 'kasKelola', 'kasIuranDetail', 'kasLaporan', 'kasNota', 'inventarisRiwayat', 'laporanKelas', 'briefingHari', 'piketFoto', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   // Server dibatasi 30 permintaan serentak, jadi saat banyak siswa mengakses bersamaan sebagian permintaan bisa gagal sementara.
@@ -1562,6 +1652,7 @@
     const b = e.target.closest('[data-go],[data-open],[data-baru]'); if (!b) return;
     if (b.dataset.open) return openRekap(b.dataset.open);
     if (b.dataset.mode) nMode = b.dataset.mode;
+    if (b.dataset.ktab) kelasTab = b.dataset.ktab;
     if (b.dataset.lbauto) { await goAdmin(b.dataset.go); $('lbBuka').click(); return; } // langsung buka tampilan bulanan setelah data mingguan selesai dimuat; kartu mingguan (pLapor) sengaja tidak dipakai lagi di beranda guru
     goAdmin(b.dataset.go || 'pTugas');
     if (b.dataset.baru) { $('fBaru').hidden = false; $('tJudul').focus(); }
@@ -1732,7 +1823,10 @@
     $('abForm').hidden = true; $('abList').hidden = false; $('abList').innerHTML = skBerisi(skPanel(3));
     let r; try { r = await api('listAbsensi', { mapel: $('abMapel').value, kelas: $('abKelas').value }); } catch (e) { $('abList').innerHTML = ''; return msg('adminMsg', e.message); }
     abData = r; abTerakhir = { mapel: $('abMapel').value, kelas: $('abKelas').value };
-    $('abList').innerHTML = `<div class="bar"><button id="abBaru" type="button">Pertemuan baru (ke-${r.berikut})</button></div>`
+    const totH = r.sesi.reduce((t, s) => t + s.ringkas.H, 0), totAll = r.sesi.reduce((t, s) => t + s.ringkas.H + s.ringkas.S + s.ringkas.I + s.ringkas.A, 0);
+    const ringkasBar = r.sesi.length ? `<p class="muted" style="margin:0 0 10px">${r.sesi.length} pertemuan tercatat${totAll ? ' · rata-rata hadir ' + Math.round(totH / totAll * 100) + '%' : ''}</p>` : '';
+    $('abList').innerHTML = `<div class="bar"><button id="abBaru" type="button">Pertemuan baru (ke-${r.berikut})</button><button class="ghost" id="abLapor" type="button">Laporan absensi</button></div>`
+      + ringkasBar
       + (r.sesi.length ? '<div class="panel card">' + r.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan,
           `<div class="muted">Hadir ${s.ringkas.H}, sakit ${s.ringkas.S}, izin ${s.ringkas.I}, alpa ${s.ringkas.A}${s.ringkas.belum ? ', belum ' + s.ringkas.belum : ''}</div>`,
           `<button class="ghost small" data-buka="${esc(s.id)}" type="button">Buka</button>`)).join('') + '</div>'
@@ -1741,7 +1835,11 @@
   const balikAb = () => { $('abMapel').value = abTerakhir.mapel; isiAbKelas(); $('abKelas').value = abTerakhir.kelas; };
   $('abMapel').onchange = async () => { if (!(await izinPindah())) return balikAb(); isiAbKelas(); muatAbList(); };
   $('abKelas').onchange = async () => { if (!(await izinPindah())) return balikAb(); muatAbList(); };
-  $('abList').onclick = e => { if (e.target.id === 'abBaru') bukaAb(null); else if (e.target.dataset.buka) bukaAb(e.target.dataset.buka); };
+  $('abList').onclick = e => {
+    if (e.target.id === 'abBaru') bukaAb(null);
+    else if (e.target.id === 'abLapor') laBuka({ jenis: 'mapel', mapel: $('abMapel').value, kelas: $('abKelas').value });
+    else if (e.target.dataset.buka) bukaAb(e.target.dataset.buka);
+  };
 
   async function bukaAb(id) { // id kosong = pertemuan baru
     let st = {}, tgl = hariIni(), ke = abData.berikut;
@@ -1784,15 +1882,16 @@
   $('abSisa').onclick = () => { ab.sis.forEach(s => { if (!ab.status[s.nis]) ab.status[s.nis] = 'H'; }); segarkanAb(); };
   $('abKosong').onclick = async () => { if (Object.keys(ab.status).length && !(await konfirmasi('Kosongkan semua tanda di pertemuan ini?', { ya: 'Kosongkan', bahaya: true }))) return; ab.status = {}; segarkanAb(); };
   $('abBatal').onclick = async () => { if (await izinPindah()) muatAbList(); };
+  $('abSimpanAtas').onclick = () => $('abSimpan').click();
   $('abSimpan').onclick = async () => {
     const belum = segarkanAb();
     if (belum && !(await konfirmasi(`Masih ada ${belum} siswa yang belum ditandai. Simpan tetap?`, { ya: 'Simpan tetap' }))) return;
-    const b = $('abSimpan'); b.disabled = true;
+    const b = $('abSimpan'), b2 = $('abSimpanAtas'); b.disabled = b2.disabled = true;
     try {
       const r = await api('simpanAbsensi', { id: ab.id, mapel: $('abMapel').value, kelas: $('abKelas').value, tanggal: $('abTgl').value, pertemuan: Number($('abKe').value), data: ab.status });
       toast(`Absensi pertemuan ke-${r.pertemuan} tersimpan.`); abAsli = abSnap(); await muatAbList();
     } catch (e) { msg('adminMsg', e.message); }
-    b.disabled = false;
+    b.disabled = b2.disabled = false;
   };
   $('abHapus').onclick = async () => {
     if (!(await konfirmasi('Hapus absensi pertemuan ini? Tidak bisa dibatalkan.', { ya: 'Hapus', bahaya: true }))) return;
@@ -2122,12 +2221,13 @@
     const KOND = { aman: 'Aman', perlu_perhatian: 'Perlu perhatian', bermasalah: 'Bermasalah' };
     const chk = (id, label) => `<label class="noprint" style="display:inline-flex;align-items:center;gap:4px;margin-right:10px"><input type="checkbox" data-lbsec="${id}" checked> ${label}</label>`;
     const sec = (id, title, body) => `<div data-lbwrap="${id}"><h3 style="margin:14px 0 4px">${title}</h3>${body}</div>`;
-    const absensiBody = d.absensi.hari.length
+    const absensiBody = (d.absensi.hari.length
       ? '<table style="width:100%;min-width:auto;border-collapse:collapse;table-layout:fixed"><thead><tr><th style="text-align:left;width:40%">Tanggal</th><th>H</th><th>S</th><th>I</th><th>A</th></tr></thead><tbody>'
         + d.absensi.hari.map(h => `<tr><td>${tglPendek(h.tanggal)}</td><td style="text-align:center">${h.H}</td><td style="text-align:center">${h.S}</td><td style="text-align:center">${h.I}</td><td style="text-align:center">${h.A}</td></tr>`).join('')
         + `</tbody></table><p>Total: ${d.absensi.H} hadir, ${d.absensi.S} sakit, ${d.absensi.I} izin, ${d.absensi.A} alpa dari ${d.absensi.total} catatan (${d.absensi.persen == null ? 'belum ada data' : d.absensi.persen + '% hadir'}).</p>`
         + (d.absensi.suratBelum ? `<p class="late">Surat sakit belum lengkap: ${d.absensi.suratBelum} catatan.</p>` : '')
-      : '<p class="muted">Belum ada data absensi bulan ini.</p>';
+      : '<p class="muted">Belum ada data absensi bulan ini.</p>')
+      + '<div class="noprint" style="margin:6px 0 4px"><button class="ghost small" type="button" id="lbLapAbsen">Laporan absensi (cetak PDF)</button></div>';
     const piketBody = d.piket.catatan
       ? `<p>${d.piket.catatan} hari tercatat, kepatuhan piket ${d.piket.persen == null ? '-' : d.piket.persen + '%'} (bersih ${d.piket.kondisi.bersih}x, cukup ${d.piket.kondisi.cukup}x, kotor ${d.piket.kondisi.kotor}x).</p>`
         + (d.piket.catatanList.length ? '<ul>' + d.piket.catatanList.map(x => `<li>${tglPendek(x.tanggal)}: ${esc(x.catatan)}</li>`).join('') + '</ul>' : '')
@@ -2189,15 +2289,22 @@
         $('lbCatatanSimpan').disabled = false;
       };
       $('lbCetak').onclick = () => { lbSyncCatatanPrint(); window.print(); };
+      if ($('lbLapAbsen')) $('lbLapAbsen').onclick = () => laBuka({ jenis: 'kelas', kelas: lbData.kelas, dari: lbData.dari, sampai: lbData.sampai });
     } catch (e) { $('lbIsi').innerHTML = ''; $('lbErr').textContent = e.message; }
   }
   $('lbTampil').onclick = lbTampilkan;
-  $('lbKembali').onclick = () => { $('lpBulan').hidden = true; $('lpBarMinggu').hidden = false; $('lpBody').hidden = false; };
+  $('lbKembali').onclick = () => { $('lpTitle').textContent = 'Laporan mingguan'; $('lpBulan').hidden = true; $('lpBarMinggu').hidden = false; $('lpBody').hidden = false; };
   $('lbBuka').onclick = () => {
+    $('lpTitle').textContent = 'Laporan bulanan';
     $('lpBarMinggu').hidden = true; $('lpBody').hidden = true; $('lpBulan').hidden = false;
-    if (!$('lbKelas').options.length) $('lbKelas').innerHTML = ((lpData && lpData.kelas) || []).map(k => `<option value="${esc(k.kelas)}">${esc(k.kelas)}</option>`).join('');
+    const semuaKelas = (lpData && lpData.kelas) || [];
+    const aktifKelas = semuaKelas.filter(k => k.harian);
+    const sumber = aktifKelas.length ? aktifKelas : semuaKelas;
+    const cur = $('lbKelas').value;
+    $('lbKelas').innerHTML = sumber.map(k => `<option value="${esc(k.kelas)}">${esc(k.kelas)}</option>`).join('');
+    if (cur && sumber.some(k => k.kelas === cur)) $('lbKelas').value = cur;
     if (!$('lbBulan').value) $('lbBulan').value = hariIni().slice(0, 7);
-    if (!lbData) lbTampilkan();
+    if (!lbData || (cur && lbData.kelas !== $('lbKelas').value)) lbTampilkan();
   };
 
   $('lpBody').onclick = e => {
@@ -2290,7 +2397,7 @@
     if (!r.izin.absensi) return '';
     const list = r.harian && r.harian.length ? r.harian.map(a => item(esc(tglIndo(a.tanggal)), `Hadir ${a.ringkas.H}, sakit ${a.ringkas.S}, izin ${a.ringkas.I}, alpa ${a.ringkas.A}${a.ringkas.belum ? ', belum ' + a.ringkas.belum : ''}`,
       (a.suratBelum ? `<div class="late">${a.suratBelum} surat sakit belum diupload</div>` : '') + `<div>${vTag('absen', a.id)}</div>${vAlasan('absen', a.id)}${vAksi('absen', a.id)}`, `<button class="ghost small" type="button" data-abuka="${esc(a.tanggal)}">Buka</button>`)).join('') : '<p class="muted">Belum ada absensi harian.</p>';
-    return `<div class="panel"><div class="row"><h2 style="margin:0">Absen harian</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="ghost small" type="button" data-abimpor="1">Impor Excel</button><button class="small" type="button" data-abuka="${hariIni()}">Isi hari ini</button></div></div>${list}</div>`;
+    return `<div class="panel"><div class="row"><h2 style="margin:0">Absen harian</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="ghost small" type="button" data-ablapor="1">Laporan absensi</button><button class="ghost small" type="button" data-abimpor="1">Impor Excel</button><button class="small" type="button" data-abuka="${hariIni()}">Isi hari ini</button></div></div>${list}</div>`;
   }
   // ----- Validasi laporan: ketua, wakil, dan guru menerima atau menolak laporan pengurus -----
   const vStatus = (j, id) => (kelasData && kelasData.validasi && kelasData.validasi.status[j + '|' + id]) || null;
@@ -2469,6 +2576,7 @@
     if (d.abuka) return bukaAbsKelas(d.abuka);
     if (d.libur) return liburKlik(d.libur);
     if (d.abimpor) return abBuka();
+    if (d.ablapor) return laBuka({ jenis: 'kelas', kelas: kelasData.kelas });
     if (d.bfcepat) return briefingCepat();
     if (d.bfdialog) return bukaBriefing();
     if (d.jwatur) return bukaJadwal();
@@ -2525,10 +2633,11 @@
     try { r = await api('absenKelasHari', { kelas: kelasData.kelas, tanggal }); } catch (e) { toast(e.message, true); return; }
     ak = { tanggal: r.tanggal, id: r.id, sis: r.siswa, status: { ...r.data }, asli: { ...r.data }, surat: r.surat || {} };
     $('akTgl').value = ak.tanggal; $('akTgl').max = hariIni(); $('akErr').textContent = ''; $('akHapus').hidden = !(ak.id && me.role === 'admin');
-    $('akDaftar').innerHTML = ak.sis.length ? ak.sis.map((s, i) => `<div class="abrow" data-nis="${esc(s.nis)}"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)}<span class="absurat"></span></span>`
+    $('akDaftar').innerHTML = ak.sis.length ? ak.sis.map((s, i) => `<div class="abrow" tabindex="0" data-nis="${esc(s.nis)}"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)}<span class="absurat"></span></span>`
       + `<span class="abtns" role="group" aria-label="Status ${esc(s.nama)}">${ST.map(k => `<button class="abtn" type="button" data-s="${k}" title="${NAMA_ST[k]}" aria-label="${NAMA_ST[k]}">${k}</button>`).join('')}</span></div>`).join('')
       : '<p class="muted" style="padding:12px">Belum ada siswa di kelas ini.</p>';
     segarkanAk(); if (!$('dlgAbsKelas').open) $('dlgAbsKelas').showModal();
+    const r1 = $('akDaftar').querySelector('.abrow'); if (r1) r1.focus();
   }
   function segarkanAk() {
     const c = { H: 0, S: 0, I: 0, A: 0 };
@@ -2546,7 +2655,15 @@
       if (akBoleh()) t += tersimpan ? ` <button class="${ada ? 'ghost ' : ''}small" type="button" data-up="${esc(nis)}">${ada ? 'Ganti foto' : 'Upload surat'}</button>` : ' <span class="muted">(simpan dulu)</span>';
       el.innerHTML = t;
     });
+    return belum;
   }
+  $('akDaftar').addEventListener('keydown', e => {
+    const row = e.target.closest('.abrow'); if (!row || !ak || (e.target.closest('button') && (e.key === 'Enter' || e.key === ' '))) return;
+    const k = e.key.toUpperCase(), geser = d => { const n = d > 0 ? row.nextElementSibling : row.previousElementSibling; if (n) n.focus(); };
+    if (ST.includes(k) && e.key.length === 1) { e.preventDefault(); ak.status[row.dataset.nis] = k; segarkanAk(); geser(1); }
+    else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); delete ak.status[row.dataset.nis]; segarkanAk(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); geser(1); } else if (e.key === 'ArrowUp') { e.preventDefault(); geser(-1); }
+  });
   $('akDaftar').onclick = async e => {
     const b = e.target.closest('button'); if (!b || !ak) return;
     const row = b.closest('.abrow'), nis = row && row.dataset.nis;
@@ -2562,12 +2679,15 @@
     }
   };
   $('akSisa').onclick = () => { ak.sis.forEach(s => { if (!ak.status[s.nis]) ak.status[s.nis] = 'H'; }); segarkanAk(); };
+  $('akKosong').onclick = async () => { if (Object.keys(ak.status).length && !(await konfirmasi('Kosongkan semua tanda di tanggal ini?', { ya: 'Kosongkan', bahaya: true }))) return; ak.status = {}; segarkanAk(); };
   $('akTgl').onchange = async () => {
     if (!$('akTgl').value) return;
     if (akUbah() && !(await konfirmasi('Perubahan belum disimpan. Pindah tanggal?', { ya: 'Pindah tanpa menyimpan' }))) { $('akTgl').value = ak.tanggal; return; }
     bukaAbsKelas($('akTgl').value);
   };
   $('akSimpan').onclick = async () => {
+    const belum = segarkanAk();
+    if (belum && !(await konfirmasi(`Masih ada ${belum} siswa yang belum ditandai. Simpan tetap?`, { ya: 'Simpan tetap' }))) return;
     $('akSimpan').disabled = true; $('akErr').textContent = '';
     try { await api('simpanAbsenKelas', { kelas: kelasData.kelas, tanggal: ak.tanggal, data: ak.status }); toast('Absensi tersimpan.'); await bukaAbsKelas(ak.tanggal); loadKelas(kelasEl, kelasData.kelas); }
     catch (e) { $('akErr').textContent = e.message; }
@@ -3165,11 +3285,11 @@
     const el = $('aKelasRingkas'); if (!el) return;
     const hari = hariIni(), dow = dowIni(), ada = (r.harian || []).find(x => x.tanggal === hari), surat = (r.harian || []).reduce((t, x) => t + (x.suratBelum || 0), 0), rusak = r.inventaris.rusak + r.inventaris.hilang;
     const vt = vAntrian(r), nv = vt.tolak.length + vt.tunggu.length;
-    const kartu = (n, l, hot) => `<button class="stat${hot ? ' hot' : ''}" type="button" data-go="pKelas"><div class="n">${n}</div><div class="l">${l}</div></button>`;
-    el.innerHTML = `<div class="panel"><div class="row"><h2 style="margin:0">Kelas wali · ${esc(r.kelas)}</h2><button class="ghost small" type="button" data-go="pKelas">Buka</button></div><div class="stats s2" style="margin-top:10px">`
-      + kartu(dow === 0 ? '–' : ada ? 'Sudah' : 'Belum', 'absen harian hari ini', dow >= 1 && !ada) + kartu(surat, 'surat sakit belum', surat > 0)
-      + kartu(rp(r.kas.saldo), 'saldo kas') + kartu(rusak, 'barang rusak atau hilang', rusak > 0) + '</div>'
-      + (nv ? `<div style="margin-top:10px">${todoBaris({ t: `${nv} laporan menunggu validasi atau ditolak`, bahaya: vt.tolak.length > 0 }, '<button class="small" type="button" data-go="pKelas">Periksa</button>')}</div>` : '') + '</div>';
+    const kartu = (n, l, hot, kt) => `<button class="stat${hot ? ' hot' : ''}" type="button" data-go="pKelas"${kt ? ` data-ktab="${kt}"` : ''}><div class="n">${n}</div><div class="l">${l}</div></button>`;
+    el.innerHTML = `<div class="panel"><div class="row"><h2 style="margin:0">Kelas wali · ${esc(r.kelas)}</h2><button class="ghost small" type="button" data-go="pKelas" data-ktab="hari">Buka</button></div><div class="stats s2" style="margin-top:10px">`
+      + kartu(dow === 0 ? '–' : ada ? 'Sudah' : 'Belum', 'absen harian hari ini', dow >= 1 && !ada, 'absensi') + kartu(surat, 'surat sakit belum', surat > 0, 'absensi')
+      + kartu(rp(r.kas.saldo), 'saldo kas', false, 'kas') + kartu(rusak, 'barang rusak atau hilang', rusak > 0, 'barang') + '</div>'
+      + (nv ? `<div style="margin-top:10px">${todoBaris({ t: `${nv} laporan menunggu validasi atau ditolak`, bahaya: vt.tolak.length > 0 }, '<button class="small" type="button" data-go="pKelas" data-ktab="hari">Periksa</button>')}</div>` : '') + '</div>';
   }
 
   /* ---------------- Notifikasi push (Chrome/Android; server: Firebase Cloud Messaging) ---------------- */
@@ -3333,7 +3453,7 @@
       else return ''; }
     const c = new Date(Date.UTC(y, m - 1, d)); return c.getUTCFullYear() === y && c.getUTCMonth() === m - 1 && c.getUTCDate() === d && y >= 2000 ? abIso(y, m, d) : '';
   }
-  const AB_ST = { H: 'H', HADIR: 'H', S: 'S', SAKIT: 'S', I: 'I', IZIN: 'I', IJIN: 'I', A: 'A', ALPA: 'A', ALPHA: 'A', ALFA: 'A' };
+  const AB_ST = { H: 'H', HADIR: 'H', V: 'H', '✓': 'H', '✔': 'H', S: 'S', SAKIT: 'S', I: 'I', IZIN: 'I', IJIN: 'I', A: 'A', ALPA: 'A', ALPHA: 'A', ALFA: 'A' };
   function abParse(aoa) { // -> { kolom: [{ i, tanggal }], baris: [{ nama, nis, sel }], tak, contoh } atau null
     let hi = -1, cn = -1;
     for (let r = 0; r < Math.min(aoa.length, 30) && hi < 0; r++) for (let c = 0; c < (aoa[r] || []).length; c++) if (imNorm(aoa[r][c]) === 'nama') { hi = r; cn = c; break; }
@@ -3417,6 +3537,236 @@
     b.disabled = false;
   };
   $('aiX').onclick = $('aiTutup').onclick = () => $('dlgAbsImpor').close();
+
+  // ---- Laporan absensi cetak PDF (seragam untuk absensi mapel & absensi kelas, mengikuti format template impor absensi) ----
+  let laCfg = null;
+  const LA_HR = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+  const LA_MAP = { H: ['ab-c-h', 'v'], S: ['ab-c-s', 's'], I: ['ab-c-i', 'i'], A: ['ab-c-a', 'a'] };
+  const laBulanRange = (y, m) => ({ dari: abIso(y, m, 1), sampai: abIso(y, m, new Date(Date.UTC(y, m, 0)).getUTCDate()) });
+  const laBlnNama = ym => new Date(ym + '-01T12:00:00+07:00').toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', month: 'long', year: 'numeric' });
+  const laTglLengkap = t => new Date(t + 'T12:00:00+07:00').toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'long', year: 'numeric' });
+  function laSetPreset(mode) {
+    const t = hariIni(), y = Number(t.slice(0, 4)), m = Number(t.slice(5, 7));
+    if (mode === 'bulan') { const r = laBulanRange(y, m); $('laDari').value = r.dari; $('laSampai').value = r.sampai; }
+    else if (mode === 'lalu') { const d = new Date(Date.UTC(y, m - 2, 1)), r = laBulanRange(d.getUTCFullYear(), d.getUTCMonth() + 1); $('laDari').value = r.dari; $('laSampai').value = r.sampai; }
+    else if (mode === 'semester') { $('laDari').value = `${m >= 7 ? y : y - 1}-07-01`; $('laSampai').value = t; }
+  }
+  function laSyncSabtu() {
+    const on = $('laTerisi').checked;
+    $('laSabtu').disabled = on;
+    $('laSabtuWrap').style.opacity = on ? '.5' : '';
+  }
+  function laBuka(cfg) {
+    laCfg = { jenis: cfg.jenis || 'kelas', kelas: cfg.kelas || '', mapel: cfg.mapel || '' };
+    $('laHead').textContent = laCfg.jenis === 'mapel' ? 'Laporan absensi mapel' : 'Laporan absensi kelas';
+    $('laSub').textContent = laCfg.jenis === 'mapel'
+      ? `${laCfg.mapel} · Kelas ${laCfg.kelas}`
+      : `Absensi harian · Kelas ${laCfg.kelas}`;
+    if (cfg.dari && cfg.sampai) { $('laDari').value = cfg.dari; $('laSampai').value = cfg.sampai; }
+    else laSetPreset('bulan');
+    $('laSabtu').checked = cfg.sabtu !== undefined ? !!cfg.sabtu : true;
+    $('laTerisi').checked = cfg.terisi !== undefined ? !!cfg.terisi : false;
+    laSyncSabtu();
+    $('laErr').textContent = '';
+    $('dlgLapAbsen').showModal();
+  }
+  $('laTerisi').onchange = laSyncSabtu;
+  $('laPreset').onclick = e => { const b = e.target.closest('[data-lapr]'); if (b) laSetPreset(b.dataset.lapr); };
+  $('laX').onclick = $('laTutup').onclick = () => $('dlgLapAbsen').close();
+
+  function laTutupPrint() {
+    $('abPrintWrap').hidden = true;
+    $('abPrintWrap').innerHTML = '';
+    document.body.classList.remove('cetak-absen');
+    const st = $('abPageStyle'); if (st) st.remove();
+  }
+  function laRenderSheet(res, judulBagian, cols, grand, cetakTgl, idx, totalHal) {
+    const sis = res.siswa || [];
+    const judul = res.jenis === 'mapel' ? `Laporan Absensi Mapel ${res.mapel}` : `Laporan Absensi Kelas ${res.kelas}`;
+    const infoKiri = [
+      res.jenis === 'mapel' ? `<strong>Mapel:</strong> ${esc(res.mapel)}` : '',
+      `<strong>Kelas:</strong> ${esc(res.kelas)}`,
+      res.wali ? `<strong>Wali kelas:</strong> ${esc(res.wali)}` : '',
+      `<strong>Periode:</strong> ${esc(judulBagian)}`,
+      `<strong>Siswa:</strong> ${sis.length}`
+    ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+    const adaLibur = cols.some(c => c.libur);
+    const colTotals = cols.map(() => ({ H: 0, ada: false }));
+    let totH = 0, totS = 0, totI = 0, totA = 0;
+
+    const thead = `<thead>
+      <tr>
+        <th class="ab-col-no" rowspan="2">No</th>
+        <th class="ab-col-nis" rowspan="2">NIS</th>
+        <th class="ab-col-nama" rowspan="2">Nama</th>
+        ${cols.map(c => `<th class="ab-day">${c.sub ? esc(c.sub) + '<br>' : ''}${esc(c.hari)}</th>`).join('')}
+        <th colspan="4">Jumlah</th>
+        <th class="ab-col-pct" rowspan="2">%</th>
+      </tr>
+      <tr>
+        ${cols.map(c => `<th class="ab-tgl">${esc(c.label)}</th>`).join('')}
+        <th class="ab-col-sum">H</th><th class="ab-col-sum">S</th><th class="ab-col-sum">I</th><th class="ab-col-sum">A</th>
+      </tr>
+    </thead>`;
+
+    const tbody = '<tbody>' + sis.map((s, i) => {
+      let h = 0, sk = 0, iz = 0, al = 0;
+      const tds = cols.map((c, ci) => {
+        const st = c.data[s.nis] || '';
+        if (st === 'H') { h++; colTotals[ci].H++; colTotals[ci].ada = true; }
+        else if (st === 'S') { sk++; colTotals[ci].ada = true; }
+        else if (st === 'I') { iz++; colTotals[ci].ada = true; }
+        else if (st === 'A') { al++; colTotals[ci].ada = true; }
+        if (LA_MAP[st]) return `<td class="${LA_MAP[st][0]}">${LA_MAP[st][1]}</td>`;
+        if (c.libur) return '<td class="ab-c-libur"></td>';
+        return '<td></td>';
+      }).join('');
+      totH += h; totS += sk; totI += iz; totA += al;
+      if (grand[s.nis]) { grand[s.nis].H += h; grand[s.nis].S += sk; grand[s.nis].I += iz; grand[s.nis].A += al; }
+      const j = h + sk + iz + al, pct = j ? Math.round(h / j * 100) + '%' : '-';
+      return `<tr><td class="ab-no">${i + 1}</td><td class="ab-nis">${esc(s.nis)}</td><td class="ab-nama" title="${esc(s.nama)}">${esc(s.nama)}</td>${tds}<td class="ab-sum">${h}</td><td class="ab-sum">${sk}</td><td class="ab-sum">${iz}</td><td class="ab-sum">${al}</td><td class="ab-pct">${pct}</td></tr>`;
+    }).join('') + '</tbody>';
+
+    const totAll = totH + totS + totI + totA;
+    const tfoot = `<tfoot><tr>
+      <td colspan="3" style="text-align:right;padding-right:6px">Hadir per tanggal / Total</td>
+      ${colTotals.map(x => `<td>${x.ada ? x.H : ''}</td>`).join('')}
+      <td>${totH}</td><td>${totS}</td><td>${totI}</td><td>${totA}</td>
+      <td>${totAll ? Math.round(totH / totAll * 100) + '%' : '-'}</td>
+    </tr></tfoot>`;
+
+    const jabatanTtd = res.jenis === 'mapel' ? `Guru Mapel ${res.mapel}` : 'Wali Kelas';
+    const namaTtd = res.jenis === 'kelas' && res.wali ? esc(res.wali) : '&nbsp;';
+    const sheetCls = sis.length > 28 ? 'ab-sheet ab-dense' : 'ab-sheet';
+    const tblCls = cols.length <= 12 ? 'ab-tbl ab-compact' : 'ab-tbl';
+    return `<section class="${sheetCls}">
+      <div class="ab-shead">
+        <div><h2>${esc(judul)}</h2><div class="ab-smeta">${infoKiri}</div></div>
+        <div class="ab-sright">Hal. ${idx + 1}/${totalHal}<br>Dicetak ${esc(cetakTgl)}</div>
+      </div>
+      <div class="ab-tblwrap"><table class="${tblCls}">${thead}${tbody}${tfoot}</table></div>
+      <div class="ab-sfoot">
+        <div class="ab-legend">
+          <span><strong>Keterangan:</strong></span>
+          <span><strong>v</strong> = Hadir</span>
+          <span><strong>s</strong> = Sakit</span>
+          <span><strong>i</strong> = Izin</span>
+          <span><span class="ab-sw-a">a</span> = Alpa</span>
+          ${adaLibur ? '<span><span style="display:inline-block;width:13px;height:13px;background:#F1F5F9;border:1px solid #334155;vertical-align:middle"></span> = Libur</span>' : ''}
+        </div>
+        <div class="ab-ttd">
+          <div>${esc(cetakTgl)}</div>
+          <div>${esc(jabatanTtd)}</div>
+          <div class="ab-ttd-sp"></div>
+          <div class="ab-ttd-nm">${namaTtd}</div>
+        </div>
+      </div>
+    </section>`;
+  }
+  function laRenderRekap(res, grand, cetakTgl, idx, totalHal) {
+    const sis = res.siswa || [];
+    const judul = res.jenis === 'mapel' ? `Rekap Total Absensi Mapel ${res.mapel}` : `Rekap Total Absensi Kelas ${res.kelas}`;
+    let totH = 0, totS = 0, totI = 0, totA = 0;
+    const rows = sis.map((s, i) => {
+      const g = grand[s.nis] || { H: 0, S: 0, I: 0, A: 0 }, j = g.H + g.S + g.I + g.A;
+      totH += g.H; totS += g.S; totI += g.I; totA += g.A;
+      return `<tr><td class="ab-no">${i + 1}</td><td class="ab-nis">${esc(s.nis)}</td><td class="ab-nama">${esc(s.nama)}</td><td>${g.H}</td><td>${g.S}</td><td>${g.I}</td><td class="${g.A ? 'ab-c-a' : ''}">${g.A}</td><td>${j}</td><td>${j ? Math.round(g.H / j * 100) + '%' : '-'}</td></tr>`;
+    }).join('');
+    const totAll = totH + totS + totI + totA;
+    const jabatanTtd = res.jenis === 'mapel' ? `Guru Mapel ${res.mapel}` : 'Wali Kelas';
+    const namaTtd = res.jenis === 'kelas' && res.wali ? esc(res.wali) : '&nbsp;';
+    return `<section class="ab-sheet">
+      <div class="ab-shead">
+        <div><h2>${esc(judul)}</h2><div class="ab-smeta"><strong>Kelas:</strong> ${esc(res.kelas)}${res.wali ? ` &nbsp;·&nbsp; <strong>Wali kelas:</strong> ${esc(res.wali)}` : ''} &nbsp;·&nbsp; <strong>Periode:</strong> ${esc(laTglLengkap(res.dari))} – ${esc(laTglLengkap(res.sampai))} &nbsp;·&nbsp; <strong>Siswa:</strong> ${sis.length}</div></div>
+        <div class="ab-sright">Hal. ${idx + 1}/${totalHal}<br>Dicetak ${esc(cetakTgl)}</div>
+      </div>
+      <div class="ab-tblwrap"><table class="ab-tbl" style="table-layout:auto">
+        <thead><tr><th class="ab-col-no">No</th><th style="width:90px">NIS</th><th style="text-align:left;padding-left:6px">Nama</th><th style="width:68px">Hadir (v)</th><th style="width:68px">Sakit (s)</th><th style="width:68px">Izin (i)</th><th style="width:68px">Alpa (a)</th><th style="width:76px">Tercatat</th><th style="width:68px">% Hadir</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td colspan="3" style="text-align:right;padding-right:6px">Total keseluruhan</td><td>${totH}</td><td>${totS}</td><td>${totI}</td><td>${totA}</td><td>${totAll}</td><td>${totAll ? Math.round(totH / totAll * 100) + '%' : '-'}</td></tr></tfoot>
+      </table></div>
+      <div class="ab-sfoot">
+        <div class="ab-legend"><span><strong>Keterangan:</strong></span><span><strong>v</strong> = Hadir</span><span><strong>s</strong> = Sakit</span><span><strong>i</strong> = Izin</span><span><span class="ab-sw-a">a</span> = Alpa</span></div>
+        <div class="ab-ttd"><div>${esc(cetakTgl)}</div><div>${esc(jabatanTtd)}</div><div class="ab-ttd-sp"></div><div class="ab-ttd-nm">${namaTtd}</div></div>
+      </div>
+    </section>`;
+  }
+  async function laJalankan(autoPrint) {
+    $('laErr').textContent = '';
+    const dari = $('laDari').value, sampai = $('laSampai').value, sabtu = $('laSabtu').checked, terisi = $('laTerisi').checked;
+    if (!dari || !sampai || dari > sampai) { $('laErr').textContent = 'Isi rentang tanggal dengan benar (dari tidak boleh setelah sampai).'; return; }
+    let days = [];
+    if (!terisi) {
+      days = abHariDalam(dari, sampai, sabtu);
+      if (!days.length) { $('laErr').textContent = 'Tidak ada hari sekolah di rentang tanggal itu.'; return; }
+      if (days.length >= 400) { $('laErr').textContent = 'Rentang terlalu panjang (maksimal 400 hari sekolah). Pilih rentang yang lebih pendek.'; return; }
+    }
+    const b1 = $('laLihat'), b2 = $('laCetak'); b1.disabled = b2.disabled = true;
+    try {
+      const res = await api('laporanAbsensi', { jenis: laCfg.jenis, kelas: laCfg.kelas, mapel: laCfg.mapel, dari, sampai });
+      if (!(res.siswa && res.siswa.length)) { $('laErr').textContent = 'Belum ada siswa di kelas ini.'; return; }
+      const liburSet = new Set(res.libur || []);
+      const pages = []; // [{ judul, cols }]
+      if (terisi) {
+        if (!(res.sesi && res.sesi.length)) { $('laErr').textContent = 'Belum ada data absensi di rentang tanggal ini. Hilangkan centang "Hanya tanggal yang ada data absensi" untuk mencetak semua hari sekolah.'; return; }
+        const allCols = res.sesi.map(s => ({
+          tanggal: s.tanggal,
+          hari: LA_HR[new Date(s.tanggal + 'T00:00:00Z').getUTCDay()],
+          label: `${s.tanggal.slice(8, 10)}/${s.tanggal.slice(5, 7)}`,
+          sub: s.pertemuan ? 'P' + s.pertemuan : '',
+          data: s.data || {},
+          libur: false
+        }));
+        const perHal = 26;
+        for (let i = 0; i < allCols.length; i += perHal) {
+          const slice = allCols.slice(i, i + perHal);
+          pages.push({ judul: `${laTglLengkap(slice[0].tanggal)} – ${laTglLengkap(slice[slice.length - 1].tanggal)}`, cols: slice });
+        }
+      } else {
+        const byDate = {};
+        (res.sesi || []).forEach(s => { (byDate[s.tanggal] = byDate[s.tanggal] || []).push(s); });
+        const bulanOrder = [], perBulan = {};
+        days.forEach(t => {
+          const ym = t.slice(0, 7);
+          if (!perBulan[ym]) { perBulan[ym] = []; bulanOrder.push(ym); }
+          const list = byDate[t] || [];
+          const hr = LA_HR[new Date(t + 'T00:00:00Z').getUTCDay()];
+          if (list.length > 1) {
+            list.forEach(s => perBulan[ym].push({ tanggal: t, hari: hr, label: t.slice(8, 10), sub: s.pertemuan ? 'P' + s.pertemuan : '', data: s.data || {}, libur: false }));
+          } else {
+            const s = list[0] || null;
+            perBulan[ym].push({ tanggal: t, hari: hr, label: t.slice(8, 10), sub: s && s.pertemuan ? 'P' + s.pertemuan : '', data: s ? (s.data || {}) : {}, libur: !s && liburSet.has(t) });
+          }
+        });
+        bulanOrder.forEach(ym => {
+          const bln = perBulan[ym];
+          pages.push({ judul: bulanOrder.length === 1 ? `${laBlnNama(ym)} (${laTglLengkap(dari)} – ${laTglLengkap(sampai)})` : laBlnNama(ym), cols: bln });
+        });
+      }
+      const grand = {}; res.siswa.forEach(s => { grand[s.nis] = { H: 0, S: 0, I: 0, A: 0 }; });
+      const adaRekap = pages.length > 1, totalHal = pages.length + (adaRekap ? 1 : 0);
+      const cetakTgl = laTglLengkap(hariIni());
+      const judulBar = res.jenis === 'mapel' ? `Laporan Absensi · ${res.mapel} (${res.kelas})` : `Laporan Absensi · Kelas ${res.kelas}`;
+      const htmlSheets = pages.map((pg, idx) => laRenderSheet(res, pg.judul, pg.cols, grand, cetakTgl, idx, totalHal)).join('')
+        + (adaRekap ? laRenderRekap(res, grand, cetakTgl, totalHal - 1, totalHal) : '');
+      $('abPrintWrap').innerHTML = `<div class="ab-pbar noprint"><div class="ab-ptitle">${esc(judulBar)}</div><div class="ab-pacts"><button class="ghost small" type="button" id="abPrAtur">Ubah pengaturan</button><button class="small" type="button" id="abPrCetak">Cetak / Simpan PDF</button><button class="ghost small" type="button" id="abPrTutup">Tutup</button></div></div>${htmlSheets}`;
+      $('dlgLapAbsen').close();
+      let st = $('abPageStyle');
+      if (!st) { st = document.createElement('style'); st.id = 'abPageStyle'; document.head.appendChild(st); }
+      st.textContent = '@page { size: A4 landscape; margin: 8mm 10mm; }';
+      document.body.classList.add('cetak-absen');
+      $('abPrintWrap').hidden = false;
+      $('abPrintWrap').scrollTop = 0;
+      $('abPrTutup').onclick = laTutupPrint;
+      $('abPrCetak').onclick = () => window.print();
+      $('abPrAtur').onclick = () => { laTutupPrint(); laBuka({ ...laCfg, dari, sampai, sabtu, terisi }); };
+      if (autoPrint) setTimeout(() => window.print(), 180);
+    } catch (e) { $('laErr').textContent = e.message; }
+    finally { b1.disabled = b2.disabled = false; }
+  }
+  $('laLihat').onclick = () => laJalankan(false);
+  $('laCetak').onclick = () => laJalankan(true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('cetak-absen')) laTutupPrint(); });
   // ---- Akun wali kelas (guru mengisi email; wali hanya melihat laporan kelasnya) ----
   let wlAwal = {};
   $('btnWali').onclick = async () => {
@@ -3628,22 +3978,30 @@
 
   function drawTugasAdmin() {
     if (fjAdmin !== 'semua' && !tugasAdmin.some(t => jenisDari(t) === fjAdmin)) fjAdmin = 'semua';
-    const daftar = fjAdmin === 'semua' ? tugasAdmin : tugasAdmin.filter(t => jenisDari(t) === fjAdmin);
-    $('tList').innerHTML = fjBar(tugasAdmin, fjAdmin, 'fja') + (daftar.length ? daftar.map(t => `<div class="panel card"><div class="row">
-        <div><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}${jenisTag(t.jenis)}</div><h3>${esc(t.judul)}</h3>
-        <div class="muted">Deadline ${fmt(t.deadline)} · ${t.kumpul} dari ${t.total} sudah kumpul</div>${!t.rilis && t.kumpul - t.belumDinilai > 0 ? '<div class="due-soon">Nilai belum dirilis ke siswa</div>' : ''}</div>
-        <button class="ghost small" data-id="${esc(t.id)}">Buka</button></div></div>`).join('')
-      : '<p class="muted">Belum ada tugas. Klik "Tugas baru" untuk membuat yang pertama.</p>');
+    const fm = $('tFilMapel').value, fk = $('tFilKelas').value, fq = $('tFilCari').value.trim().toLowerCase();
+    const dasar = tugasAdmin.filter(t => (!fm || t.mapel === fm) && (!fk || (t.kelas || []).includes(fk)) && (!fq || (t.judul + ' ' + t.mapel).toLowerCase().includes(fq)));
+    const daftar = fjAdmin === 'semua' ? dasar : dasar.filter(t => jenisDari(t) === fjAdmin);
+    $('tList').innerHTML = fjBar(dasar, fjAdmin, 'fja') + (daftar.length ? daftar.map(t => `<div class="panel card"><div class="row">
+        <div><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}${jenisTag(t.jenis)}${t.belumDinilai > 0 ? ` <span class="tag warn">${t.belumDinilai} perlu dinilai</span>` : ''}</div><h3>${esc(t.judul)}</h3>
+        <div class="muted">${t.bentuk === 'nilai' ? 'Dinilai langsung' : 'Deadline ' + fmt(t.deadline)} · ${t.kumpul} dari ${t.total} ${t.bentuk === 'nilai' ? 'sudah dinilai' : 'sudah kumpul'}</div>${!t.rilis && t.kumpul - t.belumDinilai > 0 ? '<div class="due-soon">Nilai belum dirilis ke siswa</div>' : ''}</div>
+        <button class="ghost small" data-id="${esc(t.id)}">${t.belumDinilai > 0 ? `Nilai (${t.belumDinilai})` : 'Buka'}</button></div></div>`).join('')
+      : `<p class="muted">${tugasAdmin.length ? 'Tidak ada tugas yang cocok dengan filter ini.' : 'Belum ada tugas. Klik "Tugas baru" untuk membuat yang pertama.'}</p>`);
   }
   async function loadTugasAdmin() {
     if (!$('tList').innerHTML) $('tList').innerHTML = skBerisi(skKartu(3));
     try {
       const r = await api('listTugas'); opsi = r; tugasAdmin = r.tugas;
       $('tMapel').innerHTML = r.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
+      const curM = $('tFilMapel').value, curK = $('tFilKelas').value;
+      $('tFilMapel').innerHTML = '<option value="">Semua mapel</option>' + r.mapel.map(m => `<option>${esc(m.nama)}</option>`).join('');
+      $('tFilKelas').innerHTML = '<option value="">Semua kelas</option>' + r.kelas.map(k => `<option>${esc(k.nama)}</option>`).join('');
+      if ([...$('tFilMapel').options].some(o => o.value === curM)) $('tFilMapel').value = curM;
+      if ([...$('tFilKelas').options].some(o => o.value === curK)) $('tFilKelas').value = curK;
       drawKelasBox();
       drawTugasAdmin();
     } catch (e) { msg('adminMsg', e.message); }
   }
+  $('tFilMapel').onchange = $('tFilKelas').onchange = $('tFilCari').oninput = drawTugasAdmin;
   function drawKelasBox() {
     const m = opsi.mapel.find(x => x.nama === $('tMapel').value);
     $('tKelas').innerHTML = opsi.kelas.filter(k => m && k.tingkat === m.tingkat)
@@ -3653,11 +4011,12 @@
   $('btnBaru').onclick = () => { $('fBaru').hidden = !$('fBaru').hidden; };
   $('btnSimpanTugas').onclick = async () => {
     const b = $('btnSimpanTugas'); b.disabled = true; msg('adminMsg');
+    const bentuk = $('tBentuk').value, dlVal = $('tDl').value || (bentuk === 'nilai' ? hariIni() + 'T23:59' : '');
     try {
-      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, bentuk: $('tBentuk').value, jenis: $('tJenis').value, aiNilai: $('tAi').checked && !$('tAiWrap').hidden, deadline: $('tDl').value,
+      await api('buatTugas', { mapel: $('tMapel').value, judul: $('tJudul').value, deskripsi: $('tDesk').value, bentuk, jenis: $('tJenis').value, aiNilai: $('tAi').checked && !$('tAiWrap').hidden, deadline: dlVal,
         kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) });
-      const snapT = { mapel: $('tMapel').value, judul: $('tJudul').value.trim(), deskripsi: $('tDesk').value.trim(), bentuk: $('tBentuk').value,
-        deadline: new Date($('tDl').value + ':00+07:00').toISOString(), kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) };
+      const snapT = { mapel: $('tMapel').value, judul: $('tJudul').value.trim(), deskripsi: $('tDesk').value.trim(), bentuk,
+        deadline: dlVal ? new Date(dlVal + ':00+07:00').toISOString() : new Date().toISOString(), kelas: [...document.querySelectorAll('#tKelas input:checked')].map(i => i.value) };
       $('tJudul').value = ''; $('tDesk').value = ''; $('tDl').value = ''; $('tAi').checked = false; syncAiForm(); $('fBaru').hidden = true;
       await loadTugasAdmin(); toast('Tugas dibuat.');
       if (snapT.bentuk !== 'nilai') bagikan('Tugas dibuat. Bagikan ke kelas?', pesanTugas(snapT)); // tugas yang dinilai langsung tidak perlu diumumkan ke siswa
@@ -3711,14 +4070,24 @@
     if (act === 'ai') return saranAi(curRows.find(x => x.nis === nis), v => { tr.querySelector('[data-f=cat]').value = v; }, btn);
     btn.disabled = true;
     try {
+      const sObj = curRows.find(x => x.nis === nis);
       if (act === 'nilai') {
-        await api('nilai', { id: rekapId, nis, nilai: tr.querySelector('[data-f=nilai]').value, catatan: tr.querySelector('[data-f=cat]').value });
-        tr.children[1].innerHTML = '<span class="ok">Dinilai</span>';
+        const val = tr.querySelector('[data-f=nilai]').value, cat = tr.querySelector('[data-f=cat]').value;
+        await api('nilai', { id: rekapId, nis, nilai: val, catatan: cat });
+        if (sObj) { sObj.kunci = true; sObj.nilai = Number(val); sObj.catatanGuru = cat; sObj.revisi = null; sObj.aiBelum = false; sObj.dinilai = new Date().toISOString(); }
+        tr.dataset.st = 'dinilai';
+        tr.children[1].innerHTML = '<span class="ok">Dinilai</span>' + (sObj && sObj.waktu ? `<div class="muted">kumpul ${fmt(sObj.waktu)}</div>` : '') + (sObj && sObj.diubahSetelah ? '<div class="late">diubah setelah deadline</div>' : '') + (sObj ? flagHtml(sObj) : '') + `<div class="muted">dinilai ${fmtTgl(new Date().toISOString())}</div>`;
+        const aiTag = tr.children[3] && tr.children[3].querySelector('.tag.me'); if (aiTag) aiTag.remove();
         if (!tr.querySelector('[data-act=buka]')) btn.insertAdjacentHTML('afterend', ' <button class="ghost small" data-act="buka">Buka kunci</button>');
+        renderFilter();
         toast('Nilai ' + nama + ' tersimpan.');
       } else {
         await api('bukaKunci', { id: rekapId, nis });
-        tr.children[1].textContent = 'Terkumpul'; btn.remove();
+        if (sObj) { sObj.kunci = false; }
+        tr.dataset.st = sObj ? stRow(sObj) : 'menunggu';
+        tr.children[1].innerHTML = (sObj && sObj.terlambat ? '<span class="late">Terlambat</span>' : 'Terkumpul') + (sObj && sObj.waktu ? `<div class="muted">kumpul ${fmt(sObj.waktu)}</div>` : '') + (sObj && sObj.diubahSetelah ? '<div class="late">diubah setelah deadline</div>' : '') + (sObj ? flagHtml(sObj) : '');
+        btn.remove();
+        renderFilter();
         toast('Kunci dibuka. ' + nama + ' bisa kumpul ulang.');
       }
     } catch (err) { msg('adminMsg', err.message); }
@@ -4017,6 +4386,7 @@
     boot();
   }
 </script>
+<div id="abPrintWrap" hidden></div>
 <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogle()"></script>
 </body>
 </html>
