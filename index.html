@@ -1377,7 +1377,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.27-c'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.27-d'; // harus sama dengan VERSI di Code.gs
   // ----- Pembantu animasi: mengetik dan menghitung naik. Semuanya langsung ke hasil akhir kalau pengguna meminta gerakan dikurangi. -----
   const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ketikEl = async (el, teks, kec = 34, batal = () => false) => {
@@ -2885,15 +2885,35 @@
         </table></div></div>` : '';
     const kasBody = kasFlow + cekHtml + iuranHtml + masukLainHtml + katHtml + keluarHtml + kasSisHtml;
 
-    // --- 3. Piket Kebersihan ---
-    const tpList = d.piket.tidakPiket || [];
+    // --- 3. Piket Kebersihan (3 lapis: overall, per regu hari Senin-Sabtu, & detail opsional per tanggal) ---
+    const tpList = d.piket.tidakPiket || [], pkHari = d.piket.perHari || [], pkHarian = d.piket.harian || [];
+    const KOND_PK = { bersih: 'Bersih', cukup: 'Cukup', kotor: 'Kotor' };
+    const pkReguHtml = pkHari.length
+      ? `<div class="doc-sub">Rekap piket per regu hari</div><div class="doc-twrap"><table class="doc-tbl">
+          <thead><tr><th>Regu Hari</th><th class="ctr" style="width:74px">Tercatat</th><th class="ctr" style="width:88px">Kepatuhan</th><th class="ctr" style="width:62px">Bersih</th><th class="ctr" style="width:62px">Cukup</th><th class="ctr" style="width:62px">Kotor</th><th class="ctr" style="width:56px">Foto</th></tr></thead>
+          <tbody>${pkHari.map(h => `<tr><td><strong>${esc(h.nama)}</strong></td><td class="ctr">${h.tercatat}x</td><td class="ctr"><span class="doc-b ${h.persen == null ? 'mut' : h.persen >= 85 ? 'ok' : h.persen >= 70 ? 'warn' : 'bad'}">${h.persen == null ? '–' : h.persen + '%'}</span></td><td class="ctr">${h.bersih}</td><td class="ctr">${h.cukup}</td><td class="ctr">${h.kotor ? `<span class="doc-b bad">${h.kotor}</span>` : '0'}</td><td class="ctr">${h.foto}</td></tr>`).join('')}</tbody>
+        </table></div>` : '';
+    const pkDetailHtml = pkHarian.length
+      ? `<div data-lbwrap="piketDetail" hidden><div class="doc-sub">Rincian piket harian per tanggal</div><div class="doc-twrap"><table class="doc-tbl">
+          <thead><tr><th class="ctr" style="width:32px">No</th><th style="width:128px">Tanggal</th><th class="ctr" style="width:70px">Piket</th><th class="ctr" style="width:72px">Kondisi</th><th>Tidak Piket / Catatan</th><th class="ctr" style="width:46px">Foto</th></tr></thead>
+          <tbody>${pkHarian.map((x, idx) => {
+            const totP = x.ya + x.tidak;
+            const kCls = x.kondisi === 'bersih' ? 'ok' : x.kondisi === 'cukup' ? 'warn' : x.kondisi === 'kotor' ? 'bad' : 'mut';
+            const ketParts = [];
+            if (x.tidakList && x.tidakList.length) ketParts.push(`<strong>Tidak piket:</strong> ${esc(x.tidakList.join(', '))}`);
+            if (x.catatan) ketParts.push(esc(x.catatan));
+            return `<tr><td class="ctr">${idx + 1}</td><td>${esc(x.hari)}, ${esc(tglPendek(x.tanggal))}</td><td class="ctr">${totP ? `${x.ya}/${totP}` : '–'}</td><td class="ctr"><span class="doc-b ${kCls}">${esc(KOND_PK[x.kondisi] || '–')}</span></td><td>${ketParts.join(' · ') || '<span style="color:#64748B">Semua terlaksana</span>'}</td><td class="ctr">${x.foto}</td></tr>`;
+          }).join('')}</tbody>
+        </table></div></div>` : '';
     const piketBody = d.piket.catatan
       ? `<div class="doc-twrap"><table class="doc-tbl">
           <thead><tr><th class="ctr">Hari Tercatat</th><th class="ctr">Kepatuhan Piket</th><th class="ctr">Kelas Bersih</th><th class="ctr">Cukup</th><th class="ctr">Kotor</th><th class="ctr">Foto Bukti</th></tr></thead>
           <tbody><tr><td class="ctr"><strong>${d.piket.catatan}</strong></td><td class="ctr"><span class="doc-b ${d.piket.persen >= 85 ? 'ok' : d.piket.persen >= 70 ? 'warn' : 'bad'}">${d.piket.persen == null ? '–' : d.piket.persen + '%'}</span></td><td class="ctr">${d.piket.kondisi.bersih}x</td><td class="ctr">${d.piket.kondisi.cukup}x</td><td class="ctr">${d.piket.kondisi.kotor}x</td><td class="ctr">${d.piket.foto}</td></tr></tbody>
         </table></div>`
-        + (tpList.length ? `<p class="doc-note"><strong>Siswa tidak melaksanakan piket:</strong> ${tpList.map(x => `${esc(x.nama)} (${x.kali}x)`).join(', ')}.</p>` : '<p class="doc-note">Seluruh siswa yang bertugas melaksanakan piket sesuai jadwal.</p>')
+        + pkReguHtml
+        + (tpList.length ? `<p class="doc-note"><strong>Siswa tidak melaksanakan piket:</strong> ${tpList.map(x => `${esc(x.nama)} (${x.kali}x${x.tanggal && x.tanggal.length ? ': ' + x.tanggal.map(tglPendek).join(', ') : ''})`).join('; ')}.</p>` : '<p class="doc-note">Seluruh siswa yang bertugas melaksanakan piket sesuai jadwal.</p>')
         + (d.piket.catatanList.length ? '<p class="doc-note"><strong>Catatan:</strong> ' + d.piket.catatanList.map(x => `${tglPendek(x.tanggal)}: ${esc(x.catatan)}`).join(' · ') + '</p>' : '')
+        + pkDetailHtml
       : '<p class="doc-note">Belum ada catatan piket pada periode ini.</p>';
 
     // --- 4. Kerohanian & Keamanan ---
@@ -2943,7 +2963,7 @@
 
     return `<div class="noprint" style="margin:0 0 10px;display:flex;flex-wrap:wrap;align-items:center">
       <span class="muted" style="font-size:.85rem;margin-right:10px">Tampilkan / cetak:</span>
-      ${chk('absensi', 'Absensi & Surat')}${chk('kas', 'Keuangan Kas')}${kasSisList.length && d.kas.iuran && d.kas.iuran.length ? '<label class="noprint" style="display:inline-flex;align-items:center;gap:5px;margin:0 12px 4px 0;font-weight:500;font-size:.875rem"><input type="checkbox" data-lbsec="kasSiswa" style="width:auto;margin:0"> Detail iuran per siswa</label>' : ''}${chk('piket', 'Piket')}${chk('sikap', 'Kerohanian & Keamanan')}${chk('inventaris', 'Inventaris')}${chk('tugas', 'Tugas')}${chk('catatan', 'Catatan')}
+      ${chk('absensi', 'Absensi & Surat')}${chk('kas', 'Keuangan Kas')}${kasSisList.length && d.kas.iuran && d.kas.iuran.length ? '<label class="noprint" style="display:inline-flex;align-items:center;gap:5px;margin:0 12px 4px 0;font-weight:500;font-size:.875rem"><input type="checkbox" data-lbsec="kasSiswa" style="width:auto;margin:0"> Detail iuran per siswa</label>' : ''}${chk('piket', 'Piket')}${pkHarian.length ? '<label class="noprint" style="display:inline-flex;align-items:center;gap:5px;margin:0 12px 4px 0;font-weight:500;font-size:.875rem"><input type="checkbox" data-lbsec="piketDetail" style="width:auto;margin:0"> Detail piket per tanggal</label>' : ''}${chk('sikap', 'Kerohanian & Keamanan')}${chk('inventaris', 'Inventaris')}${chk('tugas', 'Tugas')}${chk('catatan', 'Catatan')}
     </div>
     <article class="doc-paper">
       <div class="doc-head">
