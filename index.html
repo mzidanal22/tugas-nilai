@@ -1042,26 +1042,67 @@
   <div class="dlg-head"><strong id="ktHead">Catat transaksi kas</strong><button class="ghost small" id="ktX" type="button" aria-label="Tutup">✕</button></div>
   <label for="ktJenis">Jenis</label>
   <select id="ktJenis"><option value="keluar">Pengeluaran</option><option value="masuk">Pemasukan lain (bukan iuran)</option></select>
+  <div id="ktKatWrap">
+    <label for="ktKat">Kategori pengeluaran</label>
+    <select id="ktKat"><option value="ATK & Spidol">ATK &amp; Spidol</option><option value="Kebersihan">Kebersihan</option><option value="Fotokopi / Print">Fotokopi / Print</option><option value="Perlengkapan Kelas">Perlengkapan Kelas</option><option value="Acara / Sosial">Acara / Sosial</option><option value="Lainnya">Lainnya</option></select>
+  </div>
   <label for="ktTgl">Tanggal</label><input id="ktTgl" type="date">
-  <label for="ktJumlah">Jumlah (Rp)</label><input id="ktJumlah" type="number" inputmode="numeric" min="1" step="1">
-  <label for="ktKet">Keterangan</label><input id="ktKet" maxlength="120" placeholder="Contoh: beli spidol dan penghapus">
+  <label for="ktJumlah">Jumlah (Rp)</label><input id="ktJumlah" type="number" inputmode="numeric" min="1" step="1" placeholder="Contoh: 25000">
+  <div class="bar" id="ktChips" style="margin:-6px 0 8px">
+    <button class="ghost small" type="button" data-ktnom="5000">+5rb</button>
+    <button class="ghost small" type="button" data-ktnom="10000">+10rb</button>
+    <button class="ghost small" type="button" data-ktnom="20000">+20rb</button>
+    <button class="ghost small" type="button" data-ktnom="50000">+50rb</button>
+  </div>
+  <div class="muted" id="ktPreview" style="margin:-2px 0 10px;font-size:.875rem"></div>
+  <label for="ktKet">Keterangan</label><input id="ktKet" maxlength="100" placeholder="Contoh: beli spidol dan penghapus">
   <label for="ktNota">Foto nota (opsional, disarankan untuk pengeluaran)</label><input id="ktNota" type="file" accept="image/*">
+  <img id="ktNotaPrev" alt="Pratinjau foto nota" hidden style="max-width:100%;max-height:180px;border-radius:8px;margin:0 0 12px;display:block">
   <div class="cerr" id="ktErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="ktBatal" type="button">Batal</button><button id="ktSimpan" type="button">Simpan</button></div>
 </dialog>
 <dialog id="dlgIuran" aria-labelledby="iuHead">
   <div class="dlg-head"><strong id="iuHead">Iuran siswa</strong><button class="ghost small" id="iuX" type="button" aria-label="Tutup">✕</button></div>
-  <div class="bar"><label for="iuSel" style="margin:0">Iuran</label><select id="iuSel" style="width:auto;margin:0"></select><button class="ghost small" id="iuBaru" type="button">Iuran baru</button></div>
-  <div id="iuFormBaru" hidden>
-    <label for="iuJudul">Judul iuran</label><input id="iuJudul" maxlength="80" placeholder="Contoh: Kas minggu 1 November">
-    <label for="iuNominal">Nominal per siswa (Rp)</label><input id="iuNominal" type="number" inputmode="numeric" min="1" step="1">
-    <div class="actions"><button class="ghost" id="iuBatalBaru" type="button">Batal</button><button id="iuBuat" type="button">Buat iuran</button></div>
+  <div class="seg" id="iuModeBar" role="group" aria-label="Mode pencatatan iuran" style="margin:0 0 10px">
+    <button class="small" type="button" data-iumode="iuran">Per iuran</button>
+    <button class="ghost small" type="button" data-iumode="siswa">Per siswa (rapel)</button>
   </div>
-  <div id="iuIsi" hidden>
-    <div class="bar"><label for="iuTgl" style="margin:0">Tanggal bayar</label><input id="iuTgl" type="date" style="width:auto;margin:0"><button class="ghost small" id="iuSalinBelum" type="button">Salin belum lunas</button></div>
-    <div class="bar" style="margin:6px 0"><input id="iuCari" type="search" placeholder="Cari nama siswa…" aria-label="Cari nama siswa" style="width:12rem;margin:0"><button class="ghost small" id="iuBelumBtn" type="button" aria-pressed="false">Belum lunas saja</button></div>
-    <div class="muted" id="iuRingkas" style="margin-bottom:6px"></div>
-    <div id="iuDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0 14px;max-height:45vh;overflow:auto"></div>
+  <div id="iuModeIuran">
+    <div class="bar"><label for="iuSel" style="margin:0">Iuran</label><select id="iuSel" style="width:auto;margin:0"></select><button class="ghost small" id="iuBaru" type="button">+ Iuran baru</button></div>
+    <div id="iuFormBaru" class="panel" style="padding:12px;margin:8px 0" hidden>
+      <label for="iuJudul">Judul iuran</label><input id="iuJudul" maxlength="68" placeholder="Contoh: Kas November">
+      <label for="iuNominal">Nominal per siswa (Rp)</label><input id="iuNominal" type="number" inputmode="numeric" min="1" step="1" placeholder="Contoh: 5000">
+      <div class="bar" id="iuNomChips" style="margin:-6px 0 8px">
+        <button class="ghost small" type="button" data-iunom="2000">Rp 2.000</button>
+        <button class="ghost small" type="button" data-iunom="5000">Rp 5.000</button>
+        <button class="ghost small" type="button" data-iunom="10000">Rp 10.000</button>
+        <button class="ghost small" type="button" data-iunom="20000">Rp 20.000</button>
+      </div>
+      <label for="iuMinggu">Buat sekaligus</label>
+      <select id="iuMinggu"><option value="1">1 iuran saja</option><option value="4">4 minggu sekaligus (Minggu 1–4)</option><option value="5">5 minggu sekaligus (Minggu 1–5)</option></select>
+      <div class="actions"><button class="ghost" id="iuBatalBaru" type="button">Batal</button><button id="iuBuat" type="button">Buat iuran</button></div>
+    </div>
+    <div id="iuIsi" hidden>
+      <div class="bar"><label for="iuTgl" style="margin:0">Tanggal bayar</label><input id="iuTgl" type="date" style="width:auto;margin:0"><button class="ghost small" id="iuSalinBelum" type="button">Salin belum lunas</button></div>
+      <div class="bar" style="margin:6px 0"><input id="iuCari" type="search" placeholder="Cari nama siswa…" aria-label="Cari nama siswa" style="width:11rem;margin:0"><button class="ghost small" id="iuBelumBtn" type="button" aria-pressed="false">Belum lunas saja</button><button class="ghost small" id="iuLunasiSemua" type="button">Lunasi terlihat</button><button class="ghost small" id="iuKosongSemua" type="button">Kosongkan</button></div>
+      <div class="muted" id="iuRingkas" style="margin-bottom:6px"></div>
+      <div id="iuDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0 10px;max-height:42vh;overflow:auto"></div>
+      <div class="muted" id="iuLiveTotal" style="font-weight:600;min-height:1.3em"></div>
+    </div>
+  </div>
+  <div id="iuModeSiswa" hidden>
+    <p class="muted" style="margin:0 0 8px;font-size:.875rem">Catat 1 siswa bayar beberapa iuran sekaligus (bayar rapel / melunasi tunggakan).</p>
+    <div id="iuSisListWrap">
+      <div class="bar" style="margin:0 0 8px"><input id="iuSisCari" type="search" placeholder="Cari nama siswa…" aria-label="Cari siswa" style="width:12rem;margin:0"><button class="ghost small" id="iuSisTunggakBtn" type="button" aria-pressed="false">Ada tunggakan saja</button></div>
+      <div id="iuSisDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:0 0 10px;max-height:48vh;overflow:auto"></div>
+    </div>
+    <div id="iuSisDetWrap" hidden>
+      <div class="row" style="margin-bottom:8px"><strong id="iuSisNama"></strong><button class="ghost small" id="iuSisBack" type="button">← Daftar siswa</button></div>
+      <div class="bar" style="margin:0 0 8px"><label for="iuSisTgl" style="margin:0">Tanggal bayar</label><input id="iuSisTgl" type="date" style="width:auto;margin:0"><button class="ghost small" id="iuSisLunasiAll" type="button">Lunasi semua tunggakan</button></div>
+      <div class="muted" id="iuSisRingkas" style="margin-bottom:6px"></div>
+      <div id="iuSisIuran" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:0 0 10px;max-height:40vh;overflow:auto"></div>
+      <div class="muted" id="iuSisLiveTotal" style="font-weight:600;min-height:1.3em"></div>
+    </div>
   </div>
   <div class="cerr" id="iuErr" role="alert"></div>
   <div class="actions"><button class="ghost" id="iuTutup" type="button">Tutup</button><button id="iuSimpan" type="button">Simpan pembayaran</button></div>
@@ -1072,7 +1113,11 @@
   <div class="muted" id="rwSaldo"></div>
   <div class="bar"><input id="rwFisik" type="number" inputmode="numeric" min="0" step="1" placeholder="Uang yang dipegang (Rp)" style="width:auto;margin:0" aria-label="Uang fisik"><input id="rwKet" maxlength="200" placeholder="Catatan (opsional)" style="width:auto;margin:0" aria-label="Catatan cek"><button class="small" id="rwCek" type="button">Catat</button></div>
   <div id="rwCekHasil" role="status" style="margin-bottom:8px"></div>
-  <h3 style="margin:12px 0 4px">Transaksi terakhir</h3>
+  <h3 style="margin:12px 0 4px">Riwayat transaksi</h3>
+  <div class="bar" style="margin:4px 0 8px">
+    <select id="rwFilter" aria-label="Filter jenis transaksi" style="width:auto;margin:0"><option value="semua">Semua transaksi</option><option value="keluar">Pengeluaran saja</option><option value="lain">Pemasukan lain</option><option value="iuran">Pembayaran iuran</option><option value="batal">Dibatalkan</option></select>
+    <input id="rwCari" type="search" placeholder="Cari keterangan / nama…" aria-label="Cari transaksi" style="width:12rem;margin:0">
+  </div>
   <div id="rwDaftar" style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0 14px;max-height:42vh;overflow:auto"></div>
   <div class="actions"><button class="ghost" id="rwTutup" type="button">Tutup</button></div>
 </dialog>
@@ -1332,7 +1377,7 @@
     server_error: 'Terjadi kesalahan di server. Coba lagi sebentar.'
   };
   const $ = id => document.getElementById(id);
-  const VERSI_WEB = '2026.11.27-a'; // harus sama dengan VERSI di Code.gs
+  const VERSI_WEB = '2026.11.27-b'; // harus sama dengan VERSI di Code.gs
   // ----- Pembantu animasi: mengetik dan menghitung naik. Semuanya langsung ke hasil akhir kalau pengguna meminta gerakan dikurangi. -----
   const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ketikEl = async (el, teks, kec = 34, batal = () => false) => {
@@ -1427,7 +1472,7 @@
   setTimeout(() => { if (!$('vLoad').hidden) $('vLoad').textContent = 'Gagal memuat. Cek koneksi internet lalu muat ulang halaman.'; }, 10000);
 
   let jedaDasar = 1200; // jeda sebelum kirim ulang (ms), digandakan tiap percobaan
-  const ULANG = new Set(['me', 'tugasSaya', 'fileSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'laporanCetak', 'laporanAbsensi', 'profilSiswa', 'suratFoto', 'kelasSaya', 'absenKelasHari', 'piketHari', 'kasKelola', 'kasIuranDetail', 'kasLaporan', 'kasNota', 'inventarisRiwayat', 'laporanKelas', 'briefingHari', 'piketFoto', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
+  const ULANG = new Set(['me', 'tugasSaya', 'fileSaya', 'pengumumanSaya', 'gambarPengumuman', 'rekapKelas', 'kumpul', 'listTugas', 'listPengumuman', 'rekapNilai', 'rekapRapor', 'laporanMingguan', 'laporanCetak', 'laporanAbsensi', 'profilSiswa', 'suratFoto', 'kelasSaya', 'absenKelasHari', 'piketHari', 'kasKelola', 'kasIuranDetail', 'kasSiswaDetail', 'kasLaporan', 'kasNota', 'inventarisRiwayat', 'laporanKelas', 'briefingHari', 'piketFoto', 'absensiSaya', 'listAbsensi', 'absensiSesi', 'simpanRapor', 'rekapTugas', 'listSiswa']);
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   const newRid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
   let sesiJanji = null, sesiSelesai = null;
@@ -2816,6 +2861,11 @@
           <thead><tr><th class="ctr" style="width:32px">No</th><th style="width:96px">Tanggal</th><th>Keterangan</th><th class="num" style="width:110px">Nominal</th></tr></thead>
           <tbody>${d.kas.pemasukanLain.map((x, idx) => `<tr><td class="ctr">${idx + 1}</td><td>${esc(tglPendek(x.tanggal))}</td><td>${esc(x.ket)}</td><td class="num">${rp(x.jumlah)}</td></tr>`).join('')}</tbody>
         </table></div>` : '';
+    const katHtml = d.kas.perKategori && d.kas.perKategori.some(x => x.kategori !== 'Lainnya')
+      ? `<div class="doc-sub">Ringkasan pengeluaran per kategori</div><div class="doc-twrap"><table class="doc-tbl">
+          <thead><tr><th>Kategori</th><th class="num" style="width:120px">Jumlah</th><th class="ctr" style="width:68px">Porsi</th></tr></thead>
+          <tbody>${d.kas.perKategori.map(k => `<tr><td>${esc(k.kategori)}</td><td class="num">${rp(k.jumlah)}</td><td class="ctr">${d.kas.keluar ? Math.round(k.jumlah / d.kas.keluar * 100) + '%' : '–'}</td></tr>`).join('')}</tbody>
+        </table></div>` : '';
     const keluarHtml = d.kas.pengeluaran.length
       ? `<div class="doc-sub">Rincian penggunaan uang kas (pengeluaran)</div><div class="doc-twrap"><table class="doc-tbl">
           <thead><tr><th class="ctr" style="width:32px">No</th><th style="width:96px">Tanggal</th><th>Keterangan Pengeluaran</th><th class="num" style="width:110px">Nominal</th><th style="width:128px">Bukti Nota</th></tr></thead>
@@ -2827,7 +2877,13 @@
           <tfoot><tr><td colspan="3" style="text-align:right">Total Pengeluaran</td><td class="num">${rp(d.kas.keluar)}</td><td></td></tr></tfoot>
         </table></div>`
       : '<p class="doc-note">Tidak ada pengeluaran kas pada periode ini.</p>';
-    const kasBody = kasFlow + cekHtml + iuranHtml + masukLainHtml + keluarHtml;
+    const kasSisList = d.kas.perSiswa || [];
+    const kasSisHtml = kasSisList.length && d.kas.iuran && d.kas.iuran.length
+      ? `<div data-lbwrap="kasSiswa" hidden><div class="doc-sub">Rincian iuran kas per siswa (arsip internal wali kelas)</div><div class="doc-twrap"><table class="doc-tbl">
+          <thead><tr><th class="ctr" style="width:32px">No</th><th>Nama Siswa</th><th class="ctr" style="width:74px">Lunas</th><th class="num" style="width:104px">Dibayar</th><th class="num" style="width:104px">Sisa</th><th class="ctr" style="width:82px">Status</th></tr></thead>
+          <tbody>${kasSisList.map((s, idx) => `<tr><td class="ctr">${idx + 1}</td><td>${esc(s.nama)}</td><td class="ctr">${s.lunas}/${s.totalIuran}</td><td class="num">${rp(s.dibayar)}</td><td class="num">${s.sisa ? rp(s.sisa) : '–'}</td><td class="ctr"><span class="doc-b ${s.sisa === 0 ? 'ok' : s.dibayar > 0 ? 'warn' : 'bad'}">${s.sisa === 0 ? 'Lunas' : s.dibayar > 0 ? 'Kurang' : 'Belum'}</span></td></tr>`).join('')}</tbody>
+        </table></div></div>` : '';
+    const kasBody = kasFlow + cekHtml + iuranHtml + masukLainHtml + katHtml + keluarHtml + kasSisHtml;
 
     // --- 3. Piket Kebersihan ---
     const tpList = d.piket.tidakPiket || [];
@@ -2887,7 +2943,7 @@
 
     return `<div class="noprint" style="margin:0 0 10px;display:flex;flex-wrap:wrap;align-items:center">
       <span class="muted" style="font-size:.85rem;margin-right:10px">Tampilkan / cetak:</span>
-      ${chk('absensi', 'Absensi & Surat')}${chk('kas', 'Keuangan Kas')}${chk('piket', 'Piket')}${chk('sikap', 'Kerohanian & Keamanan')}${chk('inventaris', 'Inventaris')}${chk('tugas', 'Tugas')}${chk('catatan', 'Catatan')}
+      ${chk('absensi', 'Absensi & Surat')}${chk('kas', 'Keuangan Kas')}${kasSisList.length && d.kas.iuran && d.kas.iuran.length ? '<label class="noprint" style="display:inline-flex;align-items:center;gap:5px;margin:0 12px 4px 0;font-weight:500;font-size:.875rem"><input type="checkbox" data-lbsec="kasSiswa" style="width:auto;margin:0"> Detail iuran per siswa</label>' : ''}${chk('piket', 'Piket')}${chk('sikap', 'Kerohanian & Keamanan')}${chk('inventaris', 'Inventaris')}${chk('tugas', 'Tugas')}${chk('catatan', 'Catatan')}
     </div>
     <article class="doc-paper">
       <div class="doc-head">
@@ -3598,15 +3654,38 @@
   }
 
   // catat pemasukan lain / pengeluaran
-  function bukaKasTrx() {
-    $('ktJenis').value = 'keluar'; $('ktTgl').value = hariIni(); $('ktTgl').max = hariIni(); $('ktJumlah').value = ''; $('ktKet').value = ''; $('ktNota').value = ''; $('ktErr').textContent = '';
-    $('dlgKasTrx').showModal(); $('ktJumlah').focus();
+  function updKtPreview() {
+    const j = Number($('ktJumlah').value), keluar = $('ktJenis').value === 'keluar';
+    $('ktKatWrap').hidden = !keluar;
+    if (!isFinite(j) || j < 1) { $('ktPreview').textContent = ''; return; }
+    const saldo = kelasData && kelasData.kas ? Number(kelasData.kas.saldo || 0) : null;
+    const kurang = keluar && saldo !== null && j > saldo;
+    $('ktPreview').innerHTML = `Terbaca: <strong>${rp(j)}</strong>` + (kurang ? ` · <span class="late">Melebihi saldo saat ini (${rp(saldo)}) — pastikan nominal benar.</span>` : '');
   }
+  function bukaKasTrx() {
+    $('ktJenis').value = 'keluar'; $('ktKat').value = 'ATK & Spidol'; $('ktTgl').value = hariIni(); $('ktTgl').max = hariIni();
+    $('ktJumlah').value = ''; $('ktKet').value = ''; $('ktNota').value = ''; $('ktNotaPrev').hidden = true; $('ktNotaPrev').removeAttribute('src'); $('ktErr').textContent = '';
+    updKtPreview(); $('dlgKasTrx').showModal(); $('ktJumlah').focus();
+  }
+  $('ktJenis').onchange = updKtPreview;
+  $('ktJumlah').oninput = updKtPreview;
+  $('ktChips').onclick = e => {
+    const b = e.target.closest('[data-ktnom]'); if (!b) return;
+    $('ktJumlah').value = (Number($('ktJumlah').value) || 0) + Number(b.dataset.ktnom);
+    updKtPreview(); $('ktJumlah').focus();
+  };
+  $('ktNota').onchange = async e => {
+    const f = e.target.files[0]; $('ktNotaPrev').hidden = true; if (!f) return;
+    try { const u = await kecilkan(f); $('ktNotaPrev').src = u; $('ktNotaPrev').hidden = false; }
+    catch (err) { e.target.value = ''; toast('Foto nota tidak bisa dibaca.', true); }
+  };
   $('ktX').onclick = $('ktBatal').onclick = () => $('dlgKasTrx').close();
   $('ktSimpan').onclick = async () => {
-    const jumlah = Number($('ktJumlah').value), ket = $('ktKet').value.trim(), f = $('ktNota').files[0];
+    const jumlah = Number($('ktJumlah').value), rawKet = $('ktKet').value.trim(), f = $('ktNota').files[0];
     if (!Number.isInteger(jumlah) || jumlah < 1) { $('ktErr').textContent = ERR.jumlah_tidak_valid; return; }
-    if (ket.length < 3) { $('ktErr').textContent = ERR.keterangan_kosong; return; }
+    if (rawKet.length < 3) { $('ktErr').textContent = ERR.keterangan_kosong; return; }
+    const kat = $('ktJenis').value === 'keluar' ? $('ktKat').value : '';
+    const ket = kat && kat !== 'Lainnya' && !/^\[/.test(rawKet) ? `[${kat}] ${rawKet}`.slice(0, 120) : rawKet;
     $('ktSimpan').disabled = true; $('ktErr').textContent = '';
     try {
       const nota = f ? { name: f.name, data: (await kecilkan(f)).split(',')[1] } : null;
@@ -3616,9 +3695,26 @@
     $('ktSimpan').disabled = false;
   };
 
-  // iuran: buat iuran dan catat pembayaran siswa
-  let iuHanyaBelum = false;
+  // iuran: 2 mode input -> (1) Per iuran (banyak siswa sekaligus + lunasi terlihat + total live) & (2) Per siswa (bayar rapel multi-iuran)
+  let iuHanyaBelum = false, iuMode = 'iuran', iuSisList = [], iuSisAktif = null, iuSisTunggakOnly = false;
   function isiIuSel(pilih) { $('iuSel').innerHTML = kk.iuran.map(i => `<option value="${esc(i.id)}"${i.id === pilih ? ' selected' : ''}>${esc(i.judul)} · ${rp(i.nominal)}</option>`).join(''); }
+  function updIuLiveTotal() {
+    let n = 0, tot = 0;
+    $('iuDaftar').querySelectorAll('input[data-nis]').forEach(i => { const v = Number(i.value); if (v > 0) { n++; tot += v; } });
+    $('iuLiveTotal').textContent = n ? `Akan dicatat: ${n} siswa · Total ${rp(tot)}` : 'Isi nominal atau klik "Lunasi" pada siswa yang membayar.';
+  }
+  function updIuSisLiveTotal() {
+    let n = 0, tot = 0;
+    $('iuSisIuran').querySelectorAll('input[data-iuid]').forEach(i => { const v = Number(i.value); if (v > 0) { n++; tot += v; } });
+    $('iuSisLiveTotal').textContent = n ? `Akan dicatat: ${n} iuran · Total ${rp(tot)}` : 'Isi nominal atau klik "Lunasi" untuk mencatat bayar rapel.';
+  }
+  function syncIuMode() {
+    $('iuModeBar').querySelectorAll('[data-iumode]').forEach(b => b.className = (b.dataset.iumode === iuMode ? '' : 'ghost ') + 'small');
+    $('iuModeIuran').hidden = iuMode !== 'iuran';
+    $('iuModeSiswa').hidden = iuMode !== 'siswa';
+    $('iuSimpan').hidden = (iuMode === 'iuran' && $('iuIsi').hidden) || (iuMode === 'siswa' && !iuSisAktif);
+    $('iuErr').textContent = '';
+  }
   function saringIuran() {
     const q = ($('iuCari').value || '').trim().toLowerCase();
     $('iuDaftar').querySelectorAll('.abrow').forEach(r => {
@@ -3630,7 +3726,7 @@
     $('iuBelumBtn').setAttribute('aria-pressed', iuHanyaBelum ? 'true' : 'false');
   }
   async function muatDetailIuran() {
-    if (!$('iuSel').value) { $('iuIsi').hidden = true; return; }
+    if (!$('iuSel').value) { $('iuIsi').hidden = true; syncIuMode(); return; }
     try { iuDet = await api('kasIuranDetail', { kelas: kelasData.kelas, id: $('iuSel').value }); } catch (e) { $('iuErr').textContent = e.message; return; }
     const nom = iuDet.iuran.nominal;
     $('iuDaftar').innerHTML = iuDet.siswa.map((s, i) => `<div class="abrow" data-nama="${esc(String(s.nama).toLowerCase())}" data-lunas="${s.dibayar >= nom ? '1' : '0'}"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)} <span class="muted">· ${rp(s.dibayar)} / ${rp(nom)}</span></span>`
@@ -3638,16 +3734,61 @@
     const ik = kk.iuran.find(i => i.id === iuDet.iuran.id);
     $('iuRingkas').textContent = ik ? `${ik.lunas} lunas, ${ik.kurang} kurang, ${ik.belum} belum · terkumpul ${rp(ik.terkumpul)} dari ${rp(ik.target)}` : '';
     $('iuIsi').hidden = false;
-    saringIuran();
+    saringIuran(); updIuLiveTotal(); syncIuMode();
+  }
+  function gambarSiswaIuranList() {
+    const q = ($('iuSisCari').value || '').trim().toLowerCase();
+    const list = iuSisList.filter(s => (!q || s.nama.toLowerCase().includes(q)) && (!iuSisTunggakOnly || s.sisa > 0));
+    $('iuSisTunggakBtn').classList.toggle('ghost', !iuSisTunggakOnly);
+    $('iuSisTunggakBtn').setAttribute('aria-pressed', iuSisTunggakOnly ? 'true' : 'false');
+    $('iuSisDaftar').innerHTML = list.length ? list.map((s, i) => `<div class="abrow"><span class="abnama"><span class="muted">${i + 1}</span> ${esc(s.nama)}<div class="muted">${s.sisa > 0 ? `${s.belumCount} iuran belum lunas · kurang ${rp(s.sisa)}` : 'Semua iuran lunas'}</div></span>`
+      + `<button class="${s.sisa > 0 ? '' : 'ghost '}small" type="button" data-pilsis="${esc(s.nis)}">${s.sisa > 0 ? 'Bayar' : 'Lihat'}</button></div>`).join('')
+      : '<p class="muted" style="padding:12px">Tidak ada siswa yang cocok.</p>';
+  }
+  function bukaDetailSiswaIuran(nis) {
+    const s = iuSisList.find(x => x.nis === nis); if (!s) return;
+    iuSisAktif = s;
+    $('iuSisListWrap').hidden = true; $('iuSisDetWrap').hidden = false;
+    $('iuSisNama').textContent = s.nama;
+    $('iuSisTgl').value = $('iuTgl').value || hariIni(); $('iuSisTgl').max = hariIni();
+    $('iuSisRingkas').textContent = s.sisa > 0 ? `Total sudah dibayar ${rp(s.totalDibayar)} dari ${rp(s.totalTagihan)} · sisa tunggakan ${rp(s.sisa)}` : `Semua iuran sudah lunas (${rp(s.totalDibayar)}).`;
+    $('iuSisIuran').innerHTML = s.rincian.length ? s.rincian.map(r => `<div class="abrow"><span class="abnama">${esc(r.judul)}<div class="muted">${rp(r.dibayar)} / ${rp(r.nominal)}</div></span>`
+      + (r.sisa === 0 ? '<span class="tag ok">Lunas</span>' : `<span style="display:flex;gap:6px;align-items:center"><input type="number" inputmode="numeric" min="1" max="${r.sisa}" data-iuid="${esc(r.id)}" placeholder="Bayar" aria-label="Bayar ${esc(r.judul)}" style="width:96px;margin:0"><button class="ghost small" type="button" data-sislunasi="${esc(r.id)}" data-sisa="${r.sisa}">Lunasi</button></span>`) + '</div>').join('')
+      : '<p class="muted" style="padding:12px">Belum ada iuran di kelas ini.</p>';
+    updIuSisLiveTotal(); syncIuMode();
+  }
+  async function muatModeSiswa() {
+    $('iuSisDaftar').innerHTML = '<p class="muted" style="padding:12px">Memuat data siswa…</p>';
+    iuSisAktif = null; $('iuSisListWrap').hidden = false; $('iuSisDetWrap').hidden = true; syncIuMode();
+    try { const r = await api('kasSiswaDetail', { kelas: kelasData.kelas }); iuSisList = r.siswa || []; gambarSiswaIuranList(); }
+    catch (e) { $('iuSisDaftar').innerHTML = ''; $('iuErr').textContent = e.message; }
   }
   async function bukaIuran() {
     try { await muatKas(); } catch (e) { toast(e.message, true); return; }
-    isiIuSel(); $('iuErr').textContent = ''; $('iuCari').value = ''; iuHanyaBelum = false; $('iuTgl').value = hariIni(); $('iuTgl').max = hariIni(); $('iuFormBaru').hidden = kk.iuran.length > 0; $('iuJudul').value = ''; $('iuNominal').value = '';
+    iuMode = 'iuran'; iuSisAktif = null;
+    isiIuSel(); $('iuErr').textContent = ''; $('iuCari').value = ''; iuHanyaBelum = false; $('iuTgl').value = hariIni(); $('iuTgl').max = hariIni();
+    $('iuFormBaru').hidden = kk.iuran.length > 0; $('iuJudul').value = ''; $('iuNominal').value = ''; $('iuMinggu').value = '1';
     if (!$('dlgIuran').open) $('dlgIuran').showModal();
-    await muatDetailIuran();
+    syncIuMode(); await muatDetailIuran();
   }
+  $('iuModeBar').onclick = e => {
+    const b = e.target.closest('[data-iumode]'); if (!b || b.dataset.iumode === iuMode) return;
+    iuMode = b.dataset.iumode; syncIuMode();
+    if (iuMode === 'siswa') muatModeSiswa(); else muatDetailIuran();
+  };
+  $('iuNomChips').onclick = e => { const b = e.target.closest('[data-iunom]'); if (b) { $('iuNominal').value = b.dataset.iunom; $('iuNominal').focus(); } };
   $('iuCari').oninput = saringIuran;
   $('iuBelumBtn').onclick = () => { iuHanyaBelum = !iuHanyaBelum; saringIuran(); };
+  $('iuLunasiSemua').onclick = () => {
+    let n = 0;
+    $('iuDaftar').querySelectorAll('.abrow').forEach(r => {
+      if (r.hidden) return;
+      const b = r.querySelector('[data-lunasi]'), inp = r.querySelector('input[data-nis]');
+      if (b && inp) { inp.value = b.dataset.sisa; n++; }
+    });
+    updIuLiveTotal(); if (!n) toast('Tidak ada siswa belum lunas yang terlihat.');
+  };
+  $('iuKosongSemua').onclick = () => { $('iuDaftar').querySelectorAll('input[data-nis]').forEach(i => { i.value = ''; }); updIuLiveTotal(); };
   $('iuSalinBelum').onclick = async () => {
     if (!iuDet) return;
     const nom = iuDet.iuran.nominal, belum = iuDet.siswa.filter(s => s.dibayar < nom);
@@ -3661,23 +3802,68 @@
   $('iuBaru').onclick = () => { $('iuFormBaru').hidden = !$('iuFormBaru').hidden; if (!$('iuFormBaru').hidden) $('iuJudul').focus(); };
   $('iuBatalBaru').onclick = () => { $('iuFormBaru').hidden = true; };
   $('iuBuat').onclick = async () => {
-    const judul = $('iuJudul').value.trim(), nominal = Number($('iuNominal').value);
+    const judul = $('iuJudul').value.trim(), nominal = Number($('iuNominal').value), minggu = Number($('iuMinggu').value) || 1;
     if (!judul) { $('iuErr').textContent = ERR.judul_kosong; return; }
     if (!Number.isInteger(nominal) || nominal < 1) { $('iuErr').textContent = ERR.jumlah_tidak_valid; return; }
     $('iuBuat').disabled = true; $('iuErr').textContent = '';
-    try { const r = await api('kasBuatIuran', { kelas: kelasData.kelas, judul, nominal }); await muatKas(); isiIuSel(r.id); $('iuFormBaru').hidden = true; await muatDetailIuran(); toast('Iuran dibuat.'); }
-    catch (e) { $('iuErr').textContent = e.message; }
+    try {
+      const r = await api('kasBuatIuran', { kelas: kelasData.kelas, judul, nominal, minggu });
+      await muatKas(); isiIuSel(r.id); $('iuFormBaru').hidden = true; $('iuJudul').value = ''; $('iuNominal').value = ''; $('iuMinggu').value = '1';
+      await muatDetailIuran(); toast(r.dibuat > 1 ? `${r.dibuat} iuran mingguan dibuat.` : 'Iuran dibuat.');
+    } catch (e) { $('iuErr').textContent = e.message; }
     $('iuBuat').disabled = false;
   };
   $('iuDaftar').onclick = e => {
     const b = e.target.closest('[data-lunasi]'); if (!b) return;
-    const inp = $('iuDaftar').querySelector(`input[data-nis="${CSS.escape(b.dataset.lunasi)}"]`); if (inp) inp.value = b.dataset.sisa;
+    const inp = $('iuDaftar').querySelector(`input[data-nis="${CSS.escape(b.dataset.lunasi)}"]`);
+    if (inp) { inp.value = inp.value === String(b.dataset.sisa) ? '' : b.dataset.sisa; updIuLiveTotal(); }
   };
+  $('iuDaftar').oninput = updIuLiveTotal;
+  $('iuDaftar').onkeydown = e => {
+    if (e.key !== 'Enter' || !e.target.matches('input[data-nis]')) return;
+    e.preventDefault();
+    const all = [...$('iuDaftar').querySelectorAll('input[data-nis]')].filter(x => !x.closest('.abrow').hidden);
+    const nx = all[all.indexOf(e.target) + 1]; if (nx) { nx.focus(); nx.select(); }
+  };
+  $('iuSisCari').oninput = gambarSiswaIuranList;
+  $('iuSisTunggakBtn').onclick = () => { iuSisTunggakOnly = !iuSisTunggakOnly; gambarSiswaIuranList(); };
+  $('iuSisDaftar').onclick = e => { const b = e.target.closest('[data-pilsis]'); if (b) bukaDetailSiswaIuran(b.dataset.pilsis); };
+  $('iuSisBack').onclick = () => { iuSisAktif = null; $('iuSisDetWrap').hidden = true; $('iuSisListWrap').hidden = false; syncIuMode(); };
+  $('iuSisLunasiAll').onclick = () => {
+    $('iuSisIuran').querySelectorAll('[data-sislunasi]').forEach(b => {
+      const inp = $('iuSisIuran').querySelector(`input[data-iuid="${CSS.escape(b.dataset.sislunasi)}"]`);
+      if (inp) inp.value = b.dataset.sisa;
+    });
+    updIuSisLiveTotal();
+  };
+  $('iuSisIuran').onclick = e => {
+    const b = e.target.closest('[data-sislunasi]'); if (!b) return;
+    const inp = $('iuSisIuran').querySelector(`input[data-iuid="${CSS.escape(b.dataset.sislunasi)}"]`);
+    if (inp) { inp.value = inp.value === String(b.dataset.sisa) ? '' : b.dataset.sisa; updIuSisLiveTotal(); }
+  };
+  $('iuSisIuran').oninput = updIuSisLiveTotal;
   $('iuX').onclick = $('iuTutup').onclick = () => { $('dlgIuran').close(); muatUlangKelas(); };
   $('iuSimpan').onclick = async () => {
+    $('iuErr').textContent = '';
+    if (iuMode === 'siswa') {
+      if (!iuSisAktif) return;
+      const items = [];
+      $('iuSisIuran').querySelectorAll('input[data-iuid]').forEach(i => { if (i.value) items.push({ id: i.dataset.iuid, jumlah: Number(i.value) }); });
+      if (!items.length) { $('iuErr').textContent = 'Isi jumlah pembayaran minimal satu iuran.'; return; }
+      $('iuSimpan').disabled = true;
+      try {
+        const r = await api('kasBayarSiswa', { kelas: kelasData.kelas, nis: iuSisAktif.nis, tanggal: $('iuSisTgl').value, items, rid: newRid() });
+        toast(`${iuSisAktif.nama}: ${r.jumlah} iuran tercatat (${rp(r.total)}).`);
+        const nisKeep = iuSisAktif.nis;
+        const fresh = await api('kasSiswaDetail', { kelas: kelasData.kelas });
+        iuSisList = fresh.siswa || []; gambarSiswaIuranList(); bukaDetailSiswaIuran(nisKeep);
+      } catch (e) { $('iuErr').textContent = e.message; }
+      $('iuSimpan').disabled = false;
+      return;
+    }
     const bayar = {}; $('iuDaftar').querySelectorAll('input[data-nis]').forEach(i => { if (i.value) bayar[i.dataset.nis] = Number(i.value); });
     if (!Object.keys(bayar).length) { $('iuErr').textContent = 'Isi jumlah pembayaran minimal satu siswa.'; return; }
-    $('iuSimpan').disabled = true; $('iuErr').textContent = '';
+    $('iuSimpan').disabled = true;
     try {
       const r = await api('kasBayarIuran', { kelas: kelasData.kelas, id: iuDet.iuran.id, tanggal: $('iuTgl').value, bayar, rid: newRid() });
       toast(`${r.jumlah} pembayaran tercatat (${rp(r.total)}).`); const pilih = iuDet.iuran.id; await muatKas(); isiIuSel(pilih); await muatDetailIuran();
@@ -3689,14 +3875,26 @@
   function gambarRiwayat() {
     const c = kk.cek[0];
     $('rwSaldo').innerHTML = `Saldo di aplikasi: <strong>${rp(kk.saldo)}</strong>` + (c ? ` · cek terakhir ${esc(tglIndo(c.tanggal))}: ${c.selisih === 0 ? 'cocok' : 'selisih ' + rp(c.selisih)}` : '');
-    $('rwDaftar').innerHTML = kk.riwayat.length ? kk.riwayat.map(x => {
+    const fl = $('rwFilter') ? $('rwFilter').value : 'semua', q = ($('rwCari') ? $('rwCari').value : '').trim().toLowerCase();
+    const list = kk.riwayat.filter(x => {
+      if (fl === 'keluar' && !(x.jenis === 'keluar' && !x.batal)) return false;
+      if (fl === 'lain' && !(x.jenis === 'masuk' && !x.isIuran && !x.batal)) return false;
+      if (fl === 'iuran' && !x.isIuran) return false;
+      if (fl === 'batal' && !x.batal) return false;
+      if (q && !(String(x.ket + ' ' + x.siswa + ' ' + x.iuran).toLowerCase().includes(q))) return false;
+      return true;
+    });
+    $('rwDaftar').innerHTML = list.length ? list.map(x => {
       const label = x.iuran ? `${esc(x.iuran)}: ${esc(x.siswa)}` : esc(x.ket), isi = `${esc(tglIndo(x.tanggal))} · ${x.jenis === 'masuk' ? '+' : '−'}${rp(x.jumlah)} · ${label}`;
       return `<div class="abrow" data-id="${esc(x.id)}"><span class="abnama" style="flex:1;min-width:0">${x.batal ? `<s>${isi}</s>` : isi}<div class="muted">${x.batal ? 'Dibatalkan: ' + esc(x.alasan) : 'Dicatat ' + (x.oleh ? esc(x.oleh) : 'guru')}</div>${x.batal || x.iuran ? '' : vTag('kas', x.id) + vAlasan('kas', x.id)}</span>`
         + `<span style="display:flex;gap:6px">${x.adaNota ? `<button class="ghost small" type="button" data-nota="${esc(x.id)}">Nota</button>` : ''}${x.batal ? '' : `<button class="ghost small danger" type="button" data-batal="${esc(x.id)}">Batalkan</button>`}</span></div>`;
-    }).join('') : '<p class="muted" style="padding:12px">Belum ada transaksi.</p>';
+    }).join('') : '<p class="muted" style="padding:12px">Tidak ada transaksi yang cocok.</p>';
   }
+  if ($('rwFilter')) $('rwFilter').onchange = gambarRiwayat;
+  if ($('rwCari')) $('rwCari').oninput = gambarRiwayat;
   async function bukaKasRiwayat() {
     try { await muatKas(); } catch (e) { toast(e.message, true); return; }
+    if ($('rwFilter')) $('rwFilter').value = 'semua'; if ($('rwCari')) $('rwCari').value = '';
     gambarRiwayat(); $('rwFisik').value = ''; $('rwKet').value = ''; $('rwCekHasil').textContent = ''; if (!$('dlgKasRiwayat').open) $('dlgKasRiwayat').showModal();
   }
   $('rwX').onclick = $('rwTutup').onclick = () => { $('dlgKasRiwayat').close(); muatUlangKelas(); };
