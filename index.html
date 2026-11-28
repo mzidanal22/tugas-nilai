@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#0D231A">
+<meta name="description" content="Zidan Labs — Portal tugas, nilai, kehadiran, dan manajemen kelas untuk siswa, guru, dan wali kelas.">
 <meta name="apple-mobile-web-app-title" content="Zidan Labs">
 <title>Zidan Labs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,7 +63,7 @@
   tr:last-child td { border-bottom: 0; }
   .ok { color: var(--ok); font-weight: 600; }
   .late { color: var(--bad); font-weight: 600; }
-  .tag { font-size: 0.8125rem; border: 1px solid var(--line); border-radius: 99px; padding: 1px 10px; }
+  .tag { font-size: 0.8125rem; border: 1px solid var(--line); border-radius: 99px; padding: 1px 10px; display: inline-block; white-space: nowrap; }
   .tag.ok { color: var(--ok); border-color: var(--ok); }
   .tag.warn { color: var(--warn); border-color: var(--warn); }
   .tag.bad { color: var(--bad); border-color: var(--bad); }
@@ -484,7 +485,7 @@
   @keyframes temaPutar { from { transform: rotate(0deg) scale(.85); } to { transform: rotate(360deg) scale(1); } }
   @keyframes tagGlow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
   @media (prefers-reduced-motion: no-preference) {
-    body { animation: gridDrift 14s linear infinite; }
+    body.masuk { animation: gridDrift 14s linear infinite; }
     h1.mengetik::after { animation: kedip .9s steps(1) infinite; }
     .fade > * { animation: naik .38s cubic-bezier(.22, 1.15, .36, 1) both; }
     .fade > *:nth-child(2) { animation-delay: .04s; } .fade > *:nth-child(3) { animation-delay: .08s; } .fade > *:nth-child(4) { animation-delay: .12s; }
@@ -523,19 +524,220 @@
     button.stat:active, .qa button:active { transform: translate(1.5px, 1.5px); box-shadow: 1.5px 1.5px 0 var(--shd); }
   }
   @media print { body { animation: none !important; } .meter > i, .stat.hot::after, .dot, .ndot, .kdot { animation: none !important; } }
+
+  /* ===== PC Web Dashboard Overhaul (responsive: PC sidebar workspace + tablet top bar + mobile PWA utuh) ===== */
+  :root { color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root:not([data-tema=light]) { color-scheme: dark; } }
+  :root[data-tema=dark] { color-scheme: dark; }
+  :root[data-tema=light] { color-scheme: light; }
+  h1, h2 { text-wrap: balance; }
+  button, a, select, input, summary { touch-action: manipulation; }
+  dialog, .navbar { overscroll-behavior: contain; }
+  .skip-link { position: fixed; top: -100px; left: 16px; z-index: 100; padding: 10px 16px; border-radius: 99px; background: var(--lime); color: var(--lime-ink); border: 2px solid var(--shd); box-shadow: 3px 3px 0 var(--shd); font-weight: 800; text-decoration: none; }
+  .skip-link:focus-visible { top: 14px; }
+  body.has-nav [data-id], body.has-nav h2, body.has-nav .panel, body.has-nav #kValidasi { scroll-margin-top: 84px; }
+  .stat .n, .nilai-pill, .nilai-big, td { font-variant-numeric: tabular-nums; }
+  .side-brand, .side-foot, .nav-grp, .top-ctx, .login-hero { display: none; }
+  .nav .desk-only { display: none; }
+  .pg-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin: 0 0 18px; }
+  .pg-head h1 { margin: 0 0 2px; max-width: none; }
+  .pg-head p { margin: 0; }
+  .pg-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .dash-bento, .kelas-grid, .cards-grid, .ab-work { display: block; }
+  .dash-col { display: flex; flex-direction: column; gap: 14px; }
+  .dash-col > .panel, .dash-col > details.panel, .dash-col > #aKelasRingkas > .panel { margin-bottom: 0; }
+  .dash-col > #aKelasRingkas:empty { display: none; }
+  .cards-grid > .panel { margin-bottom: 12px; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0 16px; }
+  .ab-side-box { margin-bottom: 12px; }
+  .login-shell { width: 100%; display: flex; justify-content: center; }
+  .nav button.on-mob { background: var(--lime); color: var(--lime-ink); border: 2px solid var(--shd); }
+
+  /* Tablet (721px - 1023px): ruang lebih lega, navigasi horizontal rapi */
+  @media (min-width: 721px) {
+    header { max-width: 76rem; padding: 18px 28px 0; }
+    .navbar { max-width: 76rem; padding: 0 28px; }
+    main { max-width: 76rem; padding: 24px 28px 64px; }
+    .nav button.on-mob:not(.on) { background: transparent; color: var(--muted); border-color: transparent; }
+    .nav .desk-only { display: inline-flex; }
+    .toolbar { background: var(--panel); border: 2px solid var(--edge); border-radius: 16px; padding: 12px 16px; box-shadow: 3px 3px 0 var(--shd); }
+    .toolbar input[type=search] { flex: 1 1 14rem; min-width: 11rem; }
+    .cards-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    .cards-grid > .panel, .cards-grid > article.panel { max-width: none; width: 100%; margin-bottom: 0; }
+    .cards-grid > .panel.card { display: flex; flex-direction: column; justify-content: space-between; }
+    .cards-grid > .panel.card .row { align-items: flex-start; gap: 10px; }
+    .panel { box-shadow: 3px 3px 0 var(--shd); }
+    #rRilis, #aMasalah details.panel { max-width: none !important; }
+    .tablewrap { max-height: calc(100vh - 250px); overflow: auto; }
+    .tablewrap thead th { position: sticky; top: 0; z-index: 3; background: var(--panel); box-shadow: inset 0 -1px 0 var(--line); }
+    .tablewrap table.matrix thead th:first-child { z-index: 4; }
+    .tablewrap tbody tr:hover td { background: color-mix(in srgb, var(--lime) 10%, var(--panel)); }
+    .tablewrap table.matrix tbody tr:hover td:first-child { background: color-mix(in srgb, var(--lime) 14%, var(--panel)); }
+  }
+
+  /* PC Web (>= 1024px): Full PC Web Dashboard Shell (Left Sidebar + Sticky Top Bar + Spacious Canvas) */
+  @media (min-width: 1024px) {
+    :root { --side-w: 256px; }
+    body.has-nav { background-size: 32px 32px; }
+    body.has-nav .navbar {
+      position: fixed; top: 0; left: 0; bottom: 0; width: var(--side-w);
+      max-width: none; margin: 0; padding: 18px 14px 16px;
+      background: var(--panel); border-right: 2px solid var(--edge);
+      display: flex; flex-direction: column; gap: 4px; overflow-y: auto; z-index: 40;
+    }
+    body.has-nav .side-brand {
+      display: flex; align-items: center; gap: 10px; padding: 4px 8px 14px;
+      border-bottom: 1.5px solid var(--line); margin-bottom: 6px;
+    }
+    .side-brand-txt { min-width: 0; }
+    .side-brand-name { font-weight: 800; font-size: 1.2rem; letter-spacing: -0.04em; line-height: 1.1; display: block; }
+    .side-role {
+      display: inline-block; margin-top: 3px; font-size: 0.72rem; font-weight: 700;
+      padding: 1px 8px; border-radius: 99px; border: 1.5px solid var(--edge);
+      background: color-mix(in srgb, var(--lime) 28%, var(--panel)); color: var(--ink);
+    }
+    body.has-nav .nav { flex-direction: column; flex-wrap: nowrap; gap: 3px; flex: 1; }
+    body.has-nav .nav-grp {
+      display: block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); padding: 14px 10px 4px;
+    }
+    body.has-nav .nav-grp:first-child { padding-top: 4px; }
+    body.has-nav .nav button {
+      width: 100%; justify-content: flex-start; gap: 10px; padding: 9px 12px;
+      border-radius: 12px; font-size: 0.94rem; font-weight: 600; min-height: 42px;
+      color: var(--muted); border: 2px solid transparent; transition: background-color .14s ease, color .14s ease, transform .14s ease;
+    }
+    body.has-nav .nav button:hover {
+      color: var(--ink); background: color-mix(in srgb, var(--ink) 6%, transparent); transform: none;
+    }
+    body.has-nav .nav button.on {
+      background: var(--lime); color: var(--lime-ink); border: 2px solid var(--shd);
+      box-shadow: 2px 2px 0 var(--shd); font-weight: 700;
+    }
+    body.has-nav .nav button .ndot {
+      position: static; margin-left: auto; min-width: 20px; height: 20px; line-height: 20px; font-size: .72rem;
+    }
+    body.has-nav .side-foot {
+      display: flex; flex-direction: column; gap: 8px; margin-top: 14px;
+      padding-top: 14px; border-top: 1.5px solid var(--line);
+    }
+    .side-foot button.side-cta { width: 100%; justify-content: center; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: .92rem; }
+    .side-meta { font-size: .78rem; color: var(--muted); padding: 0 6px; line-height: 1.4; }
+
+    body.has-nav header {
+      position: sticky; top: 0; z-index: 30;
+      margin: 0 0 0 var(--side-w); max-width: none; height: 64px; padding: 0 36px;
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1.5px solid var(--line);
+    }
+    body.has-nav header .brand { display: none; }
+    body.has-nav .top-ctx { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .top-ctx-title { font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; white-space: nowrap; }
+    .top-ctx-sub { font-size: 0.84rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 10px; border-left: 1.5px solid var(--line); }
+    body.has-nav #who {
+      background: var(--panel); border: 1.5px solid var(--line); border-radius: 99px;
+      padding: 4px 6px 4px 8px; gap: 8px;
+    }
+    body.has-nav #who #whoName { font-size: .88rem; font-weight: 600; color: var(--ink); max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    body.has-nav #who button.small { box-shadow: none; border-width: 1.5px; }
+    body.has-nav #who #btnOut { border-color: transparent; background: transparent; }
+    body.has-nav #who #btnOut:hover { background: color-mix(in srgb, var(--bad) 12%, transparent); color: var(--bad); transform: none; box-shadow: none; }
+
+    body.has-nav main {
+      margin: 0 0 0 var(--side-w); max-width: none; padding: 28px 36px 72px;
+    }
+    body.has-nav main > section, body.has-nav main > #pushBanner, body.has-nav main > #vLoad {
+      max-width: 1360px; margin-inline: auto;
+    }
+    body.has-nav .toast-wrap { left: var(--side-w); }
+    body.has-nav h1 { font-size: clamp(1.75rem, 2.4vw, 2.25rem); }
+
+    /* Bento Dashboard & Split Workspaces */
+    .stats { gap: 16px; margin: 16px 0 20px; }
+    button.stat { padding: 18px 20px; position: relative; }
+    button.stat::before { content: '↗'; position: absolute; top: 14px; right: 16px; font-size: .95rem; font-weight: 700; opacity: .35; transition: transform .15s ease, opacity .15s ease; }
+    button.stat:hover::before { opacity: .9; transform: translate(2px, -2px); }
+    .stat .n { font-size: 2.45rem; }
+    .dash-bento { display: grid; grid-template-columns: minmax(0, 1.48fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    .dash-col { gap: 16px; }
+    .kelas-grid { display: grid; grid-template-columns: minmax(0, 1.32fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    .kelas-col { display: flex; flex-direction: column; gap: 14px; }
+    .kelas-col > .panel { margin-bottom: 0; }
+    .kelas-col > .sec:first-child { margin-top: 2px; }
+    .ab-work { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(290px, 340px); gap: 20px; align-items: start; }
+    .ab-work #abDaftar { max-width: none; margin: 0; }
+    .ab-side { position: sticky; top: 84px; }
+    .ab-side .panel { margin-bottom: 0; }
+    .ab-side #abRingkas { position: static; background: transparent; padding: 0; margin: 10px 0 12px; }
+    .ab-side #abSimpan { width: 100%; margin-top: 10px; }
+    .ab-work .abrow { padding: 10px 14px; }
+    .ab-work .abrow:hover { background: color-mix(in srgb, var(--lime) 10%, var(--panel)); }
+
+    /* Login Split Hero Showcase on PC */
+    body.masuk header { max-width: 72rem; padding: 24px 32px 0; }
+    body.masuk main { max-width: 72rem; padding: 20px 32px 48px; }
+    .login { min-height: calc(100svh - 120px); }
+    .login-shell {
+      display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 48px; align-items: center; max-width: 68rem;
+    }
+    .login-hero { display: block; }
+    .logincard .script { display: none; }
+    body.has-nav #btnDashBaru { display: none; }
+    .login-hero .hero-kicker {
+      display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px;
+      border-radius: 99px; border: 2px solid var(--edge); background: var(--panel);
+      font-size: .85rem; font-weight: 700; box-shadow: 2px 2px 0 var(--shd); margin-bottom: 18px;
+    }
+    .login-hero .hero-kicker i { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); display: inline-block; }
+    .login-hero h2 { font-size: clamp(2.4rem, 3.8vw, 3.35rem); line-height: 1.03; letter-spacing: -0.045em; font-weight: 800; margin: 0 0 14px; max-width: 14ch; }
+    .login-hero p.hero-sub { font-size: 1.08rem; color: var(--muted); max-width: 44ch; margin: 0 0 24px; }
+    .hero-feats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .hero-feat { background: var(--panel); border: 2px solid var(--edge); border-radius: 16px; padding: 14px; box-shadow: 3px 3px 0 var(--shd); }
+    .hero-feat strong { display: block; font-size: .95rem; margin-bottom: 3px; }
+    .hero-feat span { display: block; font-size: .82rem; color: var(--muted); line-height: 1.38; }
+    .logincard { max-width: 27rem; justify-self: end; box-shadow: 6px 6px 0 var(--shd); padding: 32px; }
+
+    /* Form panels & cards on PC */
+    #fBaru.panel.card, #fEdit.panel.card, #fInfo.panel.card { max-width: 52rem; }
+    .form-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+    #pRekap .rekap-head { background: var(--panel); border: 2px solid var(--edge); border-radius: 18px; padding: 18px 22px; margin: 12px 0 16px; box-shadow: 3px 3px 0 var(--shd); }
+    #pRekap .rekap-head h2 { margin: 0 0 4px; font-size: 1.45rem; }
+  }
+
+  /* Wide PC (>= 1440px): 3 kolom untuk daftar tugas admin */
+  @media (min-width: 1440px) {
+    #tList .cards-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* Pastikan mode cetak selalu bersih tanpa offset sidebar */
+  @media print {
+    body.has-nav main, main { margin-left: 0 !important; padding: 0 !important; max-width: none !important; }
+    body.has-nav header, body.has-nav .navbar, .side-brand, .side-foot { display: none !important; }
+  }
 </style>
 </head>
 <body>
+<a href="#main" class="skip-link">Langsung ke isi utama</a>
 <div class="bgfx" id="bgfx" aria-hidden="true" hidden><i class="pita a"></i><i class="pita b"></i><span class="pop"></span><span class="pop"></span><span class="pop"></span></div>
 <div id="topbar" aria-hidden="true"><i></i></div>
 <header>
   <span class="brand"><span class="logo-mark" role="img" aria-label="Logo Zidan Labs"></span>Zidan Labs</span>
+  <div class="top-ctx" aria-hidden="true"><span class="top-ctx-title" id="topCtxTitle">Beranda</span><span class="top-ctx-sub" id="topCtxSub"></span></div>
   <div class="who"><button class="ghost small" id="btnPasang" type="button" hidden>Pasang</button><button class="ghost small" id="btnTema" type="button" aria-label="Ganti tema terang atau gelap"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v16a8 8 0 0 0 0-16z" fill="currentColor"/></svg></button>
   <div id="who" class="who" hidden><button class="ghost small bell" id="btnBell" hidden aria-label="Pengumuman"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/></svg><span class="dot" id="bellN" hidden></span></button><button type="button" class="avatar" id="avatar" aria-label="Info akun"></button><span id="whoName" class="muted"></span> <button class="ghost small" id="btnOut" aria-label="Keluar"><span class="txt">Keluar</span><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button></div></div>
 </header>
-<nav class="navbar" id="navbar" hidden aria-label="Menu utama"><div class="nav" id="nav"></div></nav>
+<nav class="navbar" id="navbar" hidden aria-label="Menu utama">
+  <div class="side-brand">
+    <span class="logo-mark" aria-hidden="true"></span>
+    <div class="side-brand-txt"><span class="side-brand-name">Zidan Labs</span><span class="side-role" id="sideRole">Ruang Kelas</span></div>
+  </div>
+  <div class="nav" id="nav"></div>
+  <div class="side-foot" id="sideFoot"></div>
+</nav>
 
-<main>
+<main id="main" tabindex="-1">
 <div id="pushBanner" class="panel" hidden role="region" aria-label="Notifikasi"><strong>Aktifkan notifikasi</strong><p class="muted" style="margin:2px 0 10px">Dapat pengingat deadline, tugas baru, nilai keluar, dan pengumuman langsung di perangkat ini.</p><div class="bar"><button class="small" id="pushBannerYa" type="button">Aktifkan</button><button class="ghost small" id="pushBannerNanti" type="button">Nanti</button></div></div>
   <div id="vLoad" role="status" aria-busy="true">
     <span class="sr">Memuat…</span>
@@ -545,23 +747,36 @@
   </div>
 
   <section id="vLogin" class="login" hidden>
-    <div class="panel logincard">
-      <span class="script">buka, cek, kumpulkan.</span>
-      <h1>Masuk ke Zidan Labs</h1>
-      <p class="muted" style="margin:0 0 18px">Tugas, nilai, dan info kelasmu ada di sini. Pakai akun Google sekolahmu.</p>
-      <div id="gbtn"></div>
-      <div class="msg" id="loginMsg" role="alert"></div>
-      <p class="muted" style="margin:14px 0 0;font-size:.9rem">Pertama kali masuk? Kamu diminta mengisi nama dan NIS (atau kode dari guru), cukup sekali.</p>
-      <details class="bantuan">
-        <summary>Tidak bisa masuk?</summary>
-        <ul>
-          <li>Pakai akun Google yang sama dengan yang didaftarkan guru.</li>
-          <li>Lupa NIS atau kodenya? Tanya wali kelas atau guru.</li>
-          <li>Salah akun? Pilih akun Google lain saat diminta masuk.</li>
-        </ul>
-        <a class="tombol" id="waBantuan" target="_blank" rel="noopener noreferrer" hidden>Chat wali kelas</a>
-      </details>
-      <p class="muted" style="margin:14px 0 0;font-size:.82rem">Nilai tiap siswa hanya terlihat oleh siswa itu sendiri dan guru. <a href="privacy.html" target="_blank" rel="noopener noreferrer">Kebijakan Privasi</a></p>
+    <div class="login-shell">
+      <div class="login-hero">
+        <span class="hero-kicker"><i></i> Portal Kelas &amp; Penilaian Digital</span>
+        <span class="script">buka, cek, kumpulkan.</span>
+        <h2>Semua tugas, nilai, dan <span class="hl">info kelas</span> di satu ruang.</h2>
+        <p class="hero-sub">Kelola pengumpulan tugas, pantau nilai akhir otomatis sesuai KKM, absensi harian, piket, sampai transparansi kas kelas — cepat di PC maupun HP.</p>
+        <div class="hero-feats">
+          <div class="hero-feat"><strong>Tugas &amp; Deadline</strong><span>Kumpul lewat link atau file dengan pengingat otomatis.</span></div>
+          <div class="hero-feat"><strong>Nilai &amp; Rekap</strong><span>Matriks nilai ala spreadsheet, bobot KKM, &amp; cetak PDF.</span></div>
+          <div class="hero-feat"><strong>Kelasku Lengkap</strong><span>Absensi harian, surat sakit, piket, jadwal, dan kas kelas.</span></div>
+        </div>
+      </div>
+      <div class="panel logincard">
+        <span class="script">buka, cek, kumpulkan.</span>
+        <h1>Masuk ke Zidan Labs</h1>
+        <p class="muted" style="margin:0 0 18px">Tugas, nilai, dan info kelasmu ada di sini. Pakai akun Google sekolahmu.</p>
+        <div id="gbtn"></div>
+        <div class="msg" id="loginMsg" role="alert"></div>
+        <p class="muted" style="margin:14px 0 0;font-size:.9rem">Pertama kali masuk? Kamu diminta mengisi nama dan NIS (atau kode dari guru), cukup sekali.</p>
+        <details class="bantuan">
+          <summary>Tidak bisa masuk?</summary>
+          <ul>
+            <li>Pakai akun Google yang sama dengan yang didaftarkan guru.</li>
+            <li>Lupa NIS atau kodenya? Tanya wali kelas atau guru.</li>
+            <li>Salah akun? Pilih akun Google lain saat diminta masuk.</li>
+          </ul>
+          <a class="tombol" id="waBantuan" target="_blank" rel="noopener noreferrer" hidden>Chat wali kelas</a>
+        </details>
+        <p class="muted" style="margin:14px 0 0;font-size:.82rem">Nilai tiap siswa hanya terlihat oleh siswa itu sendiri dan guru. <a href="privacy.html" target="_blank" rel="noopener noreferrer">Kebijakan Privasi</a></p>
+      </div>
     </div>
   </section>
 
@@ -591,25 +806,24 @@
   <!-- Siswa / ketua kelas -->
   <section id="vSiswa" hidden>
     <div id="sHome">
-      <h1 id="sHello" style="margin-bottom:4px"></h1>
-      <p class="muted" id="sInfo"></p>
+      <div class="pg-head"><div><h1 id="sHello" style="margin-bottom:4px"></h1><p class="muted" id="sInfo"></p></div></div>
       <div id="sDash"></div>
     </div>
     <div id="sTugas" hidden>
-      <div class="row"><h1 style="margin:0">Tugas</h1><div class="seg" id="sTugasMode" role="group" aria-label="Tampilan tugas" style="margin:0" hidden><button class="ghost small on" type="button" data-stmode="sTugas">Tugas saya</button><button class="ghost small" type="button" data-stmode="kBlock">Rekap kelas</button></div></div>
-      <div class="bar" id="sFilterBar" style="margin-top:12px" hidden>
+      <div class="pg-head"><div><h1>Tugas</h1></div><div class="pg-acts"><div class="seg" id="sTugasMode" role="group" aria-label="Tampilan tugas" style="margin:0" hidden><button class="ghost small on" type="button" data-stmode="sTugas">Tugas saya</button><button class="ghost small" type="button" data-stmode="kBlock">Rekap kelas</button></div></div></div>
+      <div class="toolbar" id="sFilterBar" hidden>
         <select id="sFilMapel" aria-label="Filter mapel" style="width:auto;margin:0"><option value="">Semua mapel</option></select>
         <input id="sFilCari" type="search" placeholder="Cari judul tugas…" aria-label="Cari judul tugas" style="width:13rem;margin:0">
       </div>
       <div id="sList"></div>
     </div>
-    <div id="sHadir" hidden><h1>Kehadiran</h1><div id="sHadirBody"></div></div>
-    <div id="sKelas" hidden><h1>Kelasku</h1><div id="sKelasBody"></div></div>
+    <div id="sHadir" hidden><div class="pg-head"><div><h1>Kehadiran</h1></div></div><div id="sHadirBody"></div></div>
+    <div id="sKelas" hidden><div class="pg-head"><div><h1>Kelasku</h1></div></div><div id="sKelasBody"></div></div>
     <div id="sLapKelas" hidden><div id="sLapKelasBody"></div></div>
-    <div id="sNilai" hidden><h1>Nilai</h1><p class="muted">Nilai akhir = rata-rata dari komponen yang sudah ada: rata-rata tugas, rata-rata sumatif, STS, dan SAS. STS dan SAS baru dihitung setelah ada nilainya. Hanya dari nilai yang sudah dirilis guru.</p><div id="sNilaiBody"></div><div id="sRiwWrap"></div></div>
+    <div id="sNilai" hidden><div class="pg-head"><div><h1>Nilai</h1><p class="muted">Nilai akhir = rata-rata dari komponen yang sudah ada: rata-rata tugas, rata-rata sumatif, STS, dan SAS. STS dan SAS baru dihitung setelah ada nilainya. Hanya dari nilai yang sudah dirilis guru.</p></div></div><div id="sNilaiBody"></div><div id="sRiwWrap"></div></div>
     <div id="kBlock" hidden>
-      <div class="row" style="margin-bottom:8px"><h1 style="margin:0">Rekap kelas</h1><div class="seg" id="kTugasMode" role="group" aria-label="Tampilan tugas" style="margin:0"><button class="ghost small" type="button" data-stmode="sTugas">Tugas saya</button><button class="ghost small on" type="button" data-stmode="kBlock">Rekap kelas</button></div></div>
-      <div class="bar"><label for="kTugas" style="margin:0">Tugas</label><select id="kTugas"></select><button class="ghost small" id="kSalin">Salin daftar yang belum kumpul</button></div>
+      <div class="pg-head"><div><h1>Rekap kelas</h1></div><div class="pg-acts"><div class="seg" id="kTugasMode" role="group" aria-label="Tampilan tugas" style="margin:0"><button class="ghost small" type="button" data-stmode="sTugas">Tugas saya</button><button class="ghost small on" type="button" data-stmode="kBlock">Rekap kelas</button></div></div></div>
+      <div class="toolbar"><label for="kTugas" style="margin:0">Tugas</label><select id="kTugas"></select><button class="ghost small" id="kSalin" style="margin-left:auto">Salin daftar yang belum kumpul</button></div>
       <p class="muted" id="kInfo"></p>
       <div class="tablewrap"><table>
         <thead><tr><th>Nama</th><th>Status</th><th id="kNilaiTh">Nilai</th><th></th></tr></thead>
@@ -622,31 +836,42 @@
   <!-- Admin -->
   <section id="vAdmin" hidden>
     <div id="pHome">
-      <h1 id="aHello" style="margin-bottom:4px"></h1>
-      <p class="muted" id="aDate"></p>
+      <div class="pg-head">
+        <div><h1 id="aHello" style="margin-bottom:4px"></h1><p class="muted" id="aDate"></p></div>
+        <div class="pg-acts"><button type="button" id="btnDashBaru">+ Tugas baru</button></div>
+      </div>
       <div id="aVersi"></div>
       <div id="aDash"></div>
     </div>
 
 
     <div id="pAbsen" hidden>
-      <h1>Kehadiran per mapel</h1>
-      <div class="bar">
+      <div class="pg-head"><div><h1>Kehadiran per mapel</h1></div></div>
+      <div class="toolbar">
         <label for="abMapel" style="margin:0">Mapel</label><select id="abMapel"></select>
         <label for="abKelas" style="margin:0">Kelas</label><select id="abKelas"></select>
       </div>
       <div id="abList"></div>
       <div id="abForm" hidden>
-        <div class="row"><h2 id="abJudul" style="margin:0"></h2><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="small" id="abSimpanAtas" type="button">Simpan</button><button class="ghost small" id="abHapus" type="button">Hapus</button><button class="ghost small" id="abBatal" type="button">Kembali</button></span></div>
-        <div class="bar">
-          <label for="abTgl" style="margin:0">Tanggal</label><input id="abTgl" type="date" style="width:auto;margin:0">
-          <label for="abKe" style="margin:0">Pertemuan ke</label><input id="abKe" type="number" min="1" style="width:5rem;margin:0">
+        <div class="row" style="margin-bottom:12px"><h2 id="abJudul" style="margin:0"></h2><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="small" id="abSimpanAtas" type="button">Simpan</button><button class="ghost small" id="abHapus" type="button">Hapus</button><button class="ghost small" id="abBatal" type="button">Kembali</button></span></div>
+        <div class="ab-work">
+          <div>
+            <div class="toolbar" style="margin-top:0"><input id="abCari" type="search" placeholder="Cari nama siswa…" aria-label="Cari nama siswa" style="width:13rem;margin:0"><button class="ghost small" id="abSisa" type="button">Tandai sisanya hadir</button><button class="ghost small" id="abKosong" type="button">Kosongkan semua</button></div>
+            <div id="abDaftar"></div>
+          </div>
+          <div class="ab-side">
+            <div class="panel ab-side-box">
+              <h3 style="margin-top:0">Detail pertemuan</h3>
+              <div class="bar" style="margin:8px 0">
+                <label for="abTgl" style="margin:0">Tanggal</label><input id="abTgl" type="date" style="width:auto;margin:0">
+                <label for="abKe" style="margin:0">Pertemuan ke</label><input id="abKe" type="number" min="1" style="width:5rem;margin:0">
+              </div>
+              <div class="sum" id="abRingkas"></div>
+              <p class="muted" style="margin:8px 0 0;font-size:.85rem">Klik H, S, I, atau A. Dengan keyboard: tekan huruf itu, lalu otomatis lanjut ke nama berikutnya (panah atas/bawah untuk berpindah).</p>
+              <button id="abSimpan" type="button">Simpan absensi</button>
+            </div>
+          </div>
         </div>
-        <p class="muted" style="margin-bottom:0">Klik H, S, I, atau A. Dengan keyboard: tekan huruf itu, lalu otomatis lanjut ke nama berikutnya (panah atas/bawah untuk berpindah).</p>
-        <div class="sum" id="abRingkas"></div>
-        <div class="bar"><input id="abCari" type="search" placeholder="Cari nama siswa…" aria-label="Cari nama siswa" style="width:13rem;margin:0"><button class="ghost small" id="abSisa" type="button">Tandai sisanya hadir</button><button class="ghost small" id="abKosong" type="button">Kosongkan semua</button></div>
-        <div id="abDaftar"></div>
-        <button id="abSimpan" type="button">Simpan absensi</button>
       </div>
     </div>
 
@@ -740,19 +965,23 @@
     </div>
 
     <div id="pTugas" hidden>
-      <div class="row"><h1 style="margin:0">Tugas</h1><button id="btnBaru">Tugas baru</button></div>
-      <div class="panel card" id="fBaru" hidden style="margin-top:16px">
-        <label for="tMapel">Mapel</label><select id="tMapel" style="width:100%;margin-bottom:14px"></select>
+      <div class="pg-head"><div><h1>Tugas</h1></div><div class="pg-acts"><button id="btnBaru">+ Tugas baru</button></div></div>
+      <div class="panel card" id="fBaru" hidden style="margin-top:0">
+        <div class="form-grid2">
+          <div><label for="tMapel">Mapel</label><select id="tMapel" style="width:100%;margin-bottom:14px"></select></div>
+          <div><label for="tJenis">Jenis penilaian</label><select id="tJenis" style="width:100%;margin-bottom:14px"><option value="penugasan">Tugas</option><option value="sumatif">Sumatif</option><option value="sts">STS (Sumatif Tengah Semester)</option><option value="sas">SAS / UAS (Sumatif Akhir Semester)</option></select></div>
+        </div>
         <label for="tJudul">Judul</label><input id="tJudul" maxlength="150">
         <label for="tDesk">Deskripsi (opsional)</label><textarea id="tDesk"></textarea>
-        <label for="tJenis">Jenis penilaian</label><select id="tJenis" style="width:100%;margin-bottom:14px"><option value="penugasan">Tugas</option><option value="sumatif">Sumatif</option><option value="sts">STS (Sumatif Tengah Semester)</option><option value="sas">SAS / UAS (Sumatif Akhir Semester)</option></select>
-        <label for="tBentuk">Bentuk pengumpulan</label><select id="tBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
+        <div class="form-grid2">
+          <div><label for="tBentuk">Bentuk pengumpulan</label><select id="tBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select></div>
+          <div><label for="tDl">Deadline (WIB)</label><input id="tDl" type="datetime-local"></div>
+        </div>
         <label class="cek" id="tAiWrap" hidden><input type="checkbox" id="tAi"> Nilai otomatis oleh AI <span class="muted">AI mengisi nilai dari file siswa. Komentar tetap kamu tulis, dan nilai baru terlihat siswa setelah kamu merilis.</span></label>
-        <label for="tDl">Deadline (WIB)</label><input id="tDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="tKelas" style="margin-bottom:14px"></div>
         <button id="btnSimpanTugas">Simpan tugas</button>
       </div>
-      <div class="bar" id="tFilterBar" style="margin-top:12px">
+      <div class="toolbar" id="tFilterBar">
         <select id="tFilSem" aria-label="Filter semester" style="width:auto;margin:0" hidden></select>
         <select id="tFilMapel" aria-label="Filter mapel" style="width:auto;margin:0"><option value="">Semua mapel</option></select>
         <select id="tFilKelas" aria-label="Filter kelas" style="width:auto;margin:0"><option value="">Semua kelas</option></select>
@@ -763,18 +992,22 @@
 
     <div id="pRekap" hidden>
       <button class="ghost small" id="btnBack">← Kembali</button>
-      <h2 id="rJudul" style="margin-top:12px"></h2>
-      <p class="muted" id="rInfo"></p>
-      <div class="banner" id="rRilis" hidden style="max-width:40rem"><div class="row"><span id="rRilisTeks"></span><button class="small" id="btnRilis" type="button"></button></div></div>
+      <div class="rekap-head">
+        <h2 id="rJudul" style="margin-top:0"></h2>
+        <p class="muted" id="rInfo" style="margin-bottom:0"></p>
+      </div>
+      <div class="banner" id="rRilis" hidden><div class="row"><span id="rRilisTeks"></span><button class="small" id="btnRilis" type="button"></button></div></div>
       <div class="seg" id="rFilter" role="group" aria-label="Saring siswa" style="flex-wrap:wrap"></div>
       <div class="bar" id="rChipsBar" style="margin-top:0"><span class="muted">Komentar cepat (klik kolom catatan dulu):</span></div>
       <div class="chips-q" id="rChips"></div>
-      <div class="bar"><button class="small" id="btnNilaiCepat" type="button">Mulai menilai</button><button class="small" id="btnSimpanUbah" type="button" hidden>Simpan perubahan</button><button class="ghost small" id="btnSetujuAi" type="button" hidden>Setujui semua nilai AI</button><button class="ghost small" id="btnEdit">Edit tugas</button><button class="ghost small" id="btnBagi">Bagikan ke WhatsApp</button><button class="ghost small" id="btnIngat">Ingatkan yang belum kumpul</button><button class="ghost small" id="btnHapus">Hapus tugas</button><button id="btnSimpanSemua" hidden>Simpan semua nilai</button></div>
+      <div class="toolbar"><button class="small" id="btnNilaiCepat" type="button">Mulai menilai</button><button class="small" id="btnSimpanUbah" type="button" hidden>Simpan perubahan</button><button class="ghost small" id="btnSetujuAi" type="button" hidden>Setujui semua nilai AI</button><button class="ghost small" id="btnEdit">Edit tugas</button><button class="ghost small" id="btnBagi">Bagikan ke WhatsApp</button><button class="ghost small" id="btnIngat">Ingatkan yang belum kumpul</button><button class="ghost small" id="btnHapus">Hapus tugas</button><button id="btnSimpanSemua" hidden>Simpan semua nilai</button></div>
       <div class="panel card" id="fEdit" hidden>
         <label for="eJudul">Judul</label><input id="eJudul" maxlength="150">
         <label for="eDesk">Deskripsi</label><textarea id="eDesk"></textarea>
-        <label for="eJenis">Jenis penilaian</label><select id="eJenis" style="width:100%;margin-bottom:14px"><option value="penugasan">Tugas</option><option value="sumatif">Sumatif</option><option value="sts">STS (Sumatif Tengah Semester)</option><option value="sas">SAS / UAS (Sumatif Akhir Semester)</option></select>
-        <label for="eBentuk">Bentuk pengumpulan</label><select id="eBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select>
+        <div class="form-grid2">
+          <div><label for="eJenis">Jenis penilaian</label><select id="eJenis" style="width:100%;margin-bottom:14px"><option value="penugasan">Tugas</option><option value="sumatif">Sumatif</option><option value="sts">STS (Sumatif Tengah Semester)</option><option value="sas">SAS / UAS (Sumatif Akhir Semester)</option></select></div>
+          <div><label for="eBentuk">Bentuk pengumpulan</label><select id="eBentuk" style="width:100%;margin-bottom:14px"><option value="link">Link</option><option value="file">File (maks. 5 MB: JPG, PNG, WEBP, PDF, ZIP)</option><option value="link+file">Link atau file</option><option value="nilai">Tanpa pengumpulan (guru input nilai langsung)</option></select></div>
+        </div>
         <label class="cek" id="eAiWrap" hidden><input type="checkbox" id="eAi"> Nilai otomatis oleh AI <span class="muted">AI mengisi nilai dari file siswa. Komentar tetap kamu tulis, dan nilai baru terlihat siswa setelah kamu merilis.</span></label>
         <label for="eDl">Deadline (WIB)</label><input id="eDl" type="datetime-local">
         <label>Kelas tujuan</label><div id="eKelas" style="margin-bottom:14px"></div>
@@ -788,31 +1021,36 @@
     </div>
 
     <div id="pNilai" hidden>
-      <h1 style="margin:0 0 10px">Nilai</h1>
-      <div class="bar">
+      <div class="pg-head"><div><h1>Nilai</h1><p class="muted" id="nAturanInfo">Angka = nilai · … = sudah kumpul, belum dinilai · – = belum kumpul. Nilai akhir = rata-rata komponen yang ada (tugas, sumatif, STS, SAS).</p></div></div>
+      <div class="toolbar">
         <select id="nSem" aria-label="Semester" style="width:auto;margin:0" hidden></select>
         <label for="nMapel" style="margin:0">Mapel</label><select id="nMapel"></select>
         <label for="nKelas" style="margin:0">Kelas</label><select id="nKelas"></select>
+        <button class="ghost small" id="btnCsv">Unduh CSV</button>
+        <button class="small" id="btnImpor" type="button">Impor Excel</button>
+        <button class="ghost small" id="btnAturanNilai" type="button">Bobot &amp; KKM</button>
       </div>
 
       <div id="nvSemua">
-        <p class="muted" id="nAturanInfo">Angka = nilai · … = sudah kumpul, belum dinilai · – = belum kumpul. Nilai akhir = rata-rata komponen yang ada (tugas, sumatif, STS, SAS).</p>
-        <div class="bar"><button class="ghost small" id="btnCsv">Unduh CSV</button><button class="small" id="btnImpor" type="button">Impor nilai dari Excel</button><button class="ghost small" id="btnAturanNilai" type="button">Atur bobot &amp; KKM</button><label class="chk" style="margin:0"><input type="checkbox" id="nKosongNol"> Hitung belum kumpul (lewat deadline) = 0</label></div>
+        <div class="bar" style="margin:0 0 10px"><label class="chk" style="margin:0"><input type="checkbox" id="nKosongNol"> Hitung belum kumpul (lewat deadline) = 0</label></div>
         <div class="tablewrap"><table class="matrix"><thead id="nHead"></thead><tbody id="nBody"></tbody></table></div>
       </div>
     </div>
 
     <div id="pSiswa" hidden>
-      <h1>Daftar siswa</h1>
-      <p class="muted" id="aSummary"></p>
+      <div class="pg-head">
+        <div><h1>Daftar siswa</h1><p class="muted" id="aSummary"></p></div>
+        <div class="pg-acts">
+          <button class="small" id="btnTambahSiswa" type="button">+ Tambah siswa</button>
+          <button class="ghost small" id="btnImporSiswa" type="button">Impor siswa</button>
+          <button class="ghost small" id="btnWali" type="button">Wali kelas</button>
+        </div>
+      </div>
       <div id="aMasalah"></div>
-      <div class="bar">
+      <div class="toolbar">
         <label for="aKelas" style="margin:0">Kelas</label>
         <select id="aKelas"><option value="">Semua</option></select>
-        <input id="aCari" type="search" placeholder="Cari nama atau NIS" aria-label="Cari siswa" style="width:14rem;margin:0">
-        <button class="small" id="btnTambahSiswa" type="button">Tambah siswa</button>
-        <button class="ghost small" id="btnImporSiswa" type="button">Impor siswa</button>
-        <button class="ghost small" id="btnWali" type="button">Wali kelas</button>
+        <input id="aCari" type="search" placeholder="Cari nama atau NIS…" aria-label="Cari siswa" style="width:14rem;margin:0">
       </div>
       <div class="tablewrap"><table class="tbl-kartu">
         <thead><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Status akun</th><th></th></tr></thead>
@@ -1365,7 +1603,14 @@
   const anim = el => { if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return; el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }; // transisi halus saat berpindah halaman
   // tema: mengikuti perangkat, bisa dipaksa terang atau gelap lewat tombol di header
   const bacaTema = () => { try { return localStorage.getItem('tema'); } catch (e) { return null; } };
-  const pasangTema = t => { if (t) document.documentElement.dataset.tema = t; else delete document.documentElement.dataset.tema; };
+  const pasangTema = t => {
+    if (t) document.documentElement.dataset.tema = t; else delete document.documentElement.dataset.tema;
+    const m = document.querySelector('meta[name="theme-color"]');
+    if (m) {
+      const gelap = t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      m.content = gelap ? '#0D231A' : '#F1F4EC';
+    }
+  };
   pasangTema(bacaTema());
   /* kerangka loading: bentuknya meniru halaman asli supaya terasa cepat dan tidak melompat saat data tiba */
   const sk = (w, h, ex) => `<div class="sk" style="width:${w};height:${h || 14}px;${ex || ''}"></div>`;
@@ -1387,7 +1632,14 @@
   const bisaBantuTugas = m => m.role === 'ketua' || (m.jabatan || []).indexOf('wakil') >= 0;
   try { token = sessionStorage.getItem('tok'); } catch (e) {}
 
-  function show(id) { document.body.classList.toggle('masuk', id === 'vLogin'); $('vLoad').hidden = true; ['vLogin', 'vClaim', 'vAlumni', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id); $('bgfx').hidden = id !== 'vLogin'; anim($(id)); }
+  function show(id) {
+    document.body.classList.toggle('masuk', id === 'vLogin');
+    document.body.classList.toggle('has-nav', id === 'vAdmin' || id === 'vSiswa');
+    $('vLoad').hidden = true;
+    ['vLogin', 'vClaim', 'vAlumni', 'vSiswa', 'vAdmin'].forEach(v => $(v).hidden = v !== id);
+    $('bgfx').hidden = id !== 'vLogin';
+    anim($(id));
+  }
   function toast(text, err) {
     const el = document.createElement('div'); el.className = 'toast' + (err ? ' err' : ''); el.textContent = text;
     $('toasts').appendChild(el);
@@ -1639,7 +1891,7 @@
     daftar.forEach(t => by[statusOf(t)].push(t));
     by.belum.sort((a, b) => new Date(a.deadline) - new Date(b.deadline)); // yang paling mendesak di atas
     const tunggu = [...by.terkumpul, ...by.menunggu].sort(desc), nilai = by.dinilai.sort(desc);
-    const sec = (judul, arr, kosong) => arr.length ? `<h2 class="sec">${judul} <span class="muted">(${arr.length})</span></h2>${arr.map(card).join('')}`
+    const sec = (judul, arr, kosong) => arr.length ? `<h2 class="sec">${judul} <span class="muted">(${arr.length})</span></h2><div class="cards-grid">${arr.map(card).join('')}</div>`
       : kosong ? `<h2 class="sec">${judul}</h2><p class="muted">${kosong}</p>` : '';
     $('sList').innerHTML = bar + `<div class="sum"><span class="chip"><b>${by.belum.length}</b> perlu dikumpulkan</span><span class="chip"><b>${tunggu.length}</b> menunggu nilai</span><span class="chip"><b>${nilai.length}</b> sudah dinilai</span></div>`
       + sec('Perlu dikumpulkan', by.belum, 'Semua tugas sudah beres. Mantap!') + sec('Menunggu penilaian', tunggu) + sec('Sudah dinilai', nilai);
@@ -1814,20 +2066,69 @@
     info: '<path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z M10 21a2 2 0 0 0 4 0"/>',
     absen: '<path d="M4 6h16v14H4z M4 10h16 M8 3v4 M16 3v4 M9 15l2 2 4-4"/>',
     kelas: '<path d="M5 21V4 M5 4h11l-2.5 4 2.5 4H5"/>',
+    lapor: '<path d="M6 3h9l4 4v14H6z M15 3v4h4 M9 12h6 M9 16h6"/>',
     users: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6 M16 5.5a3 3 0 0 1 0 5.5 M18 14c2 .6 3.5 2.5 3.5 5"/>'
   };
   const ico = n => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
   const NAV = {
-    admin: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pAbsen', 'Kehadiran', 'absen'], ['pNilai', 'Nilai', 'nilai'], ['pSiswa', 'Siswa', 'users']],
-    siswa: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Kehadiran', 'absen'], ['sKelas', 'Kelasku', 'kelas']],
-    wali: [['pLapor', 'Laporan', 'kelas'], ['pSiswa', 'Siswa', 'users']],
-    ketua: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Kehadiran', 'absen'], ['sKelas', 'Kelasku', 'kelas']]
+    admin: [
+      { g: 'Akademik', items: [['pHome', 'Beranda', 'home'], ['pTugas', 'Tugas', 'tugas'], ['pAbsen', 'Kehadiran', 'absen'], ['pNilai', 'Nilai', 'nilai'], ['pSiswa', 'Siswa', 'users']] },
+      { g: 'Kelas & Info', items: [['pKelas', 'Kelas wali', 'kelas', true], ['pLapor', 'Laporan kelas', 'lapor', true], ['pInfo', 'Pengumuman', 'info', true]] }
+    ],
+    siswa: [
+      { g: 'Ruang Siswa', items: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Kehadiran', 'absen'], ['sKelas', 'Kelasku', 'kelas']] }
+    ],
+    wali: [
+      { g: 'Wali Kelas', items: [['pLapor', 'Laporan kelas', 'lapor'], ['pSiswa', 'Daftar siswa', 'users']] }
+    ],
+    ketua: [
+      { g: 'Ruang Siswa', items: [['sHome', 'Beranda', 'home'], ['sTugas', 'Tugas', 'tugas'], ['sNilai', 'Nilai', 'nilai'], ['sHadir', 'Kehadiran', 'absen'], ['sKelas', 'Kelasku', 'kelas']] },
+      { g: 'Pengurus', items: [['kBlock', 'Rekap kelas', 'lapor', true]] }
+    ]
   };
+  const PAGE_TITLE = {
+    pHome: 'Beranda', pTugas: 'Tugas', pRekap: 'Rekap Tugas', pAbsen: 'Kehadiran Mapel', pNilai: 'Matriks Nilai',
+    pSiswa: 'Daftar Siswa', pProfil: 'Profil Siswa', pKelas: 'Kelas Wali', pLapKelas: 'Laporan Kelas', pLapor: 'Laporan Kelas', pInfo: 'Pengumuman',
+    sHome: 'Beranda', sTugas: 'Tugas Saya', kBlock: 'Rekap Kelas', sNilai: 'Nilai Saya', sHadir: 'Kehadiran', sKelas: 'Kelasku', sLapKelas: 'Laporan Kelas'
+  };
+  function bukaTugasBaruCepat() {
+    goAdmin('pTugas');
+    $('fBaru').hidden = false;
+    $('tJudul').focus();
+  }
+  if ($('btnDashBaru')) $('btnDashBaru').onclick = bukaTugasBaruCepat;
   function buildNav(kind) {
-    $('nav').innerHTML = NAV[kind].filter(([id]) => id !== 'sKelas' || (me && me.modulKelas)).map(([id, label, ic]) => `<button data-go="${id}">${ico(ic)}<span>${label}</span></button>`).join('');
+    const groups = NAV[kind] || [];
+    $('nav').innerHTML = groups.map(grp => {
+      const btns = grp.items.filter(([id]) => id !== 'sKelas' || (me && me.modulKelas))
+        .map(([id, label, ic, deskOnly]) => `<button data-go="${id}"${deskOnly ? ' class="desk-only"' : ''}>${ico(ic)}<span>${label}</span></button>`).join('');
+      return btns ? `<div class="nav-grp">${esc(grp.g)}</div>${btns}` : '';
+    }).join('');
+    if ($('sideRole')) {
+      $('sideRole').textContent = kind === 'admin' ? 'Guru · Admin' : kind === 'wali' ? 'Wali Kelas' : kind === 'ketua' ? 'Pengurus · ' + (me && me.kelas ? me.kelas : 'Kelas') : 'Siswa' + (me && me.kelas ? ' · ' + me.kelas : '');
+    }
+    if ($('sideFoot')) {
+      const semTxt = semDaftar && semDaftar.aktif ? 'Semester ' + semDaftar.aktif : (me && me.kelas ? 'Kelas ' + me.kelas : 'Zidan Labs');
+      $('sideFoot').innerHTML = (kind === 'admin' ? '<button type="button" class="side-cta" id="sideBtnBaru">+ Tugas baru</button>' : '')
+        + `<div class="side-meta">${esc(semTxt)}</div>`;
+      if ($('sideBtnBaru')) $('sideBtnBaru').onclick = async () => { if (await izinPindah()) bukaTugasBaruCepat(); };
+    }
     $('navbar').hidden = false;
   }
-  function setActive(id) { document.querySelectorAll('#nav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === (id === 'pRekap' ? 'pTugas' : id === 'pProfil' ? 'pSiswa' : id === 'pLapor' || id === 'pKelas' || id === 'pLapKelas' || id === 'pInfo' ? 'pHome' : id === 'sLapKelas' ? 'sKelas' : id === 'kBlock' ? 'sTugas' : id))); }
+  function setActive(id) {
+    const desk = id === 'pRekap' ? 'pTugas' : id === 'pProfil' ? 'pSiswa' : id === 'pLapKelas' ? 'pKelas' : id === 'sLapKelas' ? 'sKelas' : id;
+    const mob = (id === 'pLapor' || id === 'pKelas' || id === 'pLapKelas' || id === 'pInfo') ? (me && me.role === 'wali' ? 'pLapor' : 'pHome') : id === 'kBlock' ? 'sTugas' : desk;
+    document.querySelectorAll('#nav [data-go]').forEach(b => {
+      b.classList.toggle('on', b.dataset.go === desk);
+      b.classList.toggle('on-mob', b.dataset.go === mob);
+    });
+    if ($('topCtxTitle')) $('topCtxTitle').textContent = PAGE_TITLE[id] || 'Zidan Labs';
+    if ($('topCtxSub')) {
+      $('topCtxSub').textContent = me && me.role === 'admin'
+        ? (semDaftar && semDaftar.aktif ? 'Semester ' + semDaftar.aktif : new Date().toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'short' }))
+        : me && me.kelas ? 'Kelas ' + me.kelas : '';
+    }
+  }
   $('nav').onclick = async e => { const b = e.target.closest('[data-go]'); if (!b || (me.role === 'admin' && !(await izinPindah()))) return; (me.role === 'admin' || me.role === 'wali' ? goAdmin : goSiswa)(b.dataset.go); };
   let dariPop = false;
   function catatNav(st, ganti) {
@@ -1936,10 +2237,13 @@
       return `<div class="item"><div class="grow"><div class="t">${esc(n)}</div><div class="muted">${m.total ? `${m.kumpul} dari ${m.total} tugas dikumpulkan` : 'Dinilai langsung oleh guru'}${r !== null ? ` · rata-rata nilai ${r}` : ''}</div>${m.total ? `<div class="meter"><i style="width:${p}%"></i></div>` : ''}</div></div>`; }).join('');
     $('sDash').innerHTML = bannerSurat
       + `<div class="stats s3">${stat(by.belum.length, 'perlu dikumpulkan', 'sTugas', by.belum.length > 0)}${stat(by.terkumpul.length + by.menunggu.length, 'menunggu nilai', 'sTugas')}${stat(rata === null ? '–' : rata, 'rata-rata nilai akhir', 'sNilai')}</div>`
+      + `<div class="dash-bento"><div class="dash-col">`
+      + `<div class="panel"><h2>Segera dikumpulkan</h2>${rows || '<p class="muted">Semua tugas sudah beres. Mantap!</p>'}${segera.length > 3 ? `<button class="ghost small" style="margin-top:10px" data-go="sTugas">Lihat semua (${segera.length})</button>` : ''}</div>`
+      + `<div class="panel"><h2>Progres per mapel</h2>${prog}</div>`
+      + `</div><div class="dash-col">`
       + kartuRekap
-      + `<div class="grid2"><div class="panel"><h2>Segera dikumpulkan</h2>${rows || '<p class="muted">Semua tugas sudah beres. Mantap!</p>'}${segera.length > 3 ? `<button class="ghost small" data-go="sTugas">Lihat semua (${segera.length})</button>` : ''}</div>`
-      + `<div class="panel"><h2>Nilai terbaru</h2>${baru || '<p class="muted">Belum ada nilai.</p>'}</div></div>`
-      + `<div class="panel"><h2>Progres per mapel</h2>${prog}</div>`;
+      + `<div class="panel"><h2>Nilai terbaru</h2>${baru || '<p class="muted">Belum ada nilai.</p>'}</div>`
+      + `</div></div>`;
   }
 
   function akhirPerMapel() { // nilai akhir per mapel dari nilai yang sudah dirilis (pakai bobot mapel bila diatur guru)
@@ -1951,11 +2255,11 @@
     const g = {}, ak = akhirPerMapel();
     tugasSiswa.filter(t => t.kumpul && t.kumpul.kunci && typeof t.kumpul.nilai === 'number').sort(desc).forEach(t => (g[t.mapel] = g[t.mapel] || []).push(t));
     const nama = Object.keys(g).sort();
-    $('sNilaiBody').innerHTML = nama.length ? nama.map(m => {
+    $('sNilaiBody').innerHTML = nama.length ? '<div class="cards-grid">' + nama.map(m => {
       const at = aturanMapel(m), a = ak[m].akhir, tuntas = a !== null && a >= at.kkm;
       return `<div class="panel"><div class="row"><h2>${esc(m)}</h2><span class="muted">nilai akhir <strong>${a ?? '–'}</strong>${a !== null ? ` <span class="tag ${tuntas ? 'ok' : 'warn'}">${tuntas ? 'Tuntas' : 'Di bawah KKM ' + at.kkm}</span>` : ''}</span></div><div class="sum" style="margin:0 0 6px">${kompChips(ak[m].komp)}</div>`
         + g[m].map(t => item((baru.nilai.has(t.id) ? '<span class="tag baru">Baru</span>' : '') + jenisTag(t.jenis), esc(t.judul), t.kumpul.catatanGuru ? `<div class="muted">${esc(t.kumpul.catatanGuru)}</div>` : '', `<div class="nilai-pill">${esc(t.kumpul.nilai)}</div>`)).join('') + '</div>';
-    }).join('')
+    }).join('') + '</div>'
       : '<div class="panel"><strong>Belum ada nilai.</strong><br><span class="muted">Nilai akan muncul di sini setelah guru menilai.</span></div>';
   }
 
@@ -1983,8 +2287,8 @@
     const perlu = r.tugas.filter(t => t.belumDinilai > 0).sort((a, b) => b.belumDinilai - a.belumDinilai);
     const totalPerlu = perlu.reduce((x, t) => x + t.belumDinilai, 0), pct = r.siswaTotal ? Math.round(r.siswaTerhubung / r.siswaTotal * 100) : 0;
     const stat = (n, l, go, hot) => `<button class="stat${hot ? ' hot' : ''}" data-go="${go}"><div class="n">${n}</div><div class="l">${l}</div></button>`;
-    const aksi = '<div class="bar"><button data-baru="1">+ Tugas baru</button></div><div id="aKelasRingkas"></div>'; muatRingkasKelasAdmin();
-    if (!r.tugas.length) { $('aDash').innerHTML = aksi + '<div class="panel"><h2>Mulai dari tugas pertama</h2><p class="muted">Belum ada tugas. Buat satu, pilih mapel dan kelas tujuan, lalu siswa bisa langsung mengumpulkan.</p></div>'
+    muatRingkasKelasAdmin();
+    if (!r.tugas.length) { $('aDash').innerHTML = '<div id="aKelasRingkas"></div><div class="panel"><h2>Mulai dari tugas pertama</h2><p class="muted">Belum ada tugas. Buat satu, pilih mapel dan kelas tujuan, lalu siswa bisa langsung mengumpulkan.</p></div>'
       + `<div class="stats">${stat(`${r.siswaTerhubung}/${r.siswaTotal}`, `${pct}% akun siswa terhubung`, 'pSiswa')}</div>`
       + `<details class="panel sistem"><summary>Cadangan dan kesehatan sistem</summary>${cadanganPanel(r.cadangan)}${sistemPanel()}${tutupBukuPanel()}</details>`; return; }
     const perluH = perlu.slice(0, 5).map(t => item(`${esc(t.mapel)} · ${esc(t.kelas.join(', '))}`, esc(t.judul), '', `<button class="small" data-open="${esc(t.id)}">Nilai (${t.belumDinilai})</button>`)).join('');
@@ -1992,13 +2296,16 @@
       return `<div class="item"><div class="grow"><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}${jenisTag(t.jenis)}</div><div class="t">${esc(t.judul)}</div><div class="muted">${rel(t.deadline)} · ${t.kumpul} dari ${t.total} sudah kumpul</div><div class="meter"><i style="width:${p}%"></i></div></div><button class="ghost small" data-open="${esc(t.id)}">Buka</button></div>`; }).join('');
     const kelasH = r.perKelas.map(k => { const p = k.total ? Math.round(k.terhubung / k.total * 100) : 0;
       return `<div class="item"><div class="grow"><div class="row"><span class="t">${esc(k.kelas)}</span><span class="muted">${k.terhubung}/${k.total}</span></div><div class="meter"><i style="width:${p}%"></i></div></div></div>`; }).join('');
-    $('aDash').innerHTML = aksi
-      + `<div class="stats s3">${stat(totalPerlu, 'perlu dinilai', 'pTugas', totalPerlu > 0)}${stat(aktif.length, 'tugas aktif', 'pTugas')}${stat(pct + '%', 'akun terhubung', 'pSiswa')}</div>`
-      + `<div class="grid2"><div class="panel"><h2>Perlu dinilai</h2>${perluH || '<p class="muted">Semua pengumpulan sudah dinilai.</p>'}</div>`
-      + `<div class="panel"><h2>Deadline terdekat</h2>${aktifH || '<p class="muted">Tidak ada tugas dengan deadline berjalan.</p>'}</div></div>`
+    $('aDash').innerHTML = `<div class="stats s3">${stat(totalPerlu, 'perlu dinilai', 'pTugas', totalPerlu > 0)}${stat(aktif.length, 'tugas aktif', 'pTugas')}${stat(pct + '%', 'akun terhubung', 'pSiswa')}</div>`
+      + `<div class="dash-bento"><div class="dash-col">`
+      + `<div class="panel"><h2>Perlu dinilai</h2>${perluH || '<p class="muted">Semua pengumpulan sudah dinilai.</p>'}</div>`
+      + `<div class="panel"><h2>Deadline terdekat</h2>${aktifH || '<p class="muted">Tidak ada tugas dengan deadline berjalan.</p>'}</div>`
+      + `<div id="aKelasRingkas"></div>`
+      + `</div><div class="dash-col">`
       + `<div class="panel"><h2>Akun terhubung per kelas</h2>${kelasH}</div>`
-      + `<div class="panel"><div class="row"><h2 style="margin:0">Laporan kelas (cetak PDF)</h2><button class="small" type="button" data-go="pLapor">Buka</button></div><p class="muted">Laporan resmi bulanan atau per semester (absensi &amp; surat, keuangan kas, piket, keamanan, catatan) lengkap dengan Tutup Buku Bulanan siap cetak untuk rapat dan orang tua.</p></div>`
-      + `<details class="panel sistem"><summary>Cadangan dan kesehatan sistem</summary>${cadanganPanel(r.cadangan)}${sistemPanel()}${tutupBukuPanel()}</details>`;
+      + `<div class="panel"><div class="row"><h2 style="margin:0">Laporan kelas (cetak PDF)</h2><button class="small" type="button" data-go="pLapor">Buka</button></div><p class="muted" style="margin:8px 0 0">Laporan resmi bulanan atau per semester (absensi &amp; surat, keuangan kas, piket, keamanan, catatan) lengkap dengan Tutup Buku Bulanan siap cetak untuk rapat dan orang tua.</p></div>`
+      + `<details class="panel sistem"><summary>Cadangan dan kesehatan sistem</summary>${cadanganPanel(r.cadangan)}${sistemPanel()}${tutupBukuPanel()}</details>`
+      + `</div></div>`;
   }
   $('aDash').onclick = async e => {
     if (e.target.closest('[data-tb]')) return tbBuka('semester');
@@ -2123,7 +2430,7 @@
     infoList = r.pengumuman;
     $('iKelas').innerHTML = '<label class="chk"><input type="checkbox" value="semua" checked> Semua kelas</label>'
       + r.kelas.map(k => `<label class="chk"><input type="checkbox" value="${esc(k)}"> ${esc(k)}</label>`).join('');
-    $('iList').innerHTML = r.pengumuman.length ? r.pengumuman.map(admCard).join('') : '<p class="muted">Belum ada pengumuman. Klik "Pengumuman baru" untuk membuat yang pertama.</p>';
+    $('iList').innerHTML = r.pengumuman.length ? '<div class="cards-grid">' + r.pengumuman.map(admCard).join('') + '</div>' : '<p class="muted">Belum ada pengumuman. Klik "Pengumuman baru" untuk membuat yang pertama.</p>';
     isiGambar($('iList'));
   }
   $('btnSimpanInfo').onclick = async () => {
@@ -2228,7 +2535,7 @@
     const ringkasBar = r.sesi.length ? `<p class="muted" style="margin:0 0 10px">${r.sesi.length} pertemuan tercatat${totAll ? ' · rata-rata hadir ' + Math.round(totH / totAll * 100) + '%' : ''}</p>` : '';
     $('abList').innerHTML = `<div class="bar"><button id="abBaru" type="button">Pertemuan baru (ke-${r.berikut})</button><button class="ghost" id="abLapor" type="button">Laporan absensi</button></div>`
       + ringkasBar
-      + (r.sesi.length ? '<div class="panel card">' + r.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan,
+      + (r.sesi.length ? '<div class="panel">' + r.sesi.map(s => item(esc(tglIndo(s.tanggal)), 'Pertemuan ke-' + s.pertemuan,
           `<div class="muted">Hadir ${s.ringkas.H}, sakit ${s.ringkas.S}, izin ${s.ringkas.I}, alpa ${s.ringkas.A}${s.ringkas.belum ? ', belum ' + s.ringkas.belum : ''}</div>`,
           `<button class="ghost small" data-buka="${esc(s.id)}" type="button">Buka</button>`)).join('') + '</div>'
         : '<p class="muted">Belum ada absensi untuk kelas ini. Mulai dari "Pertemuan baru".</p>');
@@ -2499,7 +2806,7 @@
   async function loadHadir() {
     $('sHadirBody').innerHTML = skBerisi(skPanel(3));
     let r; try { r = await api('absensiSaya'); } catch (e) { $('sHadirBody').innerHTML = galat(e.message || 'Coba lagi sebentar.', 'hadir'); return; }
-    $('sHadirBody').innerHTML = r.mapel.length ? r.mapel.map(hadirCard).join('')
+    $('sHadirBody').innerHTML = r.mapel.length ? '<div class="cards-grid">' + r.mapel.map(hadirCard).join('') + '</div>'
       : '<div class="panel"><strong>Belum ada data kehadiran.</strong><br><span class="muted">Kehadiranmu muncul di sini setelah guru mengisi absensi.</span></div>';
   }
   $('sHadirBody').onclick = e => { if (e.target.dataset.retry) loadHadir(); };
@@ -2649,7 +2956,7 @@
     try {
       const [r, rs] = await Promise.all([api('laporanMingguan', { sampai: $('lpSampai').value }), api('laporanSiswa', { sampai: $('lpSampai').value }).catch(() => null)]); lpData = r; lpSis = rs;
       $('lpRentang').textContent = `${tglPendek(r.dari)} – ${tglPendek(r.sampai)}`;
-      $('lpBody').innerHTML = r.kelas.map(lpKartu).join('');
+      $('lpBody').innerHTML = '<div class="cards-grid">' + r.kelas.map(lpKartu).join('') + '</div>';
     } catch (e) { $('lpBody').innerHTML = ''; msg('adminMsg', e.message); }
   }
   async function loadLaporan() {
@@ -3273,7 +3580,7 @@
       case 'jadwal': return jadwalHtml(r) + piketHtml(r);
       case 'kas': return kasHtml(r);
       case 'info': return `<div class="panel"><div class="row"><h2 style="margin:0">Info kelas</h2>${r.izin.info ? '<button class="small" type="button" data-kbaru="1">Tulis info</button>' : ''}</div>${info}</div><div class="panel"><h2>Pengurus kelas</h2>${pengurus}</div>`;
-      default: return perluHtml(r) + validasiHtml(r) + setupHtml(r) + hariIniHtml(r) + aksiCepatHtml(r) + keamananHtml(r) + infoSematHtml(r);
+      default: return `<div class="kelas-grid"><div class="kelas-col">${perluHtml(r) + validasiHtml(r) + setupHtml(r) + aksiCepatHtml(r)}</div><div class="kelas-col">${hariIniHtml(r) + keamananHtml(r) + infoSematHtml(r)}</div></div>`;
     }
   }
   function kelasHtml(r) {
@@ -4852,10 +5159,10 @@
     const fm = $('tFilMapel').value, fk = $('tFilKelas').value, fq = $('tFilCari').value.trim().toLowerCase();
     const dasar = tugasAdmin.filter(t => (!fm || t.mapel === fm) && (!fk || (t.kelas || []).includes(fk)) && (!fq || (t.judul + ' ' + t.mapel).toLowerCase().includes(fq)));
     const daftar = fjAdmin === 'semua' ? dasar : dasar.filter(t => jenisDari(t) === fjAdmin);
-    $('tList').innerHTML = fjBar(dasar, fjAdmin, 'fja') + (daftar.length ? daftar.map(t => `<div class="panel card"><div class="row">
+    $('tList').innerHTML = fjBar(dasar, fjAdmin, 'fja') + (daftar.length ? '<div class="cards-grid">' + daftar.map(t => `<div class="panel card"><div class="row">
         <div><div class="muted">${esc(t.mapel)} · ${esc(t.kelas.join(', '))}${jenisTag(t.jenis)}${t.belumDinilai > 0 ? ` <span class="tag warn">${t.belumDinilai} perlu dinilai</span>` : ''}</div><h3>${esc(t.judul)}</h3>
         <div class="muted">${t.bentuk === 'nilai' ? 'Dinilai langsung' : 'Deadline ' + fmt(t.deadline)} · ${t.kumpul} dari ${t.total} ${t.bentuk === 'nilai' ? 'sudah dinilai' : 'sudah kumpul'}</div>${!t.rilis && t.kumpul - t.belumDinilai > 0 ? '<div class="due-soon">Nilai belum dirilis ke siswa</div>' : ''}</div>
-        <button class="ghost small" data-id="${esc(t.id)}">${t.belumDinilai > 0 ? `Nilai (${t.belumDinilai})` : 'Buka'}</button></div></div>`).join('')
+        <button class="ghost small" data-id="${esc(t.id)}">${t.belumDinilai > 0 ? `Nilai (${t.belumDinilai})` : 'Buka'}</button></div></div>`).join('') + '</div>'
       : `<p class="muted">${tugasAdmin.length ? 'Tidak ada tugas yang cocok dengan filter ini.' : 'Belum ada tugas. Klik "Tugas baru" untuk membuat yang pertama.'}</p>`);
   }
   async function loadTugasAdmin() {
